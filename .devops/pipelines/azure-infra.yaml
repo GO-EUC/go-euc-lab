@@ -1,0 +1,83 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Ryan
+  - Tom
+- name: create
+  displayName: Create the environment in Azure (checked) or destroy the environment (unchecked)
+  type: boolean
+  default: true
+
+trigger:
+- none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+- name: tf_workspace 
+  value: $(build.sourceBranchName)
+
+steps:
+- task: TerraformInstaller@0
+  displayName: Terraform download
+  inputs:
+    terraformVersion: 'latest'
+
+- task: DownloadSecureFile@1
+  displayName: Download backend configuration
+  name: backend
+  inputs:
+    secureFile: $(azure_backend)
+
+- task: PowerShell@2
+  displayName: Terraform variables
+  inputs:
+    targetType: 'inline'
+    script: |
+      $terraformVariable = @()
+      $terraformVariable += "azure_client_id=`"$(azure_client_id)`""
+      $terraformVariable += "azure_client_secret=`"$(azure_client_secret)`""
+      $terraformVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
+      $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
+      $terraformVariable += "devops_token=`"$(devops_token)`""
+      $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+
+      Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform init
+  inputs:
+    script: | 
+      terraform init -backend-config=$(backend.secureFilePath)
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform validate
+  inputs:
+    script: 'terraform validate'
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform plan
+  inputs:
+    script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+  condition: eq('${{ parameters.create }}', 'true')
+
+- task: CmdLine@2
+  displayName: Terraform plan destroy
+  inputs:
+    script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+  condition: eq('${{ parameters.create }}', 'false')
+
+- task: CmdLine@2
+  displayName: Terraform apply
+  inputs:
+    script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
