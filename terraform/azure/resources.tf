@@ -1,5 +1,5 @@
 module "ActiveDirectory" {
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-dc"
 
@@ -21,7 +21,7 @@ module "ActiveDirectory" {
 }
 
 module "ManagementServer" {
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}--mgnt"
 
@@ -46,7 +46,7 @@ module "ManagementServer" {
 module "FileServer" {
     #TO-DO: Add extra datadisk or move to Azure Files. Use MGMT server for AD Join Azure Files
     #TO-DO: Download CVAD ISO not needed
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-fs"
 
@@ -75,7 +75,7 @@ module "FileServer" {
 
 module "CitrixCloudConnector" {
     #TO-DO: Add playbook Fileserver with API keys
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-cc"
     vm_count                        = 2
@@ -99,7 +99,7 @@ module "CitrixCloudConnector" {
 }
 
 module "LoadGen-Server" {
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-lgen"
     azure_vm_sku                    = "Standard_D4s_v4"
@@ -123,7 +123,7 @@ module "LoadGen-Server" {
 }
 
 module "LoadGen-Bot" {
-    source                          = "./Modules/azure.mp.vm.windows"
+    source                          = "./modules/azure.mp.vm.windows"
 
     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-bot"
     vm_count                        = 2
