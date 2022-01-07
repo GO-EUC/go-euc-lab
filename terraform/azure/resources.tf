@@ -1,38 +1,38 @@
 module "ActiveDirectory" {
-    source                          = "./modules/azure.mp.vm.windows.static"
+  source = "./modules/azure.mp.vm.windows.static"
 
-    vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-dc"
+  vm_name = "${local.environment_abbreviations[terraform.workspace]}-dc"
 
-    azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
+  azure_resource_group_name = azurerm_resource_group.InfraBackend.name
 
-    azure_vnet_name                 = azurerm_virtual_network.AzurevNet.name
-    azure_vnet_resource_group_name  = azurerm_virtual_network.AzurevNet.resource_group_name
-    azure_subnet_name               = azurerm_subnet.backend.name
-    azure_cidr_host_start           = 10
+  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
+  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
+  azure_subnet_name              = azurerm_subnet.backend.name
+  azure_cidr_host_start          = 10
 
 
-    local_admin_password            = azurerm_key_vault_secret.admin.value
-    local_admin                     = azurerm_key_vault_secret.admin.name
+  local_admin_password = azurerm_key_vault_secret.admin.value
+  local_admin          = azurerm_key_vault_secret.admin.name
 
-    depends_on                      = [ azurerm_virtual_network.AzurevNet ]
+  depends_on = [azurerm_virtual_network.AzurevNet]
 }
 
 module "CitrixCloudConnectors" {
-    source                          = "./modules/azure.mp.vm.windows"
-    vm_count                        = 2
-    vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-cc"
+  source   = "./modules/azure.mp.vm.windows"
+  vm_count = 2
+  vm_name  = "${local.environment_abbreviations[terraform.workspace]}-cc"
 
-    azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
+  azure_resource_group_name = azurerm_resource_group.InfraBackend.name
 
-    azure_vnet_name                 = azurerm_virtual_network.AzurevNet.name
-    azure_vnet_resource_group_name  = azurerm_virtual_network.AzurevNet.resource_group_name
-    azure_subnet_name               = azurerm_subnet.backend.name
+  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
+  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
+  azure_subnet_name              = azurerm_subnet.backend.name
 
 
-    local_admin_password            = azurerm_key_vault_secret.admin.value
-    local_admin                     = azurerm_key_vault_secret.admin.name
+  local_admin_password = azurerm_key_vault_secret.admin.value
+  local_admin          = azurerm_key_vault_secret.admin.name
 
-    depends_on                      = [ azurerm_virtual_network.AzurevNet ]
+  depends_on = [azurerm_virtual_network.AzurevNet]
 }
 
 
