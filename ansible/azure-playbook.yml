@@ -1,0 +1,82 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  collections:
+    - azure.azcollection
+
+  tasks:
+  - name: Get Key Vault by name
+    azure_rm_keyvault_info:
+      resource_group: "{{ resource_group }}"
+      name: "{{ vault_name }}"
+    register: keyvault
+
+  - name: Set key vault URI fact
+    set_fact: keyvaulturi="{{ keyvault['keyvaults'][0]['vault_uri'] }}"
+
+  - name: Get secret value
+    azure_rm_keyvaultsecret_info:
+      vault_uri: "{{ keyvaulturi }}"
+      name: "{{ secret_name }}"
+    register: kvSecret
+
+  - name: set secret fact
+    set_fact: 
+      my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
+      cashable: true
+
+  - name: Create group_vars directory
+    file:
+      path: group_vars
+      state: directory
+
+  - name: Create group_vars file
+    file:
+      path: group_vars/dc.yml
+      state: touch
+
+  - name: Output key ansible_password
+    lineinfile:
+      path: group_vars/dc.yml
+      line: 'ansible_password: "{{ my_password }}"'
+
+  - name: Output key recovery_password
+    lineinfile:
+      path: group_vars/dc.yml
+      line: 'recovery_password: "{{ my_password }}"'
+
+  - name: Create group_vars file
+    file:
+      path: group_vars/cc.yml
+      state: touch
+
+  - name: Output key ansible_password
+    lineinfile:
+      path: group_vars/cc.yml
+      line: 'ansible_password: "{{ my_password }}"'
+
+- name: Domain Controller
+  hosts: dc
+  roles:
+  - domain-controller
+  vars:
+    ansible_user: production-admin
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+
+- name: Citrix Cloud Connector
+  hosts: cc
+  roles:
+  - domain-join
+  - citrix-cloud-connector
+  vars:
+    dns_domain_name: 'GO.EUC'
+    domain_admin_user: 'GO\production-admin'
+    ansible_user: 'production-admin'
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985

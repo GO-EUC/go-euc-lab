@@ -1,0 +1,21 @@
+- name: Collect hostname
+  win_shell: |
+      $env:COMPUTERNAME
+  register: hostname
+
+- name: Check for xDSCDomainjoin DSC Powershell module
+  win_psmodule:
+    name: xDSCDomainjoin
+    state: present
+
+- name: Domain join
+  win_dsc:
+    resource_name: xDSCDomainjoin
+    Domain: '{{ dns_domain_name }}'
+    Credential_username: '{{ domain_admin_user }}'
+    Credential_password: '{{ ansible_password }}'
+  register: domain_state
+
+- name: Reboot to complete domain join
+  win_reboot:
+  when: domain_state.reboot_required
