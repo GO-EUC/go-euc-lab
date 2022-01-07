@@ -20,7 +20,7 @@ pool:
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
-- name: tf_workspace 
+- name: TF_WORKSPACE 
   value: $(build.sourceBranchName)
 
 steps:
@@ -28,8 +28,8 @@ steps:
   displayName: variable
   inputs:
     script: | 
-      echo PullRequest.SourceBranch $(System.PullRequest.SourceBranch)
       echo sourceBranchName $(build.sourceBranchName)
+      echo workspace $(TF_WORKSPACE)
 
 - task: TerraformInstaller@0
   displayName: Terraform download
