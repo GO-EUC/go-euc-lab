@@ -1,9 +1,9 @@
 locals {
     #naming vars
     environment_abbreviations = {
-        poison          = "pois"
-        playing_card    = "card"
-        flowers         = "flow"
+        default         = "pois"
+        main            = "card"
+        develop         = "flow"
     }
 
     #deployementname
@@ -12,20 +12,20 @@ locals {
     
 
     #geographical details about Azure Datacenter
-    azure_location              = "westeurope"
+    azure_location = "westeurope"
 
 
     #network locals
     infra_subnet_cidr = {
-        poison          = "10.100.200.0/24"
-        playing_card    = "10.100.201.0/24"
-        flowers         = "10.100.202.0/24"
+        default         = "10.100.200.0/24"
+        main            = "10.100.201.0/24"
+        develop         = "10.100.202.0/24"
     }
 
     bastion_subnet_cidr = {
-        poison          = "10.100.24.0/24"
-        playing_card    = "10.100.25.0/24"
-        flowers         = "10.100.26.0/24"
+        default         = "10.100.24.0/24"
+        main            = "10.100.25.0/24"
+        develop         = "10.100.26.0/24"
     }
 
 

@@ -3,6 +3,8 @@ parameters:
   displayName: Azure Environment
   type: string
   values:
+  - Anton
+  - Patrick
   - Ryan
   - Tom
 - name: create
