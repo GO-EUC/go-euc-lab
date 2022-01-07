@@ -26,18 +26,18 @@ resource "azurerm_subnet" "docker" {
 }
 
 resource "azurerm_network_profile" "docker" {
-    name                = "np-docker-${local.environment_abbreviations[terraform.workspace]}"
-    location            = azurerm_resource_group.VNet.location
-    resource_group_name  = azurerm_resource_group.VNet.name
+  name                = "np-docker-${local.environment_abbreviations[terraform.workspace]}"
+  location            = azurerm_resource_group.VNet.location
+  resource_group_name = azurerm_resource_group.VNet.name
 
-    container_network_interface {
-        name = "nic-docker-${local.environment_abbreviations[terraform.workspace]}"
+  container_network_interface {
+    name = "nic-docker-${local.environment_abbreviations[terraform.workspace]}"
 
-        ip_configuration {
-            name      = "ip-docker-${local.environment_abbreviations[terraform.workspace]}"
-            subnet_id = azurerm_subnet.docker.id
-        }
+    ip_configuration {
+      name      = "ip-docker-${local.environment_abbreviations[terraform.workspace]}"
+      subnet_id = azurerm_subnet.docker.id
     }
+  }
 }
 
 
