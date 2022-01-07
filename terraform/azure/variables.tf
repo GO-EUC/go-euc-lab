@@ -28,6 +28,12 @@ locals {
     develop = "10.220.202.0/24"
   }
 
+  docker_subnet_cidr = {
+    default = "10.100.124.0/24"
+    main    = "10.200.125.0/24"
+    develop = "10.220.126.0/24"
+  }
+
   bastion_subnet_cidr = {
     default = "10.100.24.0/24"
     main    = "10.200.25.0/24"
@@ -43,22 +49,44 @@ locals {
 }
 
 variable "azure_subscription_id" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
 variable "azure_client_id" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
 variable "azure_client_secret" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
 variable "azure_tenant_id" {
-    type = string
-    sensitive = true
+  type      = string
+  sensitive = true
 }
 
+variable "devops_orgname" {
+  type        = string
+  description = "Azure DevOps oranization name."
+  default     = "go-euc"
+}
+
+variable "devops_token" {
+  type        = string
+  description = "Azure DevOps perosnal access token."
+  sensitive   = true
+}
+
+variable "devops_pool" {
+  type        = string
+  description = "Azure DevOps pool name."
+}
+
+variable "devops_project" {
+  type        = string
+  description = "Azure DevOps project name."
+  default     = "NightWing"
+}
