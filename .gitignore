@@ -1,5 +1,3 @@
-Publish/
-
 # Terraform ignore
 **/.terraform/*
 *.tfstate
@@ -10,6 +8,7 @@ Publish/
 terraform.rc
 
 *.tfvars
+*backend.conf
 
 # ignore any log and lock file
 *.log
