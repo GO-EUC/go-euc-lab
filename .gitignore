@@ -1,0 +1,19 @@
+Publish/
+
+# Terraform ignore
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+.terraformrc
+terraform.rc
+
+*.tfvars
+
+# ignore any log and lock file
+*.log
+*.lock*
+
+# Packer ignore
+#*.pkrvars.hcl
