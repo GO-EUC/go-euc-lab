@@ -24,6 +24,13 @@ variables:
   value: $(System.PullRequest.SourceBranch)
 
 steps:
+- task: CmdLine@2
+  displayName: variable
+  inputs:
+    script: | 
+      echo $(System.PullRequest.SourceBranch)
+      echo $(build.sourceBranchName)
+
 - task: TerraformInstaller@0
   displayName: Terraform download
   inputs:
