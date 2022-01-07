@@ -24,6 +24,12 @@ variables:
   value: $(build.sourceBranchName)
 
 steps:
+
+- task: CmdLine@2
+  displayName: Variables
+  inputs:
+    script: 'printenv'
+
 - task: TerraformInstaller@0
   displayName: Terraform download
   inputs:
