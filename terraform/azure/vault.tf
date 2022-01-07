@@ -58,7 +58,7 @@ resource "random_password" "admin_password" {
   min_upper        = 3
   special          = true
 
-  # depends_on = [azurerm_key_vault.vault]
+  depends_on = [azurerm_key_vault.vault]
 }
 
 resource "azurerm_key_vault_secret" "admin" {
@@ -66,5 +66,5 @@ resource "azurerm_key_vault_secret" "admin" {
   value        = random_password.admin_password.result
   key_vault_id = azurerm_key_vault.vault.id
 
-  # depends_on = [azurerm_key_vault.vault, random_password.admin_password]
+  depends_on = [azurerm_key_vault.vault, random_password.admin_password]
 }
