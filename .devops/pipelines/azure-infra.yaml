@@ -21,15 +21,9 @@ pool:
 variables:
 - group: ${{ parameters.azureEnvironment }}
 - name: tf_workspace 
-  value: $(build.sourceBranchName)
+  value: $(System.PullRequest.SourceBranch)
 
 steps:
-
-- task: CmdLine@2
-  displayName: Variables
-  inputs:
-    script: 'printenv'
-
 - task: TerraformInstaller@0
   displayName: Terraform download
   inputs:
