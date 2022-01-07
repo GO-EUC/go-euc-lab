@@ -5,10 +5,22 @@ terraform {
       version = "~>2.9"
 
     }
+
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = ">=0.1.0"
+    }
   }
+
+
 
   backend "azurerm" {
   }
+}
+
+provider "azuredevops" {
+  org_service_url       = "https://dev.azure.com/${var.devops_orgname}"
+  personal_access_token = var.devops_token
 }
 
 provider "azurerm" {
