@@ -61,6 +61,11 @@ variable "azure_subnet_name" {
   sensitive   = false
 }
 
+variable "azure_cidr_host_start" {
+  description = "Start of CIDR host"
+  type        = number
+}
+
 variable "azure_image_sku" {
   description = "SKU for Windows Image"
   type        = string

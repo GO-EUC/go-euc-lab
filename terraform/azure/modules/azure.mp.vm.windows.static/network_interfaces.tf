@@ -7,6 +7,7 @@ resource "azurerm_network_interface" "AzureNic" {
   ip_configuration {
     name                          = "${var.vm_name}${count.index + 1}-ip"
     subnet_id                     = data.azurerm_subnet.AzureSubnet.id
-    private_ip_address_allocation = "dynamic"
+    private_ip_address_allocation = "static"
+    private_ip_address            = cidrhost(data.azurerm_subnet.AzureSubnet.address_prefixes[0] , var.azure_cidr_host_start)
   }
 }
