@@ -13,6 +13,11 @@ output "admin" {
   value       = azurerm_key_vault_secret.admin.name
 }
 
+output "reverse_dns_zone" {
+  description = "Infra subnet for reverse dns zone in the domain controller"
+  value       = local.infra_subnet_cidr[terraform.workspace]
+}
+
 output "dc" {
   value = module.ActiveDirectory.vm_info
 }

@@ -29,6 +29,7 @@ $content += "[all:vars]"
 $content += "vault_name=$($state.outputs.vault.value)"
 $content += "resource_group=$($state.outputs.vault_resource_group.value)"
 $content += "ansible_user=$($state.outputs.admin.value)"
+$content += "reverse_dns_zone=$($state.outputs.reverse_dns_zone.value)"
 
 $inventoryDir = $InventoryFile.Substring(0,$InventoryFile.LastIndexOf("/"))
 if ($inventoryDir -ne ".") {
