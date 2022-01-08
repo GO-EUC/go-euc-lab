@@ -79,5 +79,5 @@ steps:
     export AZURE_SUBSCRIPTION_ID="$(AZURE_SUBSCRIPTION_ID)"
     export AZURE_TENANT="$(AZURE_TENANT)"
 
-    ansible-playbook $(Build.Repository.LocalPath)/ansible/playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
+    ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
   displayName: 'Execute ansible'
