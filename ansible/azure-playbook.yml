@@ -41,11 +41,6 @@
       path: group_vars/dc.yml
       line: 'ansible_password: "{{ my_password }}"'
 
-  - name: Output key recovery_password
-    lineinfile:
-      path: group_vars/dc.yml
-      line: 'recovery_password: "{{ my_password }}"'
-
   - name: Create group_vars file
     file:
       path: group_vars/cc.yml
@@ -61,7 +56,6 @@
   roles:
   - domain-controller
   vars:
-    ansible_user: production-admin
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
@@ -74,8 +68,7 @@
   - citrix-cloud-connector
   vars:
     dns_domain_name: 'GO.EUC'
-    domain_admin_user: 'GO\production-admin'
-    ansible_user: 'production-admin'
+    domain_admin_user: "GO\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
