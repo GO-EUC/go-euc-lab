@@ -24,13 +24,6 @@ variables:
   value: $(build.sourceBranchName)
 
 steps:
-- task: CmdLine@2
-  displayName: variable
-  inputs:
-    script: | 
-      echo sourceBranchName $(build.sourceBranchName)
-      echo workspace $(TF_WORKSPACE)
-
 - task: TerraformInstaller@0
   displayName: Terraform download
   inputs:
