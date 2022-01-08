@@ -74,10 +74,10 @@ steps:
   displayName: 'Ansible version'
 
 - script: |  
-    export AZURE_CLIENT_ID="$(AZURE_CLIENT_ID)"
-    export AZURE_SECRET="$(AZURE_SECRET)"
-    export AZURE_SUBSCRIPTION_ID="$(AZURE_SUBSCRIPTION_ID)"
-    export AZURE_TENANT="$(AZURE_TENANT)"
+    export AZURE_CLIENT_ID="$(azure_client_id)"
+    export AZURE_SECRET="$(azure_client_secret)"
+    export AZURE_SUBSCRIPTION_ID="$(azure_subscription_id)"
+    export AZURE_TENANT="$(azure_tenant_id)"
 
     ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
   displayName: 'Execute ansible'
