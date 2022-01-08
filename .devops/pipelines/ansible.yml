@@ -7,16 +7,10 @@ parameters:
   - Patrick
   - Ryan
   - Tom
-- name: create
-  displayName: Create the environment in Azure (checked) or destroy the environment (unchecked)
-  type: boolean
-  default: true
-
 trigger:
 - none
 
-pool:
-  vmImage: 'ubuntu-latest'
+pool: Ryan-production
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
@@ -52,34 +46,35 @@ steps:
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
-  displayName: Terraform init
+  displayName: Terraform pull state
   inputs:
-    script: | 
-      terraform init -backend-config=$(backend.secureFilePath)
+    script: 'terraform state pull > download.tfstate'
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
-- task: CmdLine@2
-  displayName: Terraform validate
+- task: PowerShell@2
+  displayName: Generate Ansible inventory file 
   inputs:
-    script: 'terraform validate'
-    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+    filePath: '$(Build.Repository.LocalPath)/ansible/powershell/GenerateInventory.ps1'
+    arguments: '-StateFile $(Build.Repository.LocalPath)/terraform/azure/download.tfstate -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
 
-- task: CmdLine@2
-  displayName: Terraform plan
-  inputs:
-    script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-  condition: eq('${{ parameters.create }}', 'true')
+- script:  ansible --version
+  displayName: 'Ansible version'
 
-- task: CmdLine@2
-  displayName: Terraform plan destroy
-  inputs:
-    script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-  condition: eq('${{ parameters.create }}', 'false')
+- script: |
+    pip install --upgrade requests==2.20.1
+    pip install --upgrade azure-mgmt-monitor==0.5.2
+  displayName: 'Python pip upgrade'
 
-- task: CmdLine@2
-  displayName: Terraform apply
+- task: PowerShell@2
   inputs:
-    script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
-    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+    filePath: '$(Build.Repository.LocalPath)/ansible/GenerateInventory.ps1'
+    arguments: '-BackendConfig $(backend.secureFilePath) -Branch $(build.sourceBranchName) -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
+
+- script: |  
+    export AZURE_CLIENT_ID="$(AZURE_CLIENT_ID)"
+    export AZURE_SECRET="$(AZURE_SECRET)"
+    export AZURE_SUBSCRIPTION_ID="$(AZURE_SUBSCRIPTION_ID)"
+    export AZURE_TENANT="$(AZURE_TENANT)"
+
+    ansible-playbook $(Build.Repository.LocalPath)/ansible/playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
+  displayName: 'Execute ansible'
