@@ -10,7 +10,7 @@ parameters:
 trigger:
 - none
 
-pool: Ryan-production
+pool: Ryan-flow
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
