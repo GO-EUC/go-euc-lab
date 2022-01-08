@@ -63,6 +63,31 @@
       path: group_vars/cc.yml
       line: 'ansible_password: "{{ my_password }}"'
 
+  - name: Store Citrix Organization ID variable
+    lineinfile:
+      path: group_vars/cc.yml
+      line: "citrix_org_id: '{{ lookup('env', 'citrix_org_id') }}'"
+
+  - name: Store Citrix Client ID variable
+    lineinfile:
+      path: group_vars/cc.yml
+      line: "citrix_client_id: '{{ lookup('env', 'citrix_client_id') }}'"
+
+  - name: Store Citrix Client Secret variable
+    lineinfile:
+      path: group_vars/cc.yml
+      line: "citrix_client_secret: '{{ lookup('env', 'citrix_client_secret') }}'"
+
+  - name: Store Citrix prefix variable
+    lineinfile:
+      path: group_vars/cc.yml
+      line: "prefix: '{{ lookup('env', 'parameters.azureEnvironment') }}'"
+
+  - name: Store Branch variable
+    lineinfile:
+      path: group_vars/cc.yml
+      line: "branch: '{{ lookup('env', 'build.sourceBranchName') }}'"
+
 - name: Domain Controller
   hosts: dc
   roles:
@@ -77,7 +102,7 @@
   hosts: cc
   roles:
   - domain-join
-  #- citrix-cloud-connector
+  - citrix-cloud-connector
   vars:
     dns_domain_name: 'GO.EUC'
     domain_admin_user: "GO\\{{ ansible_user }}"
