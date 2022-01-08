@@ -6,6 +6,13 @@
     - azure.azcollection
 
   tasks:
+
+  - name: Prints two lines of messages, but only if there is an environment value set
+    ansible.builtin.debug:
+      msg:
+      - "Vault: {{ vault_name }}"
+      - "Resource group: {{ resource_group }}"
+  
   - name: Get Key Vault by name
     azure_rm_keyvault_info:
       resource_group: "{{ resource_group }}"
@@ -18,7 +25,7 @@
   - name: Get secret value
     azure_rm_keyvaultsecret_info:
       vault_uri: "{{ keyvaulturi }}"
-      name: "{{ secret_name }}"
+      name: "{{ ansible_user }}"
     register: kvSecret
 
   - name: set secret fact
@@ -40,7 +47,7 @@
     lineinfile:
       path: group_vars/dc.yml
       line: 'ansible_password: "{{ my_password }}"'
-
+      
   - name: Output key recovery_password
     lineinfile:
       path: group_vars/dc.yml
@@ -61,7 +68,6 @@
   roles:
   - domain-controller
   vars:
-    ansible_user: production-admin
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
@@ -71,11 +77,10 @@
   hosts: cc
   roles:
   - domain-join
-  - citrix-cloud-connector
+  #- citrix-cloud-connector
   vars:
     dns_domain_name: 'GO.EUC'
-    domain_admin_user: 'GO\production-admin'
-    ansible_user: 'production-admin'
+    domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore

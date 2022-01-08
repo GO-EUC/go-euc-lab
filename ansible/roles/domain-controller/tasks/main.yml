@@ -69,10 +69,10 @@
 #   retries: 15
 #   delay: 30
 
-# - name: Create reverse DNS zone
-#   win_shell: "Add-DnsServerPrimaryZone -NetworkID {{ reverse_dns_zone }} -ReplicationScope Forest"
-#   register: result
+- name: Create reverse DNS zone
+  win_shell: "Add-DnsServerPrimaryZone -NetworkID {{ reverse_dns_zone }} -ReplicationScope Forest"
+  register: result
 
-# - name: Create forward DNS zone
-#   win_shell: "Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru"
-#   register: result
+- name: Create forward DNS zone
+  win_shell: "Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru"
+  register: result
