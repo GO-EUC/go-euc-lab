@@ -18,6 +18,12 @@ variables:
   value: $(build.sourceBranchName)
 
 steps:
+- script: |
+    pip install --upgrade requests==2.20.1
+    pip install --upgrade azure-mgmt-monitor==0.5.2
+    apt-get -y install zip
+  displayName: 'Python pip upgrade'
+
 - task: TerraformInstaller@0
   displayName: Terraform download
   inputs:
@@ -59,11 +65,6 @@ steps:
 
 - script:  ansible --version
   displayName: 'Ansible version'
-
-- script: |
-    pip install --upgrade requests==2.20.1
-    pip install --upgrade azure-mgmt-monitor==0.5.2
-  displayName: 'Python pip upgrade'
 
 - script: |  
     export AZURE_CLIENT_ID="$(AZURE_CLIENT_ID)"
