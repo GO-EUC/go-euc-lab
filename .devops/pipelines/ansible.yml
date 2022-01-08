@@ -1,0 +1,80 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+trigger:
+- none
+
+pool: Ryan-production
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+- name: TF_WORKSPACE 
+  value: $(build.sourceBranchName)
+
+steps:
+- task: TerraformInstaller@0
+  displayName: Terraform download
+  inputs:
+    terraformVersion: 'latest'
+
+- task: DownloadSecureFile@1
+  displayName: Download backend configuration
+  name: backend
+  inputs:
+    secureFile: $(azure_backend)
+
+- task: PowerShell@2
+  displayName: Terraform variables
+  inputs:
+    targetType: 'inline'
+    script: |
+      $terraformVariable = @()
+      $terraformVariable += "azure_client_id=`"$(azure_client_id)`""
+      $terraformVariable += "azure_client_secret=`"$(azure_client_secret)`""
+      $terraformVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
+      $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
+      $terraformVariable += "devops_token=`"$(devops_token)`""
+      $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+
+      Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform pull state
+  inputs:
+    script: 'terraform state pull > download.tfstate'
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: PowerShell@2
+  displayName: Generate Ansible inventory file 
+  inputs:
+    filePath: '$(Build.Repository.LocalPath)/ansible/powershell/GenerateInventory.ps1'
+    arguments: '-StateFile $(Build.Repository.LocalPath)/terraform/azure/download.tfstate -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
+
+- script:  ansible --version
+  displayName: 'Ansible version'
+
+- script: |
+    pip install --upgrade requests==2.20.1
+    pip install --upgrade azure-mgmt-monitor==0.5.2
+  displayName: 'Python pip upgrade'
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(Build.Repository.LocalPath)/ansible/GenerateInventory.ps1'
+    arguments: '-BackendConfig $(backend.secureFilePath) -Branch $(build.sourceBranchName) -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
+
+- script: |  
+    export AZURE_CLIENT_ID="$(AZURE_CLIENT_ID)"
+    export AZURE_SECRET="$(AZURE_SECRET)"
+    export AZURE_SUBSCRIPTION_ID="$(AZURE_SUBSCRIPTION_ID)"
+    export AZURE_TENANT="$(AZURE_TENANT)"
+
+    ansible-playbook $(Build.Repository.LocalPath)/ansible/playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
+  displayName: 'Execute ansible'
