@@ -29,6 +29,13 @@ steps:
   inputs:
     terraformVersion: 'latest'
 
+- task: CmdLine@2
+  displayName: Terraform init
+  inputs:
+    script: | 
+      terraform init -backend-config=$(backend.secureFilePath)
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
 - task: DownloadSecureFile@1
   displayName: Download backend configuration
   name: backend
