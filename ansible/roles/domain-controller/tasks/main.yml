@@ -69,7 +69,7 @@
 #   retries: 15
 #   delay: 30
 
-- name: Check for xDnsServer DSC Powershell module
+- name: Check for DnsServerDsc DSC Powershell module
   win_psmodule:
     name: DnsServerDsc
     state: present
@@ -79,9 +79,8 @@
     resource_name: DnsServerForwarder
     IsSingleInstance : 'Yes'
     IPAddresses: ["{{ public_dns1 }}", "{{ public_dns2 }}"]
-    UseRootHint: true
-    EnableReordering: false
-
+    UseRootHint: false
+    
 - name: Create reverse DNS zone
   win_dsc:
     resource_name: DnsServerPrimaryZone
