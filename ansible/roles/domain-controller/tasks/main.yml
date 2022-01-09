@@ -74,11 +74,6 @@
     name: DnsServerDsc
     state: present
 
-- name: Create reverse DNS zone
-  win_dsc:
-    resource_name: DnsServerPrimaryZone
-    Name: '{{ dns_domain_name }}'
-
 - name: Create forward DNS zone
   win_dsc:
     resource_name: DnsServerForwarder
@@ -86,6 +81,13 @@
     IPAddresses: ["{{ public_dns1 }}", "{{ public_dns2 }}"]
     UseRootHint: true
     EnableReordering: false
+
+- name: Create reverse DNS zone
+  win_dsc:
+    resource_name: DnsServerPrimaryZone
+    Name: '{{ reverse_dns_zone[:-5] }}-.in-addr.arpa'
+    Ensure: Present
+
 
 # - name: Create reverse DNS zone
 #   win_shell: |
