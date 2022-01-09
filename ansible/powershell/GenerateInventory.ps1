@@ -10,7 +10,7 @@ param (
 
 $state = Get-Content -Path $StateFile -Raw | ConvertFrom-Json
 
-$machines = $state.outputs.PSObject.Properties | Where-Object {$_.Name -ne "admin" -and $_.Name -ne "vault" -and $_.Name -ne "vault_resource_group" } | Select-Object Name
+$machines = $state.outputs.PSObject.Properties | Where-Object {$_.Name -ne "admin" -and $_.Name -ne "vault" -and $_.Name -ne "vault_resource_group" -and $_.Name -ne "reverse_dns_zone" } | Select-Object Name
 
 $content = @()
 foreach ($machine in $machines) {
