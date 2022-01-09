@@ -66,27 +66,27 @@
   - name: Store Citrix Organization ID variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "citrix_org_id: '{{ lookup('env', 'citrix_org_id') }}'"
+      line: "citrix_org_id: \"{{ lookup('env', 'citrix_org_id') }}\""
 
   - name: Store Citrix Client ID variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "citrix_client_id: '{{ lookup('env', 'citrix_client_id') }}'"
+      line: "citrix_client_id: \"{{ lookup('env', 'citrix_client_id') }}\""
 
   - name: Store Citrix Client Secret variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "citrix_client_secret: '{{ lookup('env', 'citrix_client_secret') }}'"
+      line: "citrix_client_secret: \"{{ lookup('env', 'citrix_client_secret') }}\""
 
   - name: Store Citrix prefix variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "prefix: '{{ lookup('env', 'parameters.azureEnvironment') }}'"
+      line: "prefix: \"{{ lookup('env', 'parameters.azureEnvironment') }}\""
 
   - name: Store Branch variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "branch: '{{ lookup('env', 'build.sourceBranchName') }}'"
+      line: "branch: \"{{ lookup('env', 'build.sourceBranchName') }}\""
 
 - name: Domain Controller
   hosts: dc

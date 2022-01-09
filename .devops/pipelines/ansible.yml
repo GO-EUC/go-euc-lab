@@ -79,5 +79,9 @@ steps:
     export AZURE_SUBSCRIPTION_ID="$(azure_subscription_id)"
     export AZURE_TENANT="$(azure_tenant_id)"
 
+    export citrix_client_id="$(citrix_client_id)"
+    export citrix_client_secret="$(citrix_client_secret)"
+    export citrix_org_id=$(citrix_org_id)
+
     ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
   displayName: 'Execute ansible'
