@@ -69,16 +69,34 @@
 #   retries: 15
 #   delay: 30
 
+- name: Check for xDnsServer DSC Powershell module
+  win_psmodule:
+    name: xDnsServer
+    state: present
+
 - name: Create reverse DNS zone
-  win_shell: |
-    try {
-      Add-DnsServerPrimaryZone -NetworkID {{ reverse_dns_zone }} -ReplicationScope Forest
-      } catch { retrun $null }
-  register: result
+  win_dsc:
+    resource_name: DnsServerPrimaryZone
+    Name: '{{ dns_domain_name }}'
 
 - name: Create forward DNS zone
-  win_shell: |
-    try {
-      Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru 
-      } catch { return $null }
-  register: result
+  win_dsc:
+    resource_name: DnsServerForwarder
+    IsSingleInstance : 'Yes'
+    IPAddresses: ["{{ public_dns1 }}", "{{ public_dns2 }}"]
+    UseRootHint: true
+    EnableReordering: false
+
+# - name: Create reverse DNS zone
+#   win_shell: |
+#     try {
+#       Add-DnsServerPrimaryZone -NetworkID {{ reverse_dns_zone }} -ReplicationScope Forest
+#       } catch { retrun $null }
+#   register: result
+
+# - name: Create forward DNS zone
+#   win_shell: |
+#     try {
+#       Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru 
+#       } catch { return $null }
+#   register: result
