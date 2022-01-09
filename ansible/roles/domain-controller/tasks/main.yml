@@ -71,7 +71,7 @@
 
 - name: Check for xDnsServer DSC Powershell module
   win_psmodule:
-    name: xDnsServer
+    name: DnsServerDsc
     state: present
 
 - name: Create reverse DNS zone
