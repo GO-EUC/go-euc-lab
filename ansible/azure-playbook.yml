@@ -100,6 +100,7 @@
 
 - name: Citrix Cloud Connector
   hosts: cc
+  serial: 1
   roles:
   - domain-join
   - citrix-cloud-connector
