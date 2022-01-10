@@ -25,3 +25,7 @@ output "dc" {
 output "cc" {
   value = module.CitrixCloudConnectors.vm_info
 }
+
+output "mgnt" {
+  value = module.ManagementServer.vm_info
+}
