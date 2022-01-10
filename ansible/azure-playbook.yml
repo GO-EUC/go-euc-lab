@@ -114,6 +114,8 @@
   - domain-join
   - loadgen
   vars:
+    dns_domain_name: 'GO.EUC'
+    domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
