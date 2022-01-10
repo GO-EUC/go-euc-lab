@@ -73,6 +73,8 @@
   win_psmodule:
     name: DnsServerDsc
     state: present
+  retries: 5
+  delay: 30
 
 - name: Create reverse DNS zone
   win_dsc:
