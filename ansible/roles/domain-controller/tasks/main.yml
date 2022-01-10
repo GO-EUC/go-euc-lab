@@ -3,6 +3,7 @@
     adapter_names: '*'
     ipv4_addresses:
     - '{{ public_dns1 }}'
+    - '{{ public_dns2 }}'
 
 - name: Stop the time service
   win_service:
@@ -87,4 +88,4 @@
 #     UseRootHint: false
 
 - name: Create forward DNS zone
-  win_shell: Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}' -PassThru 
+  win_shell: Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru 
