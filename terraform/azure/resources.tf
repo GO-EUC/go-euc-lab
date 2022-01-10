@@ -42,9 +42,9 @@ module "ManagementServer" {
 
   azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
 
-  azure_vnet_name                 = data.azurerm_virtual_network.AzurevNet.name
-  azure_vnet_resource_group_name  = var.import_vnet_resourcegroup
-  azure_subnet_name               = data.azurerm_subnet.backend.name
+  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
+  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
+  azure_subnet_name              = azurerm_subnet.backend.name
 
   local_admin_password = azurerm_key_vault_secret.admin.value
   local_admin          = azurerm_key_vault_secret.admin.name
