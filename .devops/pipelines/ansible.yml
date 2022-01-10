@@ -10,7 +10,7 @@ parameters:
 trigger:
 - none
 
-pool: Ryan-card
+pool: ${{ parameters.azureEnvironment }}-$(build.sourceBranchName)
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
