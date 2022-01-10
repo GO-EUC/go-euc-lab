@@ -36,13 +36,13 @@
     state: present
 
 - name: Run AutoUpdater for LoadGen Director
-  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Director\AutoUpdate.dat"'
+  win_shell: '& "C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Director\AutoUpdate.dat"'
 
 - name: Run AutoUpdater for LoadGen Studio
-  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Studio\AutoUpdate.dat"'
+  win_shell: '& "C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Studio\AutoUpdate.dat"'
 
 - name: Run AutoUpdater for LoadGen Analyzer
-  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Analyzer\AutoUpdate.dat"'
+  win_shell: '& "C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Analyzer\AutoUpdate.dat"'
 
 
 
