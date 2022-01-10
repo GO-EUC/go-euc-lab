@@ -81,12 +81,12 @@
   - name: Store Citrix prefix variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "prefix: \"{{ lookup('env', 'parameters.azureEnvironment') }}\""
+      line: "prefix: \"{{ lookup('env', 'prefix') }}\""
 
   - name: Store Branch variable
     lineinfile:
       path: group_vars/cc.yml
-      line: "branch: \"{{ lookup('env', 'build.sourceBranchName') }}\""
+      line: "branch: \"{{ lookup('env', 'branch') }}\""
 
 - name: Domain Controller
   hosts: dc

@@ -83,5 +83,8 @@ steps:
     export citrix_client_secret="$(citrix_client_secret)"
     export citrix_org_id=$(citrix_org_id)
 
+    export branch="$(build.sourceBranchName)"
+    export prefix="${{ parameters.azureEnvironment }}"
+
     ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
   displayName: 'Execute ansible'
