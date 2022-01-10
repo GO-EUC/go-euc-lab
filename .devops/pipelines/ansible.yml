@@ -11,8 +11,7 @@ parameters:
 trigger:
 - none
 
-pr:
-- none
+pr: none
 
 variables:
 - group: ${{ parameters.azureEnvironment }}

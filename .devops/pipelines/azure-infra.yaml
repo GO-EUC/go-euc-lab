@@ -15,8 +15,7 @@ parameters:
 trigger:
 - none
 
-pr:
-- none
+pr: none
 
 pool:
   vmImage: 'ubuntu-latest'
