@@ -68,3 +68,23 @@ resource "azurerm_key_vault_secret" "admin" {
 
   depends_on = [azurerm_key_vault.vault, random_password.admin_password]
 }
+
+resource "random_password" "sql_admin_password" {
+  length           = 16
+  override_special = "!@#$()"
+  min_special      = 3
+  min_numeric      = 3
+  min_lower        = 3
+  min_upper        = 3
+  special          = true
+
+  depends_on = [azurerm_key_vault.vault]
+}
+
+resource "azurerm_key_vault_secret" "sql_admin" {
+  name         = "${local.environment_abbreviations[terraform.workspace]}-sql-admin"
+  value        = random_password.sql_admin_password.result
+  key_vault_id = azurerm_key_vault.vault.id
+
+  depends_on = [azurerm_key_vault.vault, random_password.sql_admin_password]
+}
