@@ -1,0 +1,48 @@
+---
+- name: Create directory structure
+  win_file:
+    path: C:\Download\LoadGen
+    state: directory
+
+- name: Check if LoadGen is downloaded yet
+  win_stat:
+    path: C:\Download\LoadGen\LoadGenSuite.zip
+  register: download_file
+
+- name: Download LoadGen Suite
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/CurrentMSI/LoadGenSuite.zip"
+    dest: C:\Download\LoadGen\LoadGenSuite.zip
+  when: download_file.stat.exists == False
+
+- name: Check if LoadGen is exctracted yet
+  win_stat:
+    path: C:\Download\LoadGen\LoadGenSuite.exe
+  register: extracted_file
+
+- name: Extract LoadGen Suite zip
+  win_unzip:
+    src: C:\Download\LoadGen\LoadGenSuite.zip
+    dest: C:\Download\LoadGen\
+    creates: C:\Download\LoadGen\LoadGenSuite.exe
+  when: extracted_file.stat.exists == False
+
+- name: Install LoadGen
+  win_package:
+    path: C:\Download\LoadGen\LoadGenSuite.exe
+    product_id: '{ED23CB99-3CCE-493E-8724-531632A2ACDD}' # LoadGen 5.0
+    arguments: /S /v/qn
+    expected_return_code: [0]
+    state: present
+
+- name: Run AutoUpdater for LoadGen Director
+  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Director\AutoUpdate.dat"'
+
+- name: Run AutoUpdater for LoadGen Studio
+  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Studio\AutoUpdate.dat"'
+
+- name: Run AutoUpdater for LoadGen Analyzer
+  win_shell: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Analyzer\AutoUpdate.dat"'
+
+
+
