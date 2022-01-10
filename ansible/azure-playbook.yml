@@ -55,6 +55,16 @@
 
   - name: Create group_vars file
     file:
+      path: group_vars/mgnt.yml
+      state: touch
+
+  - name: Output key ansible_password
+    lineinfile:
+      path: group_vars/mgnt.yml
+      line: 'ansible_password: "{{ my_password }}"'
+
+  - name: Create group_vars file
+    file:
       path: group_vars/cc.yml
       state: touch
 
