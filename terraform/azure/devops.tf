@@ -1,5 +1,5 @@
 resource "azuredevops_agent_pool" "pool" {
-  name           = "${var.devops_pool}-${local.environment_abbreviations[terraform.workspace]}"
+  name           = "${var.devops_pool}-${terraform.workspace}"
   auto_provision = false
 }
 
