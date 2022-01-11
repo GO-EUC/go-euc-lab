@@ -8,6 +8,14 @@ parameters:
   - Ryan
   - Tom
 
+- name: workspace
+  displayName: Workspace
+  type: string
+  values:
+  - main
+  - develop
+  - default
+
 trigger:
 - none
 
@@ -16,7 +24,7 @@ pr: none
 variables:
 - group: ${{ parameters.azureEnvironment }}
 - name: TF_WORKSPACE 
-  value: $(build.sourceBranchName)
+  value: ${{ parameters.workspace }}
 
 jobs:
 - job: ansible
