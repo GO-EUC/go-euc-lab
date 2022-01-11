@@ -29,7 +29,7 @@ variables:
 jobs:
 - job: ansible
   displayName: Ansible deployment
-  pool: ${{ parameters.azureEnvironment }}-$(build.sourceBranchName)
+  pool: ${{ parameters.azureEnvironment }}-${{ parameters.workspace }}
   
   steps:
   - script: |
