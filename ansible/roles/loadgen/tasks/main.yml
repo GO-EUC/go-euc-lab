@@ -126,8 +126,8 @@
     
 - name: Create ProgramData for Director
   win_file:
-    path: C:\ProgramData\LoadGen\Director
-    state: directory
+    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+    state: file
 
 - name: Create the LoadGen Datasources file
   win_xml:
