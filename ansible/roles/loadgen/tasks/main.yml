@@ -140,4 +140,4 @@
    xpath: '/*/*'
    attribute: 'DatasourceName'
    fragment: 'GO-DataSource'
-   type: attribute
+   type: element
