@@ -134,10 +134,10 @@
     path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
     state: touch
 
-  - name: Add basic xml layout
-    win_lineinfile:
-      path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
-      line: '<?xml version="1.0" standalone="yes"?>'
+- name: Add basic xml layout
+  win_lineinfile:
+    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+    line: '<?xml version="1.0" standalone="yes"?>'
 
 - name: Create the LoadGen Datasources file
   win_xml:
