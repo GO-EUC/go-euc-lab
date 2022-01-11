@@ -1,5 +1,10 @@
+resource "random_integer" "sql" {
+  min = 1000000
+  max = 9999999
+}
+
 resource "azurerm_mssql_server" "sql" {
-  name                         = "sql-infra-${local.environment_abbreviations[terraform.workspace]}"
+  name                         = "sql-infra-${local.environment_abbreviations[terraform.workspace]}-${random_integer.sql.result}"
   resource_group_name          = azurerm_resource_group.SQL.name
   location                     = azurerm_resource_group.SQL.location
   version                      = "12.0"
