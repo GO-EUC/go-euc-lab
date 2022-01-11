@@ -36,20 +36,57 @@
     state: present
 
 
-
-- name: Create ProgramData directory structure
+- name: Create ProgramData directory structure for Agent
   win_file:
-    path: C:\ProgramData\LoadGenAgent
+    path: C:\ProgramData\LoadGen\Download\Agent
     state: directory
 
 - name: Download LoadGen Agent
   win_get_url:
     url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenAgent.txt"
-    dest: C:\ProgramData\LoadGenAgent\AutoUpdate.dat
-  when: download_file.stat.exists == False
+    dest: C:\ProgramData\LoadGen\Download\Agent\AutoUpdate.dat
 
 - name: Run AutoUpdater for LoadGen Agent
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGenAgent\AutoUpdate.dat"'
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Agent\AutoUpdate.dat"'
 
 
+- name: Create ProgramData directory structure for Director
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Director
+    state: directory
 
+- name: Download LoadGen Director
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenDirector.txt"
+    dest: C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
+
+- name: Run AutoUpdater for LoadGen Director
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
+
+
+- name: Create ProgramData directory structure for Studio
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Studio
+    state: directory
+
+- name: Download LoadGen Studio
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenStudio.txt"
+    dest: C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat
+
+- name: Run AutoUpdater for LoadGen Studio
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"'
+
+
+- name: Create ProgramData directory structure for Analyzer
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Analyzer
+    state: directory
+
+- name: Download LoadGen Analyzer
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenAnalyzer.txt"
+    dest: C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat
+
+- name: Run AutoUpdater for LoadGen Analyzer
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
