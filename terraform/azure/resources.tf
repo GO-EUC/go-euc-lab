@@ -36,25 +36,21 @@ module "CitrixCloudConnectors" {
 }
 
 
-# module "ManagementServer" {
-#     source                          = "./modules/azure.mp.vm.windows"
+module "ManagementServer" {
+  source                          = "./modules/azure.mp.vm.windows"
+  vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-mgnt"
 
-#     vm_name                         = "${local.environment_abbreviations[terraform.workspace]}--mgnt"
+  azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
 
-#     azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
+  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
+  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
+  azure_subnet_name              = azurerm_subnet.backend.name
 
-#     azure_vnet_name                 = data.azurerm_virtual_network.AzurevNet.name
-#     azure_vnet_resource_group_name  = var.import_vnet_resourcegroup
-#     azure_subnet_name               = data.azurerm_subnet.backend.name
-#     azure_cidr_host_start           = 15
+  local_admin_password = azurerm_key_vault_secret.admin.value
+  local_admin          = azurerm_key_vault_secret.admin.name
 
-#     local_admin_password            = var.local_admin_password
-#     domain                          = local.ad_domain_fqdn
-#     domain_admin                    = var.domain_admin
-#     domain_admin_password           = var.domain_admin_password
-
-#     depends_on                      = [module.ActiveDirectory]
-# }
+  depends_on = [azurerm_virtual_network.AzurevNet]
+}
 
 # #Remote Gateway not needed, configured Bastion
 

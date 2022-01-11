@@ -1,0 +1,138 @@
+---
+- name: Create directory structure
+  win_file:
+    path: C:\Download\LoadGen
+    state: directory
+
+- name: Check if LoadGen is downloaded yet
+  win_stat:
+    path: C:\Download\LoadGen\LoadGenSuite.zip
+  register: download_file
+
+- name: Download LoadGen Suite
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/CurrentMSI/LoadGenSuite.zip"
+    dest: C:\Download\LoadGen\LoadGenSuite.zip
+  when: download_file.stat.exists == False
+
+- name: Check if LoadGen is exctracted yet
+  win_stat:
+    path: C:\Download\LoadGen\LoadGenSuite.exe
+  register: extracted_file
+
+- name: Extract LoadGen Suite zip
+  win_unzip:
+    src: C:\Download\LoadGen\LoadGenSuite.zip
+    dest: C:\Download\LoadGen\
+    creates: C:\Download\LoadGen\LoadGenSuite.exe
+  when: extracted_file.stat.exists == False
+
+- name: Install LoadGen
+  win_package:
+    path: C:\Download\LoadGen\LoadGenSuite.exe
+    product_id: '{ED23CB99-3CCE-493E-8724-531632A2ACDD}' # LoadGen 5.0
+    arguments: /S /v/qn
+    expected_return_code: [0]
+    state: present
+
+- name: Check if LoadGen Agent is installed
+  win_stat:
+    path: C:\Program Files\LoadGen\LoadGen Agent\LoadGen LoadBot Agent.exe
+  register: loadgen_agent
+
+- name: Create ProgramData directory structure for Agent
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Agent
+    state: directory
+  when: loadgen_agent.stat.exists == False
+
+- name: Download LoadGen Agent
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenAgent.txt"
+    dest: C:\ProgramData\LoadGen\Download\Agent\AutoUpdate.dat
+  when: loadgen_agent.stat.exists == False
+
+- name: Run AutoUpdater for LoadGen Agent
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Agent\AutoUpdate.dat"'
+  when: loadgen_agent.stat.exists == False
+
+- name: Check if LoadGen Director is installed
+  win_stat:
+    path: C:\Program Files\LoadGen\LoadGen Director\LoadGen Director.exe
+  register: loadgen_director
+
+- name: Create ProgramData directory structure for Director
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Director
+    state: directory
+  when: loadgen_director.stat.exists == False
+
+- name: Download LoadGen Director
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenDirector.txt"
+    dest: C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
+  when: loadgen_director.stat.exists == False
+
+- name: Run AutoUpdater for LoadGen Director
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
+  when: loadgen_director.stat.exists == False
+
+- name: Check if LoadGen Studio is installed
+  win_stat:
+    path: C:\Program Files\LoadGen\LoadGen Studio\LoadGen Studio.exe
+  register: loadgen_studio
+
+- name: Create ProgramData directory structure for Studio
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Studio
+    state: directory
+  when: loadgen_studio.stat.exists == False
+
+- name: Download LoadGen Studio
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenStudio.txt"
+    dest: C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat
+  when: loadgen_studio.stat.exists == False
+
+- name: Run AutoUpdater for LoadGen Studio
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"'
+  when: loadgen_studio.stat.exists == False
+
+- name: Check if LoadGen Analyzer is installed
+  win_stat:
+    path: C:\Program Files\LoadGen\LoadGen Analyzer\LoadGen Analyzer.exe
+  register: loadgen_analyzer
+
+- name: Create ProgramData directory structure for Analyzer
+  win_file:
+    path: C:\ProgramData\LoadGen\Download\Analyzer
+    state: directory
+  when: loadgen_analyzer.stat.exists == False
+
+- name: Download LoadGen Analyzer
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenAnalyzer.txt"
+    dest: C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat
+  when: loadgen_analyzer.stat.exists == False
+
+- name: Run AutoUpdater for LoadGen Analyzer
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
+  when: loadgen_analyzer.stat.exists == False
+
+- name: Remove ProgramData download directory structure for Director
+  win_file:
+    path: C:\ProgramData\LoadGen\Download
+    state: absent
+    
+# - name: Create ProgramData for Director
+#   win_file:
+#     path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+#     state: touch
+
+# - name: Create the LoadGen Datasources file
+#   win_xml:
+#    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+#    xpath: '//Server/Service[@name="Catalina"]/Connector[@port="9443"]'
+#    attribute: 'sslEnabledProtocols'
+#    fragment: 'TLSv1,TLSv1.1,TLSv1.2'
+#    type: attribute
