@@ -35,14 +35,21 @@
     expected_return_code: [0]
     state: present
 
-- name: Run AutoUpdater for LoadGen Director
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Director\AutoUpdate.dat"'
 
-- name: Run AutoUpdater for LoadGen Studio
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Studio\AutoUpdate.dat"'
 
-- name: Run AutoUpdater for LoadGen Analyzer
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\LoadGen Analyzer\AutoUpdate.dat"'
+- name: Create ProgramData directory structure
+  win_file:
+    path: C:\ProgramData\LoadGenAgent
+    state: directory
+
+- name: Download LoadGen Agent
+  win_get_url:
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen_version }}/LoadGenAgent.txt"
+    dest: C:\ProgramData\LoadGenAgent\AutoUpdate.dat
+  when: download_file.stat.exists == False
+
+- name: Run AutoUpdater for LoadGen Agent
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGenAgent\AutoUpdate.dat"'
 
 
 
