@@ -123,8 +123,13 @@
   win_file:
     path: C:\ProgramData\LoadGen\Download
     state: absent
-    
-- name: Create ProgramData for Director
+
+- name: Create ProgramData for Director Config
+  win_file:
+    path: C:\ProgramData\LoadGen\Director
+    state: directory
+
+- name: Create the LoadGenDatasources file
   win_file:
     path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
     state: touch
