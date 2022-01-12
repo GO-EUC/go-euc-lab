@@ -140,3 +140,4 @@
    xpath: '//DatasourcesDataset/Datasources'
    attribute: DatasourceName
    fragment: GO-DataSource
+   type: text
