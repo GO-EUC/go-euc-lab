@@ -3,6 +3,7 @@
     msg:
     - "Vault: {{ vault_name }}"
     - "Resource group: {{ resource_group }}"
+    - "Ansible user: {{ ansible_user }}"
 
 - name: Get Key Vault by name
   azure_rm_keyvault_info:
