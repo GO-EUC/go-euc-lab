@@ -34,11 +34,11 @@
   azure_rm_keyvaultsecret_info:
     vault_uri: "{{ keyvaulturi }}"
     name: "{{ sql_admin }}"
-  register: kvSecret
+  register: kvSecretSql
 
 - name: set secret fact
   set_fact: 
-    sql_password: "{{ kvSecret['secrets'][0]['secret'] }}"
+    sql_password: "{{ kvSecretSql['secrets'][0]['secret'] }}"
     cashable: true
 
 - name: Create group_vars directory
