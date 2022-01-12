@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="yes"?>
 <DatasourcesDataset xmlns="http://tempuri.org/DatasourcesDataset.xsd">
   <Datasources>
-    <DatasourceName>yolo Datastore</DatasourceName>
+    <DatasourceName></DatasourceName>
     <Active>true</Active>
     <DatabaseName>db-infra-loadgen-flow</DatabaseName>
     <IntegratedSecurity>false</IntegratedSecurity>
