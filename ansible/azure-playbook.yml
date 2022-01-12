@@ -6,15 +6,12 @@
     - azure.azcollection
 
   tasks:
-
-  - name: Prints two lines of messages, but only if there is an environment value set
-    ansible.builtin.debug:
-      msg:
-      - "Vault: {{ vault_name }}"
-      - "Resource group: {{ resource_group }}"
-
   - name: Start the Azure Key Vault actions
     include_tasks: azure-keyvault.yml
+    vars:
+      resource_group: "{{ resource_group }}"
+      vault_name: "{{ vault_name }}"
+      sql_admin: "{{ sql_admin }}"
 
 
 
