@@ -14,4 +14,15 @@ datasource_tableprefix_duaf: DUAF
 datasource_tableprefix_performance_counters: PM
 datasource_update_interval: 5
 datasource_debug_sql_update_count: false
-dataspirce_table_smd_create_on_load_test: true
+datasource_table_smd_create_on_load_test: true
+
+
+profile_name: GO.Administrator
+profile_domain: GO
+profile_domain_controller: flow-dc-1
+profile_domain_dns_name: go.euc
+profile_password: random
+profile_username: flow-admin
+profile_workgroup: false 
+
+
