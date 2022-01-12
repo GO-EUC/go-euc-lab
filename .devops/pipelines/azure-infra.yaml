@@ -65,9 +65,9 @@ steps:
   displayName: Terraform init
   inputs:
     script: | 
-      terraform init -backend-config=$(backend.secureFilePath) || true
+      terraform init -backend-config=$(backend.secureFilePath) -input=false || true
       terraform workspace select $(TF_WORKSPACE) || terraform workspace new $(TF_WORKSPACE)
-      terraform init -backend-config=$(backend.secureFilePath)
+      terraform init -backend-config=$(backend.secureFilePath) -input=false
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
