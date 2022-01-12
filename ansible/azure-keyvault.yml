@@ -30,6 +30,11 @@
     my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
     cashable: true
 
+- name: Password sql_admin
+  ansible.builtin.debug:
+    msg:
+    - "{{ sql_admin }}"
+
 - name: Get secret value
   azure_rm_keyvaultsecret_info:
     vault_uri: "{{ keyvaulturi }}"
