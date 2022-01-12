@@ -2,8 +2,8 @@ locals {
   #naming vars
   environment_abbreviations = {
     default = "pois"
-    main    = "card"
-    develop = "flow"
+    cards   = "card"
+    flowers = "flow"
   }
 
   #deployementname
@@ -18,26 +18,26 @@ locals {
   #network locals
   infra_cidr = {
     default = "10.100.0.0/16"
-    main    = "10.200.0.0/16"
-    develop = "10.220.0.0/16"
+    cards   = "10.200.0.0/16"
+    flowers = "10.220.0.0/16"
   }
 
   infra_subnet_cidr = {
     default = "10.100.200.0/24"
-    main    = "10.200.201.0/24"
-    develop = "10.220.202.0/24"
+    cards   = "10.200.201.0/24"
+    flowers = "10.220.202.0/24"
   }
 
   docker_subnet_cidr = {
     default = "10.100.124.0/24"
-    main    = "10.200.125.0/24"
-    develop = "10.220.126.0/24"
+    cards   = "10.200.125.0/24"
+    flowers = "10.220.126.0/24"
   }
 
   bastion_subnet_cidr = {
     default = "10.100.24.0/24"
-    main    = "10.200.25.0/24"
-    develop = "10.220.26.0/24"
+    cards   = "10.200.25.0/24"
+    flowers = "10.220.26.0/24"
   }
 
 

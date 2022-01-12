@@ -7,6 +7,12 @@ parameters:
   - Patrick
   - Ryan
   - Tom
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
 - name: azureBuild
   displayName: Azure environment action
   type: string
@@ -25,7 +31,7 @@ pool:
 variables:
 - group: ${{ parameters.azureEnvironment }}
 - name: TF_WORKSPACE 
-  value: $(build.sourceBranchName)
+  value: ${{ lower(parameters.azureWorkspace) }}
 
 steps:
 - task: TerraformInstaller@0
@@ -53,6 +59,13 @@ steps:
       $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
 
       Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select $(TF_WORKSPACE) || terraform workspace new $(TF_WORKSPACE)
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
