@@ -14,7 +14,7 @@
       - "Resource group: {{ resource_group }}"
 
   - name: Start the Azure Key Vault actions
-    inlcude: azure-keyvault.yml
+    include_tasks: azure-keyvault.yml
 
 
 
