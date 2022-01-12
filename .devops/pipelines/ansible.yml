@@ -7,7 +7,12 @@ parameters:
   - Patrick
   - Ryan
   - Tom
-
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
 trigger:
 - none
 
@@ -15,13 +20,13 @@ pr: none
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
-- name: TF_WORKSPACE 
-  value: $(build.sourceBranchName)
+
+name: ${{ parameters.azureEnvironment }}_${{ parameters.azureWorkspace }}_$(Date:yyyyMMdd)$(Rev:.r)
 
 jobs:
 - job: ansible
   displayName: Ansible deployment
-  pool: ${{ parameters.azureEnvironment }}-$(build.sourceBranchName)
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
   steps:
   - script: |
@@ -34,13 +39,6 @@ jobs:
     displayName: Terraform download
     inputs:
       terraformVersion: 'latest'
-
-  - task: CmdLine@2
-    displayName: Terraform init
-    inputs:
-      script: | 
-        terraform init -backend-config=$(backend.secureFilePath)
-      workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
   - task: DownloadSecureFile@1
     displayName: Download backend configuration
@@ -63,6 +61,20 @@ jobs:
 
         Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
       workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform init
+  inputs:
+    script: | 
+      terraform init -backend-config=$(backend.secureFilePath) -input=false 
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
   - task: CmdLine@2
     displayName: Terraform pull state
