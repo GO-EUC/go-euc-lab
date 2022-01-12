@@ -1,10 +1,3 @@
-- name: Prints two lines of messages, but only if there is an environment value set
-  ansible.builtin.debug:
-    msg:
-    - "Vault: {{ vault_name }}"
-    - "Resource group: {{ resource_group }}"
-    - "Ansible user: {{ ansible_user }}"
-
 - name: Get Key Vault by name
   azure_rm_keyvault_info:
     resource_group: "{{ resource_group }}"
@@ -20,31 +13,16 @@
     name: "{{ ansible_user }}"
   register: kvSecret
 
-- name: Password debug
-  ansible.builtin.debug:
-    msg:
-    - "{{ kvSecret['secrets'][0]['secret'] }}"
-
 - name: set secret fact my_password
   set_fact: 
     my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
     cashable: true
-
-- name: Password sql_admin
-  ansible.builtin.debug:
-    msg:
-    - "{{ sql_admin }}"
 
 - name: Get secret value
   azure_rm_keyvaultsecret_info:
     vault_uri: "{{ keyvaulturi }}"
     name: "{{ sql_admin }}"
   register: kvSecretSql
-
-- name: Password debug
-  ansible.builtin.debug:
-    msg:
-    - "{{ kvSecretSql['secrets'][0]['secret'] }}"
 
 - name: set secret fact sql_password
   set_fact: 

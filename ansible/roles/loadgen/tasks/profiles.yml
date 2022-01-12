@@ -21,7 +21,7 @@
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='DomainController']"
-   fragment: "{{ groups[dc][0] }}"
+   fragment: "{{ domain_controller }}.{{ dns_domain_name }}"
    type: text
    
 - name: Set the LoadGen RunAsProfiles configuration property DomainDnsName
