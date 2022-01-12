@@ -2,11 +2,7 @@ loadgen_version: 7524
 
 datasource_name: GO-Datastore
 datasource_active: true
-datasource_databasename: db-infra-loadgen-flow
 datasource_integrated_security: false
-datasource_password: random
-datasource_user_id: flow-sql-admin
-datasource_servername: sql-infra-flow.database.windows.net
 datasource_table_create_on_load_test: true
 datasource_tablename_duaf: DUAF
 datasource_tablename_performance_counters: PM
@@ -17,11 +13,7 @@ datasource_debug_sql_update_count: false
 datasource_table_smd_create_on_load_test: true
 
 
-profile_name: GO.Administrator
-profile_domain: GO
-profile_domain_controller: flow-dc-1
-profile_domain_dns_name: go.euc
-profile_password: random
+profile_name: GO-Admin
 profile_username: flow-admin
 profile_workgroup: false 
 

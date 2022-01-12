@@ -18,6 +18,21 @@ output "reverse_dns_zone" {
   value       = local.infra_subnet_cidr[terraform.workspace]
 }
 
+output "sql_admin" {
+  description = "SQL administrator account name"
+  value       = azurerm_key_vault_secret.sql_admin.name
+}
+
+output "sql_server" {
+  description = "Infra SQL server name"
+  value       = azurerm_mssql_server.sql.name
+}
+
+output "sql_database" {
+  description = "Infra SQL server database for LoadGen"
+  value       = azurerm_mssql_database.loadgen.name
+}
+
 output "dc" {
   value = module.ActiveDirectory.vm_info
 }
