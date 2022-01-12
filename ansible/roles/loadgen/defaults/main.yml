@@ -1,1 +1,17 @@
 loadgen_version: 7524
+
+datasource_name: GO-Datastore
+datasource_active: true
+datasource_databasename: db-infra-loadgen-flow
+datasource_integrated_security: false
+datasource_password: random
+datasource_user_id: flow-sql-admin
+datasource_servername: sql-infra-flow.database.windows.net
+datasource_table_create_on_load_test: true
+datasource_tablename_duaf: DUAF
+datasource_tablename_performance_counters: PM
+datasource_tableprefix_duaf: DUAF
+datasource_tableprefix_performance_counters: PM
+datasource_update_interval: 5
+datasource_debug_sql_update_count: false
+dataspirce_table_smd_create_on_load_test: true

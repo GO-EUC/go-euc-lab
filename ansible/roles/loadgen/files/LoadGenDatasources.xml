@@ -1,20 +1,5 @@
 <?xml version="1.0" standalone="yes"?>
 <DatasourcesDataset xmlns="http://tempuri.org/DatasourcesDataset.xsd">
   <Datasources>
-    <DatasourceName></DatasourceName>
-    <Active></Active>
-    <DatabaseName></DatabaseName>
-    <IntegratedSecurity></IntegratedSecurity>
-    <Password></Password>
-    <UserId></UserId>
-    <Servername></Servername>
-    <TableCreateOnLoadTest>true</TableCreateOnLoadTest>
-    <TablenameDuaf>DUAF</TablenameDuaf>
-    <TablenamePerformanceCounters>PM</TablenamePerformanceCounters>
-    <TableprefixDuaf>DUAF</TableprefixDuaf>
-    <TableprefixPerformanceCounters>PM</TableprefixPerformanceCounters>
-    <UpdateInterval>5</UpdateInterval>
-    <DebugSqlUpdateCount>false</DebugSqlUpdateCount>
-    <TableSmdCreateOnLoadTest>true</TableSmdCreateOnLoadTest>
   </Datasources>
 </DatasourcesDataset>
