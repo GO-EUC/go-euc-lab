@@ -7,6 +7,12 @@ parameters:
   - Patrick
   - Ryan
   - Tom
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
 - name: azureBuild
   displayName: Azure environment action
   type: string
@@ -24,8 +30,8 @@ pool:
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
-- name: TF_WORKSPACE 
-  value: $(build.sourceBranchName)
+
+name: ${{ parameters.azureEnvironment }}_${{ parameters.azureWorkspace }}_${{ parameters.azureBuild }}_$(Date:yyyyMMdd)$(Rev:.r)
 
 steps:
 - task: TerraformInstaller@0
@@ -59,7 +65,14 @@ steps:
   displayName: Terraform init
   inputs:
     script: | 
-      terraform init -backend-config=$(backend.secureFilePath)
+      terraform init -backend-config=$(backend.secureFilePath) -input=false 
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
