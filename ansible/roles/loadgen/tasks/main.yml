@@ -137,6 +137,6 @@
 - name: Create the LoadGen Datasources file
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
-   xpath: '/DatasourcesDataset/Datasources'
+   xpath: '//DatasourcesDataset/Datasources'
    attribute: DatasourceName
    fragment: GO-DataSource
