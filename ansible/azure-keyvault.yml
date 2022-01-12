@@ -20,6 +20,11 @@
     name: "{{ ansible_user }}"
   register: kvSecret
 
+- name: Password debug
+  ansible.builtin.debug:
+    msg:
+    - "{{ kvSecret['secrets'][0]['secret'] }}"
+
 - name: set secret fact
   set_fact: 
     my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
