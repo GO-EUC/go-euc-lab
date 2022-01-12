@@ -25,7 +25,7 @@
     msg:
     - "{{ kvSecret['secrets'][0]['secret'] }}"
 
-- name: set secret fact
+- name: set secret fact my_password
   set_fact: 
     my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
     cashable: true
@@ -36,7 +36,12 @@
     name: "{{ sql_admin }}"
   register: kvSecretSql
 
-- name: set secret fact
+- name: Password debug
+  ansible.builtin.debug:
+    msg:
+    - "{{ kvSecretSql['secrets'][0]['secret'] }}"
+
+- name: set secret fact sql_password
   set_fact: 
     sql_password: "{{ kvSecretSql['secrets'][0]['secret'] }}"
     cashable: true
