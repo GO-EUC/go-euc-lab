@@ -62,17 +62,17 @@ steps:
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
-  displayName: Terraform select or create workspace
-  inputs:
-    script: | 
-      terraform workspace select $(TF_WORKSPACE) || terraform workspace new $(TF_WORKSPACE)
-    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-
-- task: CmdLine@2
   displayName: Terraform init
   inputs:
     script: | 
       terraform init -backend-config=$(backend.secureFilePath)
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select $(TF_WORKSPACE) || terraform workspace new $(TF_WORKSPACE)
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
