@@ -7,10 +7,18 @@ parameters:
   - Patrick
   - Ryan
   - Tom
-- name: create
-  displayName: Create the environment in Azure (checked) or destroy the environment (unchecked)
-  type: boolean
-  default: true
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
 
 trigger:
 - none
@@ -22,8 +30,8 @@ pool:
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
-- name: TF_WORKSPACE 
-  value: $(build.sourceBranchName)
+
+name: ${{ parameters.azureEnvironment }}_${{ parameters.azureWorkspace }}_${{ parameters.azureBuild }}_$(Date:yyyyMMdd)$(Rev:.r)
 
 steps:
 - task: TerraformInstaller@0
@@ -57,7 +65,14 @@ steps:
   displayName: Terraform init
   inputs:
     script: | 
-      terraform init -backend-config=$(backend.secureFilePath)
+      terraform init -backend-config=$(backend.secureFilePath) -input=false 
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
@@ -71,14 +86,14 @@ steps:
   inputs:
     script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-  condition: eq('${{ parameters.create }}', 'true')
+  condition: eq('${{ parameters.azureBuild }}', 'Create')
 
 - task: CmdLine@2
   displayName: Terraform plan destroy
   inputs:
     script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-  condition: eq('${{ parameters.create }}', 'false')
+  condition: eq('${{ parameters.azureBuild }}', 'Destroy')
 
 - task: CmdLine@2
   displayName: Terraform apply

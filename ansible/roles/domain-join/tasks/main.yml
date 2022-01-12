@@ -15,6 +15,8 @@
     Credential_username: '{{ domain_admin_user }}'
     Credential_password: '{{ ansible_password }}'
   register: domain_state
+  retries: 2
+  delay: 30
 
 - name: Reboot to complete domain join
   win_reboot:
