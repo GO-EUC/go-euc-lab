@@ -31,6 +31,8 @@ pool:
 variables:
 - group: ${{ parameters.azureEnvironment }}
 
+name: ${{ parameters.azureEnvironment }}_${{ parameters.azureWorkspace }}_${{ parameters.azureBuild }}_$(Date:yyyyMMdd)$(Rev:.r)
+
 steps:
 - task: TerraformInstaller@0
   displayName: Terraform download
