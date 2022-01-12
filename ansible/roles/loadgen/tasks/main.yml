@@ -139,7 +139,7 @@
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
    xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='DatasourceName']"
    fragment: "{{ datasource_name }}"
-   type: element
+   type: text
 
 
 
