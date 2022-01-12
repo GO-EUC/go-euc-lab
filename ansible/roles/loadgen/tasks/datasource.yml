@@ -1,0 +1,109 @@
+- name: Create ProgramData for Director Config
+  win_copy:
+    src: LoadGenDatasources.xml
+    dest: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+
+- name: Set the LoadGen Datasources configuration property DatasourceName
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='DatasourceName']"
+   fragment: "{{ datasource_name }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property Active
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='Active']"
+   fragment: "{{ datasource_active | lower }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property DatabaseName
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='DatabaseName']"
+   fragment: "{{ datasource_databasename }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property IntegratedSecurity
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='IntegratedSecurity']"
+   fragment: "{{ datasource_integrated_security | lower }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property Password
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='Password']"
+   fragment: "{{ datasource_password }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property UserId
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='UserId']"
+   fragment: "{{ datasource_user_id }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property Servername
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='Servername']"
+   fragment: "{{ datasource_servername }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TableCreateOnLoadTest
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TableCreateOnLoadTest']"
+   fragment: "{{ datasource_table_create_on_load_test | lower }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TablenameDuaf
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TablenameDuaf']"
+   fragment: "{{ datasource_tablename_duaf }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TablenamePerformanceCounters
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TablenamePerformanceCounters']"
+   fragment: "{{ datasource_tablename_performance_counters }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TableprefixDuaf
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TableprefixDuaf']"
+   fragment: "{{ datasource_tableprefix_duaf }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TableprefixPerformanceCounters
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TableprefixPerformanceCounters']"
+   fragment: "{{ datasource_tableprefix_performance_counters }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property UpdateInterval
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='UpdateInterval']"
+   fragment: "{{ datasource_update_interval }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property DebugSqlUpdateCount
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='DebugSqlUpdateCount']"
+   fragment: "{{ datasource_debug_sql_update_count | lower }}"
+   type: text
+
+- name: Set the LoadGen Datasources configuration property TableSmdCreateOnLoadTest
+  win_xml:
+   path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
+   xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='TableSmdCreateOnLoadTest']"
+   fragment: "{{ datasource_table_smd_create_on_load_test | lower }}"
+   type: text
