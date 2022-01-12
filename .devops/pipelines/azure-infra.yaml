@@ -30,8 +30,6 @@ pool:
 
 variables:
 - group: ${{ parameters.azureEnvironment }}
-- name: TF_WORKSPACE 
-  value: ${{ lower(parameters.azureWorkspace) }}
 
 steps:
 - task: TerraformInstaller@0
@@ -62,12 +60,17 @@ steps:
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
+  displayName: Terraform select or create workspace
+  inputs:
+    script: | 
+      terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
+    workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+- task: CmdLine@2
   displayName: Terraform init
   inputs:
     script: | 
-      terraform init -backend-config=$(backend.secureFilePath) -input=false || true
-      terraform workspace select $(TF_WORKSPACE) || terraform workspace new $(TF_WORKSPACE)
-      terraform init -backend-config=$(backend.secureFilePath) -input=false
+      terraform init -backend-config=$(backend.secureFilePath) -input=false 
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
 - task: CmdLine@2
