@@ -138,4 +138,5 @@
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
    xpath: '/DatasourcesDataset/Datasources/DatasourceName'
-   fragment: 'GO-DataSource'
+   attribute: DatasourceName
+   fragment: GO-DataSource
