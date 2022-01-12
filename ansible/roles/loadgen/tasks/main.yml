@@ -137,7 +137,7 @@
 - name: Set the LoadGen DatasourceName
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
-   xpath: '//*/*/DatasourceName'
+   xpath: '//DatasourceName[0]'
    fragment: "{{ datasource_name }}"
    type: text
 
