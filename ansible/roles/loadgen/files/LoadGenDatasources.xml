@@ -1,5 +1,20 @@
 <?xml version="1.0" standalone="yes"?>
 <DatasourcesDataset xmlns="http://tempuri.org/DatasourcesDataset.xsd">
   <Datasources>
+    <DatasourceName>yolo Datastore</DatasourceName>
+    <Active>true</Active>
+    <DatabaseName>db-infra-loadgen-flow</DatabaseName>
+    <IntegratedSecurity>false</IntegratedSecurity>
+    <Password>3151281321026431443154266324721812314031613247214323821631243122266323023531973121314922923731763197313932362493143242321831263198314831551026324331673133324525131113219313932273141282277313232332273203272266322424529931323241325032373216317321621822232063127319924931322473184318631412942693158317231073220316931333139224319131922202123138173251297317422532542672453114310832243229295310721417321324624132423218285313926832123214</Password>
+    <UserId>flow-sql-admin</UserId>
+    <Servername>sql-infra-flow.database.windows.net</Servername>
+    <TableCreateOnLoadTest>true</TableCreateOnLoadTest>
+    <TablenameDuaf>DUAF</TablenameDuaf>
+    <TablenamePerformanceCounters>PM</TablenamePerformanceCounters>
+    <TableprefixDuaf>DUAF</TableprefixDuaf>
+    <TableprefixPerformanceCounters>PM</TableprefixPerformanceCounters>
+    <UpdateInterval>5</UpdateInterval>
+    <DebugSqlUpdateCount>false</DebugSqlUpdateCount>
+    <TableSmdCreateOnLoadTest>true</TableSmdCreateOnLoadTest>
   </Datasources>
 </DatasourcesDataset>
