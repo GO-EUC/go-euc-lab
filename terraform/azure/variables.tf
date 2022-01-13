@@ -17,10 +17,8 @@ locals {
   deploymentname = "golab"
   ad_domain_fqdn = "go.euc" #Active Directory Domain Name
 
-
   #geographical details about Azure Datacenter
   azure_location = "westeurope"
-
 
   #network locals
   infra_cidr = {
@@ -46,13 +44,6 @@ locals {
     cards   = "10.200.25.0/24"
     flowers = "10.220.26.0/24"
   }
-
-
-  #please specify existing network info, which is imported with data
-  #the Azure DevOps agent with Ansible need WinRM access to private IP
-  import_vnet_name          = "PBO-VNET-MP"
-  import_vnet_resourcegroup = "WVD-LABEU"
-  import_vnet_subnetname    = "WVD-SN"
 }
 
 variable "delivery" {
