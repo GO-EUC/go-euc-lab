@@ -6,6 +6,13 @@ locals {
     flowers = "flow"
   }
 
+  delivery_solutions = {
+    cvads    = "cvads"
+    avd      = "avd"
+    horizonc = "horizonc"
+    horizon  = "horizon"
+  }
+
   #deployementname
   deploymentname = "golab"
   ad_domain_fqdn = "go.euc" #Active Directory Domain Name
@@ -46,6 +53,11 @@ locals {
   import_vnet_name          = "PBO-VNET-MP"
   import_vnet_resourcegroup = "WVD-LABEU"
   import_vnet_subnetname    = "WVD-SN"
+}
+
+variable "delivery" {
+  type      = string
+  default   = "cvads"
 }
 
 variable "azure_subscription_id" {
