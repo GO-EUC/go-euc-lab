@@ -16,10 +16,10 @@ parameters:
 - name: azureDelivery
   displayName: DeliveryModel
   type: string
-  default: cvads
+  default: Citrix Virtual Apps & Desktop Services
   values:
-  - cvads: Citrix Virtual Apps & Desktop Services
-  - avd: Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - Azure Virtual Desktop
 - name: azureBuild
   displayName: Azure environment action
   type: string
@@ -64,7 +64,13 @@ steps:
       $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
       $terraformVariable += "devops_token=`"$(devops_token)`""
       $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
-      $terraformVariable += "delivery=`"${{ parameters.azureDelivery }}`""
+
+      switch ("${{ parameters.azureDelivery }}") {
+        "Citrix Virtual Apps & Desktop Services" {$delivery = "cvads"}
+        "Azure Virtual Desktop" {$delivery = "avd"}
+      }
+
+      $terraformVariable += "delivery=`"$delivery`""
 
       Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
     workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
