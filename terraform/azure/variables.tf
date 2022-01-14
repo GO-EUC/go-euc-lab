@@ -7,10 +7,10 @@ locals {
   }
 
   delivery_solutions = {
+    none     = "none"
     cvads    = "cvads"
     avd      = "avd"
     horizonc = "horizonc"
-    horizon  = "horizon"
   }
 
   #deployementname
