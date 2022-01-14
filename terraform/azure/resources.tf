@@ -64,6 +64,18 @@ module "AVD" {
   depends_on = [azurerm_virtual_network.AzurevNet]
 }
 
+module "HorizonC" {
+  count    = local.delivery_solutions[var.delivery] == "horizonc" ? 1 : 0
+  source = "./delivery/horizonc"
+
+  location              = local.azure_location
+
+  deployment_name       = local.deploymentname
+  workspace             = local.environment_abbreviations[terraform.workspace]
+
+  depends_on = [azurerm_virtual_network.AzurevNet]
+}
+
 
 # #Remote Gateway not needed, configured Bastion
 
