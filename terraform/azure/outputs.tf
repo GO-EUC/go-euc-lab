@@ -37,10 +37,10 @@ output "dc" {
   value = module.ActiveDirectory.vm_info
 }
 
-output "cc" {
-  value = module.CitrixCloudConnectors.vm_info
-}
-
 output "mgnt" {
   value = module.ManagementServer.vm_info
+}
+
+output "cc" {
+ value = module.CVADs[*].vm_info
 }

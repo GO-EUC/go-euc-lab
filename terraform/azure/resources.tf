@@ -17,25 +17,6 @@ module "ActiveDirectory" {
   depends_on = [azurerm_virtual_network.AzurevNet]
 }
 
-module "CitrixCloudConnectors" {
-  source   = "./modules/azure.mp.vm.windows"
-  vm_count = 2
-  vm_name  = "${local.environment_abbreviations[terraform.workspace]}-cc"
-
-  azure_resource_group_name = azurerm_resource_group.InfraBackend.name
-
-  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
-  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
-  azure_subnet_name              = azurerm_subnet.backend.name
-
-
-  local_admin_password = azurerm_key_vault_secret.admin.value
-  local_admin          = azurerm_key_vault_secret.admin.name
-
-  depends_on = [azurerm_virtual_network.AzurevNet]
-}
-
-
 module "ManagementServer" {
   source                          = "./modules/azure.mp.vm.windows"
   vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-mgnt"
@@ -51,6 +32,50 @@ module "ManagementServer" {
 
   depends_on = [azurerm_virtual_network.AzurevNet]
 }
+
+module "CVADs" {
+  count    = local.delivery_solutions[var.delivery] == "cvads" ? 1 : 0
+  source = "./delivery/cvads"
+
+  location              = local.azure_location
+
+  deployment_name       = local.deploymentname
+  workspace             = local.environment_abbreviations[terraform.workspace]
+
+  azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
+  azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
+  azure_subnet_name              = azurerm_subnet.backend.name
+
+  local_admin_password = azurerm_key_vault_secret.admin.value
+  local_admin          = azurerm_key_vault_secret.admin.name
+
+  depends_on = [azurerm_virtual_network.AzurevNet]
+}
+
+module "AVD" {
+  count    = local.delivery_solutions[var.delivery] == "avd" ? 1 : 0
+  source = "./delivery/avd"
+
+  location              = local.azure_location
+
+  deployment_name       = local.deploymentname
+  workspace             = local.environment_abbreviations[terraform.workspace]
+
+  depends_on = [azurerm_virtual_network.AzurevNet]
+}
+
+module "HorizonC" {
+  count    = local.delivery_solutions[var.delivery] == "horizonc" ? 1 : 0
+  source = "./delivery/horizonc"
+
+  location              = local.azure_location
+
+  deployment_name       = local.deploymentname
+  workspace             = local.environment_abbreviations[terraform.workspace]
+
+  depends_on = [azurerm_virtual_network.AzurevNet]
+}
+
 
 # #Remote Gateway not needed, configured Bastion
 
