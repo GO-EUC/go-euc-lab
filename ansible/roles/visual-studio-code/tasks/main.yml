@@ -1,0 +1,9 @@
+- name: Install Visual Studio Code
+  win_package:
+    path: https://code.visualstudio.com/sha/download?build=stable&os=win32-x64
+    creates_path: C:\Program Files\Microsoft VS Code\Code.exe
+    arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode
+    expected_return_code: [0]
+    state: present
+
+    

@@ -25,6 +25,7 @@
   hosts: mgnt
   roles:
   - domain-join
+  - visual-studio-code
   - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
