@@ -1,0 +1,117 @@
+
+- name: Check for ActiveDirectory DSC Powershell module
+  win_psmodule:
+    name: ActiveDirectoryDsc
+    state: present    
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: GO
+    path: "dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Accounts
+    path: "OU=GO,dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Groups
+    path: "OU=GO,dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Loadgen
+    path: "OU=GO,dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: ServiceAccounts
+    path: "OU=GO,dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Machines
+    path: "OU=GO,dc=GO,dc=euc"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Bots
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Builds
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: GPU
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: Infra
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: RDS
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: VDI
+    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+
+- name: Ensure the group Loadgen exists using sAMAccountName
+  win_domain_group:
+    name: Loadgen
+    scope: global
+    path: "OU=Groups,OU=GO,dc=GO,dc=euc"
+
+- name: Create Service accounts
+  win_domain_user:
+    name: sql_svc
+    password: '{{ ansible_password }}'
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    description: SQL Server - Service Account
+
+- name: Create Service accounts
+  win_domain_user:
+    name: sql_agt
+    password: '{{ ansible_password }}'
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    description: SQL Agent - Service Account
+
+- name: Create Service accounts
+  win_domain_user:
+    name: mdt
+    password: '{{ ansible_password }}'
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    groups:
+    - Domain Admins
+- name: Create Service accounts
+  win_domain_user:
+    name: loadgen_bot
+    password: '{{ ansible_password }}'
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    description: SQL Server - Service Account
+    groups:
+    - Loadgen
