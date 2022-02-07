@@ -102,6 +102,7 @@
   hosts: dc
   roles:
   - domain-controller
+  - domain-config
   vars:
     ansible_connection: winrm
     ansible_winrm_transport: ntlm

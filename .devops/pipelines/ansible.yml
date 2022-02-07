@@ -27,7 +27,9 @@ jobs:
 - job: ansible
   displayName: Ansible deployment
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-  
+  workspace:
+    clean: all
+
   steps:
   - script: |
       pip install --upgrade requests==2.20.1
