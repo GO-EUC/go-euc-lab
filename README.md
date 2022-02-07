@@ -35,12 +35,12 @@ The following technology stack in this project:
 ## Prerequisite Microsoft Azure
 Before getting started the following prerequisite needs to be in place:
 Service principal account:
-In order to deploy the infrastructure in Microsoft Azure, a service principal account needs to be created using these [instructions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret){:target="_blank"}.
+In order to deploy the infrastructure in Microsoft Azure, a service principal account needs to be created using these [instructions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret).
 Azure Storage for state file
-When using Microsoft Azure it makes sense the use an Azure storage account for storing the Terraform state configuration. Follow these [instructions](https://docs.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage?tabs=azure-cli){:target="_blank"} to create the storage account.
+When using Microsoft Azure it makes sense the use an Azure storage account for storing the Terraform state configuration. Follow these [instructions](https://docs.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage?tabs=azure-cli) to create the storage account.
 
 ## Prerequisite Citrix Virtual Apps & Desktops Service
-When using the Citrix Virtual Apps & Desktops Service delivery model API access key is required, which can be created using these [instructions](https://developer.cloud.com/citrix-cloud/citrix-cloud-api-overview/docs/get-started-with-citrix-cloud-apis){:target="_blank"}.
+When using the Citrix Virtual Apps & Desktops Service delivery model API access key is required, which can be created using these [instructions](https://developer.cloud.com/citrix-cloud/citrix-cloud-api-overview/docs/get-started-with-citrix-cloud-apis).
 
 ## Prerequisite Azure DevOps
 The Azure DevOps pipelines make use of variable groups which is linked to a specific individual that contains the following variables:
@@ -56,21 +56,21 @@ The Azure DevOps pipelines make use of variable groups which is linked to a spec
 | citrix_client_secret | Citrix Cloud API secret, when CVADs is used |
 | citrix_org_id | Citrix Cloud organization id, when CVADs is used |
 
-In the secure file, the backend configuration for Terraform is stored, which can be created using the following [instructions](https://www.terraform.io/language/settings/backends/configuration#file){:target="_blank"}.
+In the secure file, the backend configuration for Terraform is stored, which can be created using the following [instructions](https://www.terraform.io/language/settings/backends/configuration#file).
 
 The following properties are required in the backend configuration:
-storage_account_name
-container_name
-key
-access_key
+  * storage_account_name
+  * container_name
+  * key
+  * access_key
 
 ## Primary contributors
 This project is maintained by the following GO-EUC members:
 
-  * [Anton van Pelt](https://www.linkedin.com/in/antonvanpelt/?originalSubdomain=nl){:target="_blank"}
-  * [Patrick van den Bron](https://www.go-euc.com/members/patrick-van-den-born/){:target="_blank"}
-  * [Tom de Jong](https://www.go-euc.com/members/tom-de-jong/){:target="_blank"}
-  * [Ryan Ververs-Bijkerk](https://www.go-euc.com/members/ryan-ververs-bijkerk/){:target="_blank"}
+  * [Anton van Pelt](https://www.linkedin.com/in/antonvanpelt/?originalSubdomain=nl)
+  * [Patrick van den Bron](https://www.go-euc.com/members/patrick-van-den-born/)
+  * [Tom de Jong](https://www.go-euc.com/members/tom-de-jong/)
+  * [Ryan Ververs-Bijkerk](https://www.go-euc.com/members/ryan-ververs-bijkerk/)
 
 ## Contributions
 This project is initiated by GO-EUC and is maintained by multiple GO-EUC members. This project is shared publicly to allow others in the community to use the same infrastructure and configuration as the platform which allows you to reproduce our researches. Additionally, this project shows how an end-user computing environment can be built using modern technologies.
@@ -78,5 +78,5 @@ This project is initiated by GO-EUC and is maintained by multiple GO-EUC members
 As GO-EUC is a community initiative any other contributions are welcome and can be done using a pull request.
 
 ## License
-This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-sa/4.0){:target="_blank"}
+This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-sa/4.0)
  
