@@ -57,7 +57,7 @@ jobs:
     displayName: Packer init
     inputs:
       script: | 
-        packer init azure-arm.windows -var-file=variables.pkrvars.hcl .
+        packer init image.pkr.hcl
       workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
   - task: CmdLine@2
