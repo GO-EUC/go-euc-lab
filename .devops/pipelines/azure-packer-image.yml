@@ -38,7 +38,7 @@ jobs:
     displayName: 'Download and install Packer'
 
   - task: PowerShell@2
-    displayName: Terraform variables
+    displayName: Packer variables
     inputs:
       targetType: 'inline'
       script: |
@@ -64,6 +64,6 @@ jobs:
     displayName: Deploy Packer build image
     inputs:
       script: | 
-        packer build azure-arm.windows -var-file=variables.pkr.hcl .
+        packer build -only azure-arm.windows -var-file=variables.pkr.hcl .
       workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
