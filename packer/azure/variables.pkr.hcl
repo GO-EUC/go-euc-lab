@@ -23,22 +23,34 @@ variable "environment" {
   default   = "default"
 }
 
-variable "build_resource_group_name" {
-  description = ""
-  type      = string
- 
-}
-
-variable "client_id" {
+variable "azure_client_id" {
   description = ""
   type      = string
   
 }
 
-variable "client_secret" {
+variable "azure_client_secret" {
   description = ""
   type      = string
   sensitive = true
+}
+variable "azure_subscription_id" {
+  description = ""
+  type      = string
+  sensitive = true
+}
+
+variable "azure_tenant_id" {
+  description = ""
+  type      = bool
+  sensitive = true
+}
+
+variable "build_resource_group_name" {
+  description = ""
+  type      = string
+  default   = "test" 
+ 
 }
 
 variable "communicator" {
@@ -75,17 +87,6 @@ variable "os_type" {
   
 }
 
-variable "subscription_id" {
-  description = ""
-  type      = string
-  sensitive = true
-}
-
-variable "tenant_id" {
-  description = ""
-  type      = bool
-  sensitive = true
-}
 
 variable "vm_size" {
   description = ""
@@ -125,13 +126,12 @@ variable "managed_image_name" {
 variable "managed_image_resource_group_name" {
   description = ""
   type      = string
-  
+  default   = "packer" 
 }
 
 variable "virtual_network_resource_group_name" {
   description = ""
   type      = string
-  
 }
 
 variable "virtual_network_name" {
@@ -156,19 +156,21 @@ variable "private_virtual_network_with_public_ip" {
 variable "gallery_name" {
   description = ""
   type      = string
+  default   = "azurecomputegallery"
   
 }
 
 variable "image_name" {
   description = ""
   type      = string
+  default   = "citrixgen1"
   
 }
 
 variable "image_version" {
   description = ""
   type      = string
-  
+  default   = "1.0.2"  
 }
 
 variable "replication_regions" {
@@ -177,7 +179,8 @@ variable "replication_regions" {
   type      = string
 }
 
-variable "resource_group" {
+variable "var.compute_gallery_resource_group" {
   description = ""
   type      = string
+  default   = infra
 }
