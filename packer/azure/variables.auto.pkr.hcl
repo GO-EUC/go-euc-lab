@@ -85,7 +85,7 @@ variable "os_type" {
 variable "vm_size" {
   description = ""
   type      = string
-  default   = "Standard_D2_v2"
+  default   = "Standard_Ds2_v2"
 }
 
 variable "winrm_insecure" {
