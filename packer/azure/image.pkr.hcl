@@ -36,7 +36,7 @@ source "azure-arm" "windows" {
 
   shared_image_gallery_destination {
     subscription   = var.azure_subscription_id
-    resource_group = "rg-golab-${local.environment_abbreviations[var.environment]}-infra"  
+    resource_group = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.compute_gallery_resource_group}"  
     gallery_name   = var.gallery_name
     image_name     = var.image_name
     image_version  = var.image_version
@@ -51,7 +51,7 @@ build {
 }
 
     provisioner "ansible" {
-      playbook_file = "./azure.yml"
+      playbook_file = "./scripts/azure.yml"
       user = "packer"
       use_proxy       = false
       extra_arguments = [
