@@ -15,7 +15,7 @@ source "azure-arm" "windows" {
   subscription_id                   = var.azure_subscription_id
   tenant_id                         = var.azure_tenant_id
 
-  build_resource_group_name         = var.resource_group
+  build_resource_group_name         = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"
   communicator                      = local.communicator[var.os_type]
   image_offer                       = var.image_offer
   image_publisher                   = var.image_publisher
