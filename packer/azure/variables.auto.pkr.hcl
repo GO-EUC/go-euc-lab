@@ -42,7 +42,7 @@ variable "azure_subscription_id" {
 
 variable "azure_tenant_id" {
   description = ""
-  type      = bool
+  type      = string
   sensitive = true
 }
 
@@ -51,12 +51,6 @@ variable "build_resource_group_name" {
   type      = string
   default   = "test" 
  
-}
-
-variable "communicator" {
-  description = ""
-  type      = string
-  sensitive = true
 }
 
 variable "image_offer" {
@@ -111,6 +105,7 @@ variable "winrm_use_ssl" {
     type = bool
     default   = true
 }
+
 variable "winrm_username" {
     description = ""
     type = string
@@ -129,29 +124,22 @@ variable "managed_image_resource_group_name" {
   default   = "packer" 
 }
 
-variable "virtual_network_resource_group_name" {
-  description = ""
-  type      = string
-}
+// variable "virtual_network_resource_group_name" {
+//   description = ""
+//   type      = string
+//   default   = "packer"
+// }
 
-variable "virtual_network_name" {
-  description = ""
-  type      = string
-  
-}
+// variable "virtual_network_name" {
+//   description = ""
+//   type      = string
+//   }
 
-variable "virtual_network_subnet_name" {
-  description = ""
-  type      = string
-  
-}
-
-variable "private_virtual_network_with_public_ip" {
-  description = ""
-  default   = false
-  type      = bool
-  
-}
+// variable "virtual_network_subnet_name" {
+//   description = ""
+//   type      = string
+//   default   = "default"
+//   }
 
 variable "gallery_name" {
   description = ""
@@ -179,8 +167,8 @@ variable "replication_regions" {
   type      = string
 }
 
-variable "var.compute_gallery_resource_group" {
+variable "compute_gallery_resource_group" {
   description = ""
   type      = string
-  default   = infra
+  default   = "infra"
 }

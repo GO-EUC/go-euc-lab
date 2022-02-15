@@ -29,9 +29,9 @@ source "azure-arm" "windows" {
   managed_image_name                = "${local.environment_abbreviations[var.environment]}-${var.managed_image_name}"
   managed_image_resource_group_name = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"
   virtual_network_resource_group_name    = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.virtual_network_resource_group_name}" 
-  virtual_network_name                   = "vnet-infra-${var.var.virtual_network_name}"  
-  virtual_network_subnet_name            = "sn-infra-${var.var.virtual_network_name}"
-  private_virtual_network_with_public_ip = var.private_virtual_network_with_public_ip
+  virtual_network_name                   = "vnet-infra-${local.environment_abbreviations[var.environment]}"  
+  virtual_network_subnet_name            = "sn-infra-${local.environment_abbreviations[var.environment]}"
+  private_virtual_network_with_public_ip = false
 
 
   shared_image_gallery_destination {

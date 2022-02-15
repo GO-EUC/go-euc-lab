@@ -47,10 +47,7 @@ jobs:
         $packerVariable += "azure_client_secret=`"$(azure_client_secret)`""
         $packerVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
         $packerVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
-        $packerVariable += "devops_token=`"$(devops_token)`""
-        $packerVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
-
-        Set-Content -Value $packerVariable -Path variables.pkrvars.hcl -Force
+        Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force
       workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
   - task: CmdLine@2
@@ -64,6 +61,6 @@ jobs:
     displayName: Deploy Packer build image
     inputs:
       script: | 
-        packer build -only azure-arm.windows -var-file=variables.pkr.hcl .
+        packer build -var-file=azure.pkrvars.hcl .
       workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
