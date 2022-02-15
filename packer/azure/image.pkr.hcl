@@ -15,7 +15,7 @@ source "azure-arm" "windows" {
   subscription_id                   = var.azure_subscription_id
   tenant_id                         = var.azure_tenant_id
 
-  build_resource_group_name         = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"
+  build_resource_group_name         = "rg-golab-${local.environment_abbreviations[var.environment]}-infra"
   communicator                      = local.communicator[var.os_type]
   image_offer                       = var.image_offer
   image_publisher                   = var.image_publisher
@@ -27,7 +27,7 @@ source "azure-arm" "windows" {
   winrm_use_ssl                     = var.winrm_use_ssl
   winrm_username                    = var.winrm_username
   managed_image_name                = "${local.environment_abbreviations[var.environment]}-${var.managed_image_name}"
-  managed_image_resource_group_name = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"
+  managed_image_resource_group_name = "rg-golab-${local.environment_abbreviations[var.environment]}-infra"
   virtual_network_resource_group_name    = "rg-golab-${local.environment_abbreviations[var.environment]}-vnet" 
   virtual_network_name                   = "vnet-infra-${local.environment_abbreviations[var.environment]}"  
   virtual_network_subnet_name            = "sn-infra-${local.environment_abbreviations[var.environment]}"
@@ -36,7 +36,7 @@ source "azure-arm" "windows" {
 
   shared_image_gallery_destination {
     subscription   = var.azure_subscription_id
-    resource_group = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"  
+    resource_group = "rg-golab-${local.environment_abbreviations[var.environment]}-infra"  
     gallery_name   = var.gallery_name
     image_name     = var.image_name
     image_version  = var.image_version
