@@ -35,7 +35,7 @@ source "azure-arm" "windows" {
 
 
   shared_image_gallery_destination {
-    subscription   = var.subscription_id
+    subscription   = var.azure_subscription_id
     resource_group = "rg-golab-${local.environment_abbreviations[var.environment]}-${var.var.compute_gallery_resource_group}"  
     gallery_name   = var.gallery_name
     image_name     = var.image_name
