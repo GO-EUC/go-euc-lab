@@ -5,12 +5,14 @@
 - name: create partition
   win_partition:
     drive_letter: E
+    drive_letter: Z
     partition_size: -1
     disk_number: 1
 
 - name: format partition and label disk
   community.windows.win_format:
     drive_letter: E
+    drive_letter: Z
     file_system: NTFS
     new_label: Data
     full: True
