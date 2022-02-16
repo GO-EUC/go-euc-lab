@@ -27,6 +27,13 @@ resource "azurerm_virtual_machine" "AzureVM" {
     managed_disk_type = var.azure_mananaged_disk_type
   }
 
+  storage_data_disk {
+    name            = "${azurerm_managed_disk.manageddisk.name}"
+    managed_disk_id = "${azurerm_managed_disk.manageddisk.id}"
+    create_option   = "Attach"
+    lun             = 1
+    disk_size_gb    = "${azurerm_managed_disk.manageddisk.disk_size_gb}"
+  }
   os_profile {
     computer_name  = "${var.vm_name}-${count.index + 1}"
     admin_username = var.local_admin
