@@ -2,7 +2,5 @@
 
 
   tasks:
-  - name: Install git
-    win_chocolatey:
-      name: git
-      state: present
+  - name: Ping!
+    win_ping:
