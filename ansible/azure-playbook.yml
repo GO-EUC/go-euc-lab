@@ -114,6 +114,7 @@
   roles:
   - domain-join
   - loadgen
+  - managed-disk
   vars:
     dns_domain_name: 'GO.EUC'
     domain_admin_user: "GO\\{{ ansible_user }}"
