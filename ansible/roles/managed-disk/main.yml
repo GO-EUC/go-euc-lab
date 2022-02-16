@@ -2,7 +2,7 @@
   community.windows.win_initialize_disk:
     disk_number: 1
     
-- name: Full format the newly created partition as NTFS and label it
+- name: Format partition and label disk
   community.windows.win_format:
     drive_letter: D
     file_system: NTFS
