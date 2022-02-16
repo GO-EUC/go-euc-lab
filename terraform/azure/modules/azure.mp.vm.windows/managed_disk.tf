@@ -1,4 +1,5 @@
 resource "azurerm_managed_disk" "manageddisk" {
+  count = var.vm_count
   name = "${var.vm_name}${count.index + 1}-manageddisk"
   location = var.azure_location
   resource_group_name = var.azure_resource_group_name
