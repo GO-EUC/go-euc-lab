@@ -112,6 +112,7 @@
 - name: Management Server
   hosts: mgnt
   roles:
+  - managed-disk
   - domain-join
   - loadgen
   - managed-disk
