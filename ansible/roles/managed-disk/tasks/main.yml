@@ -5,7 +5,7 @@
 - name: create partition
   win_partition:
     drive_letter: D
-    partition_size: 10 GiB
+    partition_size: -1
     disk_number: 1
 
 - name: format partition and label disk
