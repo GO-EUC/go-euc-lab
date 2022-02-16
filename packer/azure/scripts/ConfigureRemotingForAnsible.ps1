@@ -188,7 +188,7 @@ Function Enable-GlobalHttpFirewallAccess {
         Write-Verbose "Creating a new HTTP firewall rule"
         $rule = New-Object -ComObject HNetCfg.FWRule
         $rule.Name = "Windows Remote Management (HTTP-In)"
-        $rule.description = "" "Inbound rule for Windows Remote Management via WS-Management. [TCP 5985]"
+        $rule.Description = "Inbound rule for Windows Remote Management via WS-Management. [TCP 5985]"
         $add_rule = $true
     }
 

@@ -35,6 +35,9 @@ jobs:
       curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
       apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
       apt-get update && apt-get install packer
+      pip install --upgrade requests==2.20.1
+      pip install --upgrade azure-mgmt-monitor==0.5.2
+      apt-get -y install zip
     displayName: 'Download and install Packer'
 
   - task: PowerShell@2
