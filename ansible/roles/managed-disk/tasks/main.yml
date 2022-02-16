@@ -1,10 +1,16 @@
-- name: Initialize managed disk
+- name: initialize managed disk
   community.windows.win_initialize_disk:
     disk_number: 1
-    
-- name: Format partition and label disk
+
+- name: create partition
+  win_partition:
+    drive_letter: D
+    partition_size: 10 GiB
+    disk_number: 1
+
+- name: format partition and label disk
   community.windows.win_format:
-    drive_letter: E
+    drive_letter: D
     file_system: NTFS
     new_label: Data
     full: True
