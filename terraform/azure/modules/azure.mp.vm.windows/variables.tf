@@ -92,3 +92,9 @@ variable "azure_vm_timezone" {
   type        = string
   default     = "W. Europe Standard Time"
 }
+
+variable "managed_disk_count" {
+  description = "Amount of managed disks to attach to a VM"
+  type        = string
+  default     = 0
+}
