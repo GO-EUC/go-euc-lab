@@ -32,7 +32,7 @@ resource "azurerm_virtual_machine" "AzureVM" {
     managed_disk_id = "${azurerm_managed_disk.manageddisk[count.index].id}"
     create_option   = "Attach"
     lun             = 1
-    disk_size_gb    = "${azurerm_managed_disk.manageddisk[count.indesk].disk_size_gb}"
+    disk_size_gb    = "${azurerm_managed_disk.manageddisk[count.index].disk_size_gb}"
   }
   os_profile {
     computer_name  = "${var.vm_name}-${count.index + 1}"
