@@ -1,5 +1,5 @@
 resource "azurerm_managed_disk" "manageddisk" {
-  count                 = var.managed_disk_enabled != null ? true : false
+  count                 = var.managed_disk_enabled = null ? true : false
   name                  = "${var.vm_name}-${var.vm_count}-manageddisk"
   location = var.azure_location
   resource_group_name = var.azure_resource_group_name
