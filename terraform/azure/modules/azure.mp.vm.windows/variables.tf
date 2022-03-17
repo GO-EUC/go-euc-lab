@@ -96,5 +96,5 @@ variable "azure_vm_timezone" {
 variable "managed_disk_enabled" {
   description = "Add a managed disk to the VM for data storage"
   type        = string
-  default     = "null"
+  default     = "0"
 }
