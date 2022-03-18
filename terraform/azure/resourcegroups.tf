@@ -29,3 +29,8 @@ resource "azurerm_resource_group" "SQL" {
   name     = "rg-${local.deploymentname}-${local.environment_abbreviations[terraform.workspace]}-sql"
   location = local.azure_location
 }
+
+resource "azurerm_resource_group" "EUCWorkers" {
+  name     = "rg-${local.deploymentname}-${local.environment_abbreviations[terraform.workspace]}-workers"
+  location = local.azure_location
+}
