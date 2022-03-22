@@ -67,6 +67,7 @@ steps:
       $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
       $terraformVariable += "devops_token=`"$(devops_token)`""
       $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+      $terraformVariable += "devops_project=$(System.TeamProject)"
 
       switch ("${{ parameters.azureDelivery }}") {
         "None" {$delivery = "none"}
