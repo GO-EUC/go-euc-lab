@@ -20,7 +20,7 @@ resource "azurerm_container_group" "docker" {
     memory = "2"
 
     environment_variables = {
-      AZP_URL        = "https://dev.azure.com/${var.devops_orgname}"
+      AZP_URL        = "${var.devops_url}"
       AZP_TOKEN      = "${var.devops_token}"
       AZP_AGENT_NAME = "${local.environment_abbreviations[terraform.workspace]}-${random_integer.agent.result}"
       AZP_POOL       = azuredevops_agent_pool.pool.name
