@@ -71,10 +71,9 @@ variable "azure_tenant_id" {
   sensitive = true
 }
 
-variable "devops_orgname" {
+variable "devops_url" {
   type        = string
-  description = "Azure DevOps oranization name."
-  default     = "go-euc"
+  description = "Azure DevOps url, based on buildin system strings"
 }
 
 variable "devops_token" {
