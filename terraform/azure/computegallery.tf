@@ -74,7 +74,7 @@ resource "azurerm_shared_image" "w1021h1-avd" {
 }
 
 resource "azurerm_shared_image" "w1020h2-avd" {
-  name                   = "img-w1021h1"
+  name                   = "img-w1021h2"
   gallery_name           = azurerm_shared_image_gallery.azurecomputegallery.name
   resource_group_name    = azurerm_resource_group.EUCWorkers.name
   location               = azurerm_resource_group.EUCWorkers.location
@@ -109,7 +109,7 @@ resource "azurerm_shared_image" "w101909-avd" {
 
 
 resource "azurerm_shared_image" "w1121h2" {
-  name                   = "img-w1021h2"
+  name                   = "img-w1121h2"
   gallery_name           = azurerm_shared_image_gallery.azurecomputegallery.name
   resource_group_name    = azurerm_resource_group.EUCWorkers.name
   location               = azurerm_resource_group.EUCWorkers.location
