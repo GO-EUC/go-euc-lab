@@ -26,9 +26,14 @@ module "ManagementServer" {
   azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
   azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
   azure_subnet_name              = azurerm_subnet.backend.name
-
-  managed_disk_enabled = true
   
+  managed_disks = [{ 
+      name = "data"
+      storage_account_type = "Standard_LRS"
+      create_option = "Empty"
+      disk_size_gb = 20
+    }]
+
   local_admin_password = azurerm_key_vault_secret.admin.value
   local_admin          = azurerm_key_vault_secret.admin.name
 
