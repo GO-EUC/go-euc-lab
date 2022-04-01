@@ -27,12 +27,16 @@ resource "azurerm_virtual_machine" "AzureVM" {
     managed_disk_type = var.azure_mananaged_disk_type
   }
 
-  storage_data_disk {
-    name            = azurerm_managed_disk.manageddisk[0].name
-    managed_disk_id = azurerm_managed_disk.manageddisk[0].id
-    create_option   = "Attach"
-    lun             = 1
-    disk_size_gb    = azurerm_managed_disk.manageddisk[0].disk_size_gb
+
+  dynamic "storage_data_disk" {
+    for_each = azurerm_managed_disk.manageddisk
+    content {
+        name            = storage_data_disk.value.name
+        managed_disk_id = storage_data_disk.value.id
+        create_option   = "Attach"
+        lun             = storage_data_disk.key + 1
+        disk_size_gb    = storage_data_disk.value.disk_size_gb
+    }
   }
 
   os_profile {
