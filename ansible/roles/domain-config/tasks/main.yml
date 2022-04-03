@@ -1,3 +1,11 @@
+- name: Ensure AD Services is in a running state
+  win_service:
+    name: NTDS 
+    state: started
+  register: ntds
+  until: ntds.state == "running"
+  retries: 30
+  delay: 30
 
 - name: Check for ActiveDirectory DSC Powershell module
   win_psmodule:
