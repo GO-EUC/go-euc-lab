@@ -1,0 +1,45 @@
+---
+
+# Patrick van den Born
+# TO-DO:
+#     - Adding the desired state part
+#     - Testing in Sandbox etc
+
+# Patrick van den Born 5th april 2022: Need to change this peace, so latest URL is grabbed from https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117
+- name: Extract "Office Deployment Tool"
+  ansible.windows.win_package:
+    path: https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_14931-20120.exe
+    creates_path: C:\ODTSetup
+    arguments: /extract:C:\ODTSetup /quiet
+
+- name: Download "Office Deployment Tool" from Microsoft
+  get_url:
+    url: https://raw.githubusercontent.com/GO-EUC/go-euc-lab/main/ansible/roles/microsoft365/xml/GO-EUC.yml
+    dest: C:\ODTSetup\GO-EUC.yml
+
+- name: Install "Microsoft 365 Apps for Enterprise - Semi-Anual enterprise channel"
+  ansible.windows.win_package:
+    path: C:\ODTSetup\setup.exe
+    arguments: /configure C:\ODTSetup\GO-EUC.yml
+
+#Details from Pieter Wigleven here - https://twitter.com/PieterWigleven/status/1280554361739833345
+- name: Install 10 day testing license from Pieter Wigleven 
+  ansible.windows.win_package:
+    chdir: C:\Program Files\Microsoft Office\Office16
+    path: C:\Windows\system32\cscript.exe
+    arguments: OSPP.VBS /inpkey:DRNV7-VGMM2-B3G9T-4BF84-VMFTK
+
+- name: M365 - Disable Activation UI
+  ansible.windows.win_regedit:
+    path: HKLM:\Software\Microsoft\Office\16.0\Common\Licensing
+    name: DisableActivationUI
+    data: 1
+    type: dword
+
+#The Accept EULA needs to be in the User GPO. Since this an user setting
+- name: M365 - Accept EULA
+  ansible.windows.win_regedit:
+    path: HKCU:\Software\Microsoft\Office\16.0\Registration
+    name: AcceptAllEulas
+    data: 1
+    type: dword
