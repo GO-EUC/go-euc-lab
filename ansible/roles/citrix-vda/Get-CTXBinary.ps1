@@ -26,6 +26,9 @@
   .PARAMETER VDAType
    Defaults to server. Options: "workstation" or "server"
 
+  .EXAMPLE
+   .\Get-CTXBinary.ps1 -MyCitrixUsername "usernameplain" -MyCitrixPassword "passwordplain" -DownloadPath "D:\Temp" -VDAVersion "2112" -VDAType "server" -CitrixEULAAccept $true
+
 #>
 [cmdletbinding()]
 Param(
