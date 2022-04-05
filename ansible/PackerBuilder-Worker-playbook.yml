@@ -8,20 +8,10 @@
 # ╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╭━╯┃
 # ╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╱╰━━╯
 
-- hosts: all
-
-# 
-
-# Download most recent VDA
-
-# Download VDA preq
-
-# Install most recent VDA
-
-# Download Microsoft Office Setup
-
-# Download GO-EUC XML
-
-# Citrix Optimizer
-
-# BIS-F Optimization
+- name: Packer Worker Playbook
+  hosts: all
+  roles:
+  - citrix-vda
+  - microsoft365apps
+  - citrix-optimizer
+  - bis-f
