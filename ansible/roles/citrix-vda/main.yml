@@ -28,7 +28,12 @@
   ansible.windows.win_reboot:
     reboot_timeout: 3600
 
-# DOWNLOAD THE VDA NEEDS TO BE ADDED
+# Use Ryan Butler GIT for downloading the VDA
+- name: Git checkout
+  ansible.builtin.git:
+    repo: 'https://foosball.example.org/path/to/repo.git'
+    dest: /srv/checkout
+    version: release-0.22
 
 # Next one needs to be checked of escape chars and var needs to be added
 - name: Install Citrix VDA 2203 
