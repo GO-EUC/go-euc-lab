@@ -67,8 +67,8 @@ The following properties are required in the backend configuration:
 ## Primary contributors
 This project is maintained by the following GO-EUC members:
 
-  * [Anton van Pelt](https://www.go-euc.com/members/anton-van-pelt/)
-  * [Patrick van den Bron](https://www.go-euc.com/members/patrick-van-den-born/)
+  * [Anton van Pelt](https://www.linkedin.com/in/antonvanpelt/?originalSubdomain=nl)
+  * [Patrick van den Born](https://www.go-euc.com/members/patrick-van-den-born/)
   * [Tom de Jong](https://www.go-euc.com/members/tom-de-jong/)
   * [Ryan Ververs-Bijkerk](https://www.go-euc.com/members/ryan-ververs-bijkerk/)
 
