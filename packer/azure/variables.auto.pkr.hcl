@@ -172,3 +172,8 @@ variable "compute_gallery_resource_group" {
   type      = string
   default   = "infra"
 }
+
+variable "BuildSourcesDirectory" {
+  description = "Input form Azure DevOps pipeline $(Build.SourcesDirectory)"
+  type        = string
+}
