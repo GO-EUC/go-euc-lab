@@ -3,6 +3,13 @@
     src: LoadGenRunAsProfiles.xml
     dest: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
 
+- name: Generate password
+  win_command: '"C:\Program Files\LoadGen\LoadGen Director\Resources\AutoUpdater.exe" -Encrypt "{{ansible_password}}"'
+  register: password_generation
+
+- set_fact:
+    loadgen_password: "{{ password_generation.stdout | trim }}"
+
 - name: Set the LoadGen RunAsProfiles configuration property profileName
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
@@ -42,7 +49,7 @@
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Username']"
-   fragment: "{{ ansible_password }}"
+   fragment: "{{ loadgen_password }}"
    type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property Workgroup

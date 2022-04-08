@@ -14,7 +14,6 @@ datasource_table_smd_create_on_load_test: true
 
 
 profile_name: GO-Admin
-profile_username: flow-admin
 profile_workgroup: false 
 
 
