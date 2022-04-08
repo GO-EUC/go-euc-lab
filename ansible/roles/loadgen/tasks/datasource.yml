@@ -8,7 +8,7 @@
   register: password_generation
 
 - set_fact:
-    loadgen_password: "{{ password_generation.stdout | trim }} "
+    loadgen_password: "{{ password_generation.stdout | trim }}"
 
 - name: Set the LoadGen Datasources configuration property DatasourceName
   win_xml:
