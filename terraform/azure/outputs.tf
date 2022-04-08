@@ -25,7 +25,7 @@ output "sql_admin" {
 
 output "sql_server" {
   description = "Infra SQL server name"
-  value       = azurerm_mssql_server.sql.name
+  value       = azurerm_mssql_server.sql.fully_qualified_domain_name
 }
 
 output "sql_database" {
