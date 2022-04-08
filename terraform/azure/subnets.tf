@@ -6,6 +6,7 @@ resource "azurerm_subnet" "backend" {
   virtual_network_name                           = azurerm_virtual_network.AzurevNet.name
   address_prefixes                               = [local.infra_subnet_cidr[terraform.workspace]]
   enforce_private_link_endpoint_network_policies = true
+  service_endpoints                              = ["Microsoft.Sql"]
 }
 
 resource "azurerm_subnet" "docker" {
