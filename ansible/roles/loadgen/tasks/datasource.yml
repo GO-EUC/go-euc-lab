@@ -3,6 +3,13 @@
     src: LoadGenDatasources.xml
     dest: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
 
+- name: Generate password
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -Encrypt "{{sql_password}}"'
+  register: password_generation
+
+- set_fact:
+    loadgen_password: "{{ password_generation.stdout }} | trim"
+
 - name: Set the LoadGen Datasources configuration property DatasourceName
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
@@ -35,7 +42,7 @@
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
    xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='Password']"
-   fragment: "{{ sql_password }}"
+   fragment: "{{ loadgen_password }}"
    type: text
 
 - name: Set the LoadGen Datasources configuration property UserId
