@@ -4,7 +4,7 @@
     dest: C:\ProgramData\LoadGen\Director\LoadGenDatasources.xml
 
 - name: Generate password
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -Encrypt "{{sql_password}}"'
+  win_command: '"C:\Program Files\LoadGen\LoadGen Director\Resources\AutoUpdater.exe" -Encrypt "{{sql_password}}"'
   register: password_generation
 
 - set_fact:
