@@ -13,17 +13,21 @@ resource "azurerm_container_group" "docker" {
   network_profile_id = azurerm_network_profile.docker.id
   os_type            = "Linux"
 
-  container {
-    name   = "azure-devops-agent"
-    image  = "goeuc/ado-agent:latest"
-    cpu    = "1"
-    memory = "2"
+  
+  dynamic "container" {
+    for_each = range(var.devops_agents)
+    content {
+      name   = "azure-devops-agent${container.key + 1}"
+      image  = "goeuc/ado-agent:latest"
+      cpu    = "1"
+      memory = "1"
 
-    environment_variables = {
-      AZP_URL        = "https://dev.azure.com/${var.devops_orgname}"
-      AZP_TOKEN      = "${var.devops_token}"
-      AZP_AGENT_NAME = "${local.environment_abbreviations[terraform.workspace]}-${random_integer.agent.result}"
-      AZP_POOL       = azuredevops_agent_pool.pool.name
+      environment_variables = {
+        AZP_URL        = "https://dev.azure.com/${var.devops_orgname}"
+        AZP_TOKEN      = "${var.devops_token}"
+        AZP_AGENT_NAME = "${local.environment_abbreviations[terraform.workspace]}-${random_integer.agent.result}"
+        AZP_POOL       = azuredevops_agent_pool.pool.name
+      }
     }
   }
 

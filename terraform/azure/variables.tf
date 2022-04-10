@@ -88,6 +88,12 @@ variable "devops_pool" {
   description = "Azure DevOps pool name."
 }
 
+variable "devops_agents" {
+  type        = number
+  description = "Azure DevOps Agents."
+  default     = 3
+}
+
 variable "devops_project" {
   type        = string
   description = "Azure DevOps project name."
