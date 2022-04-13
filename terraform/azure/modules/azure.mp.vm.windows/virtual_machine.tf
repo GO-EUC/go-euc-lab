@@ -27,6 +27,18 @@ resource "azurerm_virtual_machine" "AzureVM" {
     managed_disk_type = var.azure_mananaged_disk_type
   }
 
+  
+  dynamic "storage_data_disk" {
+    for_each = azurerm_managed_disk.managed_disks
+    content {
+      name            = azurerm_managed_disk.managed_disks[storage_data_disk.key].name
+      managed_disk_id = azurerm_managed_disk.managed_disks[storage_data_disk.key].id
+      create_option   = "Attach"
+      lun             = storage_data_disk.key + 1
+      disk_size_gb    = azurerm_managed_disk.managed_disks[storage_data_disk.key].disk_size_gb
+    }
+  }
+
   os_profile {
     computer_name  = "${var.vm_name}-${count.index + 1}"
     admin_username = var.local_admin

@@ -100,8 +100,12 @@ variable "azure_vm_timezone" {
   default     = "W. Europe Standard Time"
 }
 
-variable "azure_cidr_host_start" {
-  description = "Start of CIDR host"
-  type        = number
-  default     = 1
+variable "managed_disks" {
+  description = "Add a managed disk to the VM for data storage"
+  type        = list(object({
+      storage_account_type = string
+      create_option = string
+      disk_size_gb = number
+  }))
+  default     = []
 }
