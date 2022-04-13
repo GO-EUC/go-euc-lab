@@ -72,7 +72,6 @@ variable "azure_image_sku" {
   description = "SKU for Windows Image"
   type        = string
   default     = "2022-Datacenter"
-
 }
 
 variable "azure_mananaged_disk_type" {
@@ -98,6 +97,11 @@ variable "azure_vm_timezone" {
   description = "Time zone of Windows VM https://jackstromberg.com/2017/01/list-of-time-zones-consumed-by-azure/"
   type        = string
   default     = "W. Europe Standard Time"
+}
+
+variable "azure_cidr_host_start" {
+  type        = number
+  default     = 0
 }
 
 variable "managed_disks" {
