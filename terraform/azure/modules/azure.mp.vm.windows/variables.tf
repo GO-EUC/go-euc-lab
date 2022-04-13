@@ -93,8 +93,12 @@ variable "azure_vm_timezone" {
   default     = "W. Europe Standard Time"
 }
 
-variable "managed_disk_enabled" {
+variable "managed_disks" {
   description = "Add a managed disk to the VM for data storage"
-  type        = string
-  default     = "null"
+  type        = list(object({
+      storage_account_type = string
+      create_option = string
+      disk_size_gb = number
+  }))
+  default     = []
 }
