@@ -18,7 +18,7 @@ locals {
   ad_domain_fqdn = "go.euc" #Active Directory Domain Name
 
   #geographical details about Azure Datacenter
-  azure_location = "westeurope"
+  azure_location = "eastus"
 
   #network locals
   infra_cidr = {
