@@ -4,6 +4,7 @@ module "cloudconnectors" {
   vm_name  = "${var.workspace}-cc"
 
   azure_resource_group_name = azurerm_resource_group.CVADs.name
+  azure_location            = var.location
 
   azure_vnet_name                = var.azure_vnet_name
   azure_vnet_resource_group_name = var.azure_vnet_resource_group_name
