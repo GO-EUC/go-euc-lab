@@ -22,7 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.8 \
     python3-pip \
     ansible \
+    gnupg \
     wget \
+    xorriso \
+    mkisofs \
+    whois \
     apt-transport-https \
   && rm -rf /var/lib/apt/lists/*
 
@@ -44,6 +48,15 @@ RUN dpkg -i packages-microsoft-prod.deb
 
 RUN apt-get update
 RUN apt-get install -y powershell
+
+# Hasicorp Packer
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+RUN apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+RUN sudo apt-get update && apt-get install packer
+
+# Hasicorp Terraform
+RUN apt-get update && apt-get install terraform
+
 
 # Azure DevOps Agent
 ARG TARGETARCH=amd64
