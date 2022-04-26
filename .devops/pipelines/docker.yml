@@ -16,7 +16,7 @@ steps:
   inputs:
     repository: '$(imageName)'
     command: 'build'
-    Dockerfile: 'docker/dockerfile'
+    Dockerfile: 'docker/devops-agent/dockerfile'
     tags: |
       latest
       $(Build.BuildId)
