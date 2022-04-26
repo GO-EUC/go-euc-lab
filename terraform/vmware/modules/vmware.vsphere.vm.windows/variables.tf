@@ -36,6 +36,12 @@ variable "vm_disks" {
   }]
 }
 
+variable "firmware" {
+  description = "Boot firmware of the VM, Terraform default is bios, this case needs to be efi."
+  type        = string
+  default     = "efi"
+}
+
 variable "vm_guest_id" {
   description = "GuestID"
   type        = string

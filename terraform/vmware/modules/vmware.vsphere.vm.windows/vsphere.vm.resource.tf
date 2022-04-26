@@ -8,6 +8,8 @@ resource "vsphere_virtual_machine" "vm_static" {
   memory   = var.vm_memory
   guest_id = var.vm_guest_id
 
+  firmware = var.firmware
+
   scsi_type = data.vsphere_virtual_machine.template.scsi_type
 
   network_interface {
