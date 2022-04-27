@@ -37,7 +37,7 @@ module "CVADs" {
   count    = local.delivery_solutions[var.delivery] == "cvads" ? 1 : 0
   source = "./delivery/cvads"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]
@@ -56,7 +56,7 @@ module "AVD" {
   count    = local.delivery_solutions[var.delivery] == "avd" ? 1 : 0
   source = "./delivery/avd"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]
@@ -68,7 +68,7 @@ module "HorizonC" {
   count    = local.delivery_solutions[var.delivery] == "horizonc" ? 1 : 0
   source = "./delivery/horizonc"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]

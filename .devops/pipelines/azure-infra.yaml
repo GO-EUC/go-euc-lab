@@ -8,6 +8,7 @@ parameters:
   - Patrick
   - Ryan
   - Tom
+  - Eltjo
 - name: azureWorkspace
   displayName: Workspace
   type: string
@@ -29,6 +30,12 @@ parameters:
   values:
   - Create
   - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
 
 trigger:
 - none

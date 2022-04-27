@@ -1,6 +1,6 @@
 resource "azurerm_bastion_host" "bastion" {
   name                = "bastion-host-${local.environment_abbreviations[terraform.workspace]}"
-  location            = local.azure_location
+  location            = var.azure_region
   resource_group_name = azurerm_resource_group.Bastion.name
   ip_configuration {
     name                 = "bastion-ip-configuration-${local.environment_abbreviations[terraform.workspace]}"
