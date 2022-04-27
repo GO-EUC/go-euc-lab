@@ -51,7 +51,7 @@ build {
   }
 
   provisioner "ansible" {
-    playbook_file = "${var.BuildSourcesDirectory}/ansible/PackerBuild-Worker-playbook.yml"
+    playbook_file = "${var.BuildSourcesDirectory}/ansible/PackerBuilder-Worker-playbook.yml"
     user          = "packer"
     use_proxy     = false
     extra_arguments = [
