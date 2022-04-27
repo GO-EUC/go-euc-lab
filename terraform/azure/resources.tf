@@ -4,11 +4,13 @@ module "ActiveDirectory" {
   vm_name = "${local.environment_abbreviations[terraform.workspace]}-dc"
 
   azure_resource_group_name = azurerm_resource_group.InfraBackend.name
+  azure_location            = var.azure_region  
 
   azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
   azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
   azure_subnet_name              = azurerm_subnet.backend.name
   azure_cidr_host_start          = 10
+  
 
 
   local_admin_password = azurerm_key_vault_secret.admin.value
@@ -22,6 +24,7 @@ module "ManagementServer" {
   vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-mgnt"
 
   azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
+  azure_location                  = var.azure_region  
 
   azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
   azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
