@@ -76,6 +76,8 @@ steps:
       $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
       $terraformVariable += "devops_project=`"$(System.TeamProject)`""
       $terraformVariable += "devops_url=`"$(System.CollectionUri)`""
+      $terraformVariable += "azure_region=`"${{ parameters.azureRegion }}`""
+
 
       switch ("${{ parameters.azureDelivery }}") {
         "None" {$delivery = "none"}
