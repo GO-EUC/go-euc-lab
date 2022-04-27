@@ -6,97 +6,8 @@
     - azure.azcollection
 
   tasks:
-
-  - name: Prints two lines of messages, but only if there is an environment value set
-    ansible.builtin.debug:
-      msg:
-      - "Vault: {{ vault_name }}"
-      - "Resource group: {{ resource_group }}"
-  
-  - name: Get Key Vault by name
-    azure_rm_keyvault_info:
-      resource_group: "{{ resource_group }}"
-      name: "{{ vault_name }}"
-    register: keyvault
-
-  - name: Set key vault URI fact
-    set_fact: keyvaulturi="{{ keyvault['keyvaults'][0]['vault_uri'] }}"
-
-  - name: Get secret value
-    azure_rm_keyvaultsecret_info:
-      vault_uri: "{{ keyvaulturi }}"
-      name: "{{ ansible_user }}"
-    register: kvSecret
-
-  - name: set secret fact
-    set_fact: 
-      my_password: "{{ kvSecret['secrets'][0]['secret'] }}"
-      cashable: true
-
-  - name: Create group_vars directory
-    file:
-      path: group_vars
-      state: directory
-
-  - name: Create group_vars file
-    file:
-      path: group_vars/dc.yml
-      state: touch
-
-  - name: Output key ansible_password
-    lineinfile:
-      path: group_vars/dc.yml
-      line: 'ansible_password: "{{ my_password }}"'
-      
-  - name: Output key recovery_password
-    lineinfile:
-      path: group_vars/dc.yml
-      line: 'recovery_password: "{{ my_password }}"'
-
-  - name: Create group_vars file
-    file:
-      path: group_vars/mgnt.yml
-      state: touch
-
-  - name: Output key ansible_password
-    lineinfile:
-      path: group_vars/mgnt.yml
-      line: 'ansible_password: "{{ my_password }}"'
-
-  - name: Create group_vars file
-    file:
-      path: group_vars/cc.yml
-      state: touch
-
-  - name: Output key ansible_password
-    lineinfile:
-      path: group_vars/cc.yml
-      line: 'ansible_password: "{{ my_password }}"'
-
-  - name: Store Citrix Organization ID variable
-    lineinfile:
-      path: group_vars/cc.yml
-      line: "citrix_org_id: \"{{ lookup('env', 'citrix_org_id') }}\""
-
-  - name: Store Citrix Client ID variable
-    lineinfile:
-      path: group_vars/cc.yml
-      line: "citrix_client_id: \"{{ lookup('env', 'citrix_client_id') }}\""
-
-  - name: Store Citrix Client Secret variable
-    lineinfile:
-      path: group_vars/cc.yml
-      line: "citrix_client_secret: \"{{ lookup('env', 'citrix_client_secret') }}\""
-
-  - name: Store Citrix prefix variable
-    lineinfile:
-      path: group_vars/cc.yml
-      line: "prefix: \"{{ lookup('env', 'prefix') }}\""
-
-  - name: Store Branch variable
-    lineinfile:
-      path: group_vars/cc.yml
-      line: "branch: \"{{ lookup('env', 'branch') }}\""
+  - name: Start the Azure Key Vault actions
+    include_tasks: azure-keyvault.yml
 
 - name: Domain Controller
   hosts: dc
@@ -113,9 +24,12 @@
   hosts: mgnt
   roles:
   - domain-join
+  - visual-studio-code
   - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
+    domain_name: GO
+    domain_controller: "{{ groups['dc'][0] }}"
     domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm

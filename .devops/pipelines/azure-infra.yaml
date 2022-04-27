@@ -4,7 +4,6 @@ parameters:
   type: string
   values:
   - Anton
-  - Eltjo
   - Patrick
   - Ryan
   - Tom
@@ -77,7 +76,6 @@ steps:
       $terraformVariable += "devops_project=`"$(System.TeamProject)`""
       $terraformVariable += "devops_url=`"$(System.CollectionUri)`""
       $terraformVariable += "azure_region=`"${{ parameters.azureRegion }}`""
-
 
       switch ("${{ parameters.azureDelivery }}") {
         "None" {$delivery = "none"}

@@ -43,6 +43,13 @@ variable "azure_update_domain_count" {
   default     = "5"
 }
 
+variable "azure_vnet_allocation" {
+  description = "IP allocation of vNet"
+  type        = string
+  sensitive   = false
+  default     = "dynamic"
+}
+
 variable "azure_vnet_name" {
   description = "Name of vNET"
   type        = string
@@ -65,7 +72,6 @@ variable "azure_image_sku" {
   description = "SKU for Windows Image"
   type        = string
   default     = "2022-Datacenter"
-
 }
 
 variable "azure_mananaged_disk_type" {
@@ -91,4 +97,19 @@ variable "azure_vm_timezone" {
   description = "Time zone of Windows VM https://jackstromberg.com/2017/01/list-of-time-zones-consumed-by-azure/"
   type        = string
   default     = "W. Europe Standard Time"
+}
+
+variable "azure_cidr_host_start" {
+  type        = number
+  default     = 0
+}
+
+variable "managed_disks" {
+  description = "Add a managed disk to the VM for data storage"
+  type        = list(object({
+      storage_account_type = string
+      create_option = string
+      disk_size_gb = number
+  }))
+  default     = []
 }

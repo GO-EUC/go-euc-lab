@@ -15,4 +15,4 @@ terraform.rc
 *.lock*
 
 # Packer ignore
-*.pkrvars.hcl
+#*.pkrvars.hcl
