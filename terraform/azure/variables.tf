@@ -17,9 +17,6 @@ locals {
   deploymentname = "golab"
   ad_domain_fqdn = "go.euc" #Active Directory Domain Name
 
-  #geographical details about Azure Datacenter
-  azure_location = "westeurope"
-
   #network locals
   infra_cidr = {
     default = "10.100.0.0/16"
@@ -44,6 +41,11 @@ locals {
     cards   = "10.200.25.0/24"
     flowers = "10.220.26.0/24"
   }
+}
+
+variable "azure_region" {
+  type    = string
+  default = "westeurope"
 }
 
 variable "delivery" {
