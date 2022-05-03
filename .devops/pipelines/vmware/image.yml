@@ -40,14 +40,14 @@ stages:
               Set-Content -Value $variables -Path packer/vmware/vsphere.pkrvars.hcl -Force
             workingDirectory: '$(Build.SourcesDirectory)'
 
-          - task: CmdLine@2
-            displayName: 'Packer init'
-            inputs:
-              script: 'packer init packer/vmware/windows/server/2022/.'
-              workingDirectory: '$(Build.SourcesDirectory)'
+        - task: CmdLine@2
+          displayName: 'Packer init'
+          inputs:
+            script: 'packer init packer/vmware/windows/server/2022/.'
+            workingDirectory: '$(Build.SourcesDirectory)'
 
-          - task: CmdLine@2
-            displayName: 'Packer build'
-            inputs:
-              script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
-              workingDirectory: '$(Build.SourcesDirectory)'
+        - task: CmdLine@2
+          displayName: 'Packer build'
+          inputs:
+            script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
+            workingDirectory: '$(Build.SourcesDirectory)'
