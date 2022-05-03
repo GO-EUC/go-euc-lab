@@ -2,17 +2,13 @@ parameters:
 - name: variable_group
   default: ''
 
-name: '$(Date:yyMM)$(Rev:.r)'
-
-trigger: none
-
-variables:
-- group: ${{ parameters.variable_group }}
-
 stages:
   - stage: ImageBuilder
     displayName: "Building Images"
-    pool: 'GO-EUC Linux'
+    
+    variables:
+    - group: ${{parameters.variable_group}}
+
     jobs:
       - job: Build
         workspace:
