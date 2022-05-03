@@ -4,7 +4,7 @@ trigger:
 pool: GO-EUC Linux
 
 jobs:
-- template: /vmware/image.yml
+- template: .devops/pipelines/vmware/image.yml
   parameters:
     variable_group: VMware
 
