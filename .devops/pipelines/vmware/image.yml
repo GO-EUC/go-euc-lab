@@ -37,6 +37,9 @@ stages:
               $variables += "vsphere_network=`"$(vsphere_network)`""
               $variables += "vsphere_folder=`"$(vsphere_folder)`""
 
+              $variables += "iso_path=`"$(iso_path)`""
+              $variables += "iso_file=`"$(iso_file)`""
+
               Set-Content -Value $variables -Path packer/vmware/vsphere.pkrvars.hcl -Force
             workingDirectory: '$(Build.SourcesDirectory)'
 
