@@ -404,7 +404,7 @@ variable "communicator_timeout" {
 variable "scripts" {
   type        = list(string)
   description = "A list of scripts and their relative paths to transfer and run."
-  default     = []
+  default     = ["packer/vmware/scripts/windows/windows-prepare.ps1"]
 }
 
 variable "inline" {
