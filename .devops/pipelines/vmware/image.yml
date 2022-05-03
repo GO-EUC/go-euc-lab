@@ -1,6 +1,6 @@
 parameters:
 - name: variable_group
-  default: ''
+  type: string
 
 stages:
   - stage: ImageBuilder

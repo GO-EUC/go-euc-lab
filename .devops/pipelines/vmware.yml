@@ -3,8 +3,8 @@ trigger:
 
 pool: GO-EUC Linux
 
-jobs:
-- template: vmware/image.yml
+extends:
+  template: vmware/image.yml
   parameters:
     variable_group: VMware
 
