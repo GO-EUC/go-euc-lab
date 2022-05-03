@@ -1,0 +1,24 @@
+trigger:
+- none
+
+pool: GO-EUC Linux
+
+jobs:
+- template: /vmware/image.yml
+  parameters:
+    variable_group: VMware
+
+# - template: /vmware/domain.yml
+#   parameters:
+#     name: Linux
+#     vmImage: 'ubuntu-latest'
+
+# - template: /vmware/infra.yml
+#   parameters:
+#     name: Linux
+#     vmImage: 'ubuntu-latest'
+
+# - template: /vmware/ansible.yml
+#   parameters:
+#     name: Linux
+#     vmImage: 'ubuntu-latest'
