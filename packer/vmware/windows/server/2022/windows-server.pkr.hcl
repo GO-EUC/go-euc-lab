@@ -77,7 +77,7 @@ source "vsphere-iso" "windows-server-standard-core" {
   // Removable Media Settings
   iso_paths    = ["[${var.common_iso_datastore}] ${var.iso_path}/${var.iso_file}", "[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
   cd_files = [
-    "${path.cwd}/packer/scripts/${var.vm_guest_os_family}/"
+    "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
   ]
   cd_content = {
     "autounattend.xml" = templatefile("data/autounattend.pkrtpl.hcl", {
@@ -166,7 +166,7 @@ source "vsphere-iso" "windows-server-standard-dexp" {
   // Removable Media Settings
   iso_paths    = ["[${var.common_iso_datastore}] ${var.iso_path}/${var.iso_file}", "[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
   cd_files = [
-    "${path.cwd}/packer/scripts/${var.vm_guest_os_family}/"
+    "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
   ]
   cd_content = {
     "autounattend.xml" = templatefile("data/autounattend.pkrtpl.hcl", {
@@ -255,7 +255,7 @@ source "vsphere-iso" "windows-server-datacenter-core" {
   // Removable Media Settings
   iso_paths    = ["[${var.common_iso_datastore}] ${var.iso_path}/${var.iso_file}", "[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
   cd_files = [
-    "${path.cwd}/packer/scripts/${var.vm_guest_os_family}/"
+    "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
   ]
   cd_content = {
     "autounattend.xml" = templatefile("data/autounattend.pkrtpl.hcl", {
@@ -346,7 +346,7 @@ source "vsphere-iso" "windows-server-datacenter-dexp" {
   // Removable Media Settings
   iso_paths    = ["[${var.common_iso_datastore}] ${var.iso_path}/${var.iso_file}", "[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
   cd_files = [
-    "${path.cwd}/packer/scripts/${var.vm_guest_os_family}/"
+    "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
   ]
   cd_content = {
     "autounattend.xml" = templatefile("data/autounattend.pkrtpl.hcl", {
