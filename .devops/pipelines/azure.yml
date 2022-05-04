@@ -45,11 +45,8 @@ extends:
     azureBuild: ${{ parameters.azureBuild }}
     azureRegion: ${{ parameters.azureRegion }}
 
+extends:
   template: azure/image.yml
   parameters:
     azureEnvironment: ${{ parameters.azureEnvironment }}
     azureWorkspace: ${{ parameters.azureWorkspace }}
-
-  template: azure/ansible.yml
-  parameters:
-    variable_group: VMware
