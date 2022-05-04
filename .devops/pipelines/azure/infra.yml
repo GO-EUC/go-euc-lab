@@ -1,4 +1,7 @@
 parameters:
+- name: azure_build
+  type: string
+
 - name: azure_backend
   type: string
 
@@ -14,9 +17,6 @@ parameters:
 - name: azure_tenant_id
   type: string
 
-- name: devops_token
-  type: string
-
 - name: azure_region
   type: string
 
@@ -24,6 +24,12 @@ parameters:
   type: string
 
 - name: azure_workspace
+  type: string
+
+- name: devops_token
+  type: string
+
+- name: devops_pool
   type: string
 
 stages:
@@ -104,14 +110,14 @@ stages:
           inputs:
             script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
             workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-          condition: eq('${{ parameters.azureBuild }}', 'Create')
+          condition: eq('${{ parameters.azure_build }}', 'Create')
 
         - task: CmdLine@2
           displayName: Terraform plan destroy
           inputs:
             script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
             workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-          condition: eq('${{ parameters.azureBuild }}', 'Destroy')
+          condition: eq('${{ parameters.azure_build }}', 'Destroy')
 
         - task: CmdLine@2
           displayName: Terraform apply

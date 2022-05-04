@@ -48,6 +48,7 @@ pr: none
 stages:
 - template: azure/infra.yml
   parameters:
+    azure_build: ${{ parameters.azureBuild }}
     azure_backend: $(azure_backend)
     azure_client_id: $(azure_client_id)
     azure_client_secret: $(azure_client_secret)
@@ -57,6 +58,7 @@ stages:
     azure_delivery: ${{ parameters.azureDelivery }}
     azure_workspace: ${{ parameters.azureWorkspace }}
     devops_token: $(devops_token)
+    devops_pool: ${{ parameters.azureEnvironment }}
 
 # - template: azure/image.yml
 #   parameters:
