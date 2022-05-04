@@ -36,8 +36,8 @@ parameters:
   - westeurope
   - eastus
 
-extends:
-  template: azure/infra.yml
+stages:
+- template: azure/infra.yml
   parameters:
     azureEnvironment: ${{ parameters.azureEnvironment }}
     azureWorkspace: ${{ parameters.azureWorkspace }}
@@ -45,8 +45,7 @@ extends:
     azureBuild: ${{ parameters.azureBuild }}
     azureRegion: ${{ parameters.azureRegion }}
 
-extends:
-  template: azure/image.yml
+- template: azure/image.yml
   parameters:
     azureEnvironment: ${{ parameters.azureEnvironment }}
     azureWorkspace: ${{ parameters.azureWorkspace }}
