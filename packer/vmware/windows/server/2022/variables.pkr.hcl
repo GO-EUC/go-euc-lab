@@ -411,8 +411,6 @@ variable "inline" {
   type        = list(string)
   description = "A list of commands to run."
   default     = [
-    "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))",
-    "choco feature enable -n allowGlobalConfirmation",
     "Get-EventLog -LogName * | ForEach { Clear-EventLog -LogName $_.Log }"
   ]
 }
