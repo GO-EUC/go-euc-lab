@@ -41,7 +41,7 @@ stages:
     displayName: "Building Infra"
     
     variables:
-    - group: ${{parameters.variable_group}}
+    - group: ${{parameters.azureEnvironment}}
 
     jobs:
       - job: Build
