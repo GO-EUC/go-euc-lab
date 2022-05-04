@@ -40,7 +40,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 trigger: none
-pull: none
+pr: none
 
 stages:
 - template: azure/infra.yml
