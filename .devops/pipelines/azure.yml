@@ -51,7 +51,7 @@ stages:
     azureBuild: ${{ parameters.azureBuild }}
     azureRegion: ${{ parameters.azureRegion }}
 
-- template: azure/image.yml
-  parameters:
-    azureEnvironment: ${{ parameters.azureEnvironment }}
-    azureWorkspace: ${{ parameters.azureWorkspace }}
+# - template: azure/image.yml
+#   parameters:
+#     azureEnvironment: ${{ parameters.azureEnvironment }}
+#     azureWorkspace: ${{ parameters.azureWorkspace }}
