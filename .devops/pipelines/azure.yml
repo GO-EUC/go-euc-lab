@@ -46,25 +46,32 @@ trigger: none
 pr: none
 
 stages:
-- template: azure/infra.yml
-  parameters:
-    azure_build: ${{ parameters.azureBuild }}
-    azure_backend: $(azure_backend)
-    azure_client_id: $(azure_client_id)
-    azure_client_secret: $(azure_client_secret)
-    azure_subscription_id: $(azure_subscription_id)
-    azure_tenant_id: $(azure_tenant_id)
-    azure_region: ${{ parameters.azureRegion }}
-    azure_delivery: ${{ parameters.azureDelivery }}
-    azure_workspace: ${{ parameters.azureWorkspace }}
-    devops_token: $(devops_token)
-    devops_pool: ${{ parameters.azureEnvironment }}
+- stage: build
+  jobs:
+  - job: infra
+    steps:  
+    - template: azure/infra.yml
+      parameters:
+        azure_build: ${{ parameters.azureBuild }}
+        azure_backend: $(azure_backend)
+        azure_client_id: $(azure_client_id)
+        azure_client_secret: $(azure_client_secret)
+        azure_subscription_id: $(azure_subscription_id)
+        azure_tenant_id: $(azure_tenant_id)
+        azure_region: ${{ parameters.azureRegion }}
+        azure_delivery: ${{ parameters.azureDelivery }}
+        azure_workspace: ${{ parameters.azureWorkspace }}
+        devops_token: $(devops_token)
+        devops_pool: ${{ parameters.azureEnvironment }}
 
-- template: azure/image.yml
-  parameters:
-    devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-    azure_client_id: $(azure_client_id)
-    azure_client_secret: $(azure_client_secret)
-    azure_subscription_id: $(azure_subscription_id)
-    azure_tenant_id: $(azure_tenant_id)
-    environment: ${{ parameters.azureWorkspace }}
+  - job: image
+    dependsOn: infra
+    steps:
+    - template: azure/image.yml
+      parameters:
+        devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+        azure_client_id: $(azure_client_id)
+        azure_client_secret: $(azure_client_secret)
+        azure_subscription_id: $(azure_subscription_id)
+        azure_tenant_id: $(azure_tenant_id)
+        environment: ${{ parameters.azureWorkspace }}
