@@ -1,6 +1,40 @@
 parameters:
-- name: variable_group
+- name: azureEnvironment
+  displayName: Azure Environment
   type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureDelivery
+  displayName: Desktop Delivery Model
+  type: string
+  default: Citrix Virtual Apps & Desktop Services
+  values:
+  - None
+  - Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - VMware Horizon Cloud
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
 
 stages:
   - stage: InfraBuilder
