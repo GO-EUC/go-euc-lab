@@ -14,10 +14,18 @@ packer {
       source  = "github.com/hashicorp/vsphere"
     }
   }
+  
   required_plugins {
     windows-update = {
       version = ">= 0.14.0"
       source  = "github.com/rgl/windows-update"
+    }
+  }
+
+  required_plugins {
+    ansible = {
+      version = ">= 1.0.0"
+      source  = "github.com/hashicorp/ansible"
     }
   }
 }
