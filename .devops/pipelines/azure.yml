@@ -60,7 +60,11 @@ stages:
     devops_token: $(devops_token)
     devops_pool: ${{ parameters.azureEnvironment }}
 
-# - template: azure/image.yml
-#   parameters:
-#     azureEnvironment: ${{ parameters.azureEnvironment }}
-#     azureWorkspace: ${{ parameters.azureWorkspace }}
+- template: azure/image.yml
+  parameters:
+    devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+    azure_client_id: $(azure_client_id)
+    azure_client_secret: $(azure_client_secret)
+    azure_subscription_id: $(azure_subscription_id)
+    azure_tenant_id: $(azure_tenant_id)
+    environment: ${{ parameters.azureWorkspace }}
