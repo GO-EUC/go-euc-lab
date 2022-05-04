@@ -1,0 +1,95 @@
+parameters:
+- name: variable_group
+  type: string
+
+stages:
+  - stage: InfraBuilder
+    displayName: "Building Infra"
+    
+    variables:
+    - group: ${{parameters.variable_group}}
+
+    jobs:
+      - job: Build
+        workspace:
+          clean: all
+        steps:
+
+        - task: TerraformInstaller@0
+          displayName: Terraform download
+          inputs:
+            terraformVersion: 'latest'
+
+        - task: DownloadSecureFile@1
+          displayName: Download backend configuration
+          name: backend
+          inputs:
+            secureFile: $(azure_backend)
+        
+        - task: PowerShell@2
+          displayName: Terraform variables
+          inputs:
+            targetType: 'inline'
+            script: |
+              $terraformVariable = @()
+              $terraformVariable += "azure_client_id=`"$(azure_client_id)`""
+              $terraformVariable += "azure_client_secret=`"$(azure_client_secret)`""
+              $terraformVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
+              $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
+              $terraformVariable += "devops_token=`"$(devops_token)`""
+              $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+              $terraformVariable += "devops_project=`"$(System.TeamProject)`""
+              $terraformVariable += "devops_url=`"$(System.CollectionUri)`""
+              $terraformVariable += "azure_region=`"${{ parameters.azureRegion }}`""
+
+              switch ("${{ parameters.azureDelivery }}") {
+                "None" {$delivery = "none"}
+                "Citrix Virtual Apps & Desktop Services" {$delivery = "cvads"}
+                "Azure Virtual Desktop" {$delivery = "avd"}
+                "VMware Horizon Cloud" {$delivery = "horizonc"}
+              }
+
+              $terraformVariable += "delivery=`"$delivery`""
+
+              Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
+            workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+          - task: CmdLine@2
+            displayName: Terraform init
+            inputs:
+              script: | 
+                terraform init -backend-config=$(backend.secureFilePath) -input=false 
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+          - task: CmdLine@2
+            displayName: Terraform select or create workspace
+            inputs:
+              script: | 
+                terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+          - task: CmdLine@2
+            displayName: Terraform validate
+            inputs:
+              script: 'terraform validate'
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+          - task: CmdLine@2
+            displayName: Terraform plan
+            inputs:
+              script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+            condition: eq('${{ parameters.azureBuild }}', 'Create')
+
+          - task: CmdLine@2
+            displayName: Terraform plan destroy
+            inputs:
+              script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+            condition: eq('${{ parameters.azureBuild }}', 'Destroy')
+
+          - task: CmdLine@2
+            displayName: Terraform apply
+            inputs:
+              script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
+              workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'

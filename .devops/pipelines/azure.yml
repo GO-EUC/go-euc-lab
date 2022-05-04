@@ -1,0 +1,55 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureDelivery
+  displayName: Desktop Delivery Model
+  type: string
+  default: Citrix Virtual Apps & Desktop Services
+  values:
+  - None
+  - Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - VMware Horizon Cloud
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
+
+extends:
+  template: azure/infra.yml
+  parameters:
+    azureEnvironment: ${{ parameters.azureEnvironment }}
+    azureWorkspace: ${{ parameters.azureWorkspace }}
+    azureDelivery: ${{ parameters.azureDelivery }}
+    azureBuild: ${{ parameters.azureBuild }}
+    azureRegion: ${{ parameters.azureRegion }}
+
+  template: azure/image.yml
+  parameters:
+    azureEnvironment: ${{ parameters.azureEnvironment }}
+    azureWorkspace: ${{ parameters.azureWorkspace }}
+
+  template: azure/ansible.yml
+  parameters:
+    variable_group: VMware
