@@ -39,17 +39,24 @@ parameters:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+- group: ${{ parameters.azureEnvironment }}
+
 trigger: none
 pr: none
 
 stages:
 - template: azure/infra.yml
   parameters:
-    azureEnvironment: ${{ parameters.azureEnvironment }}
-    azureWorkspace: ${{ parameters.azureWorkspace }}
-    azureDelivery: ${{ parameters.azureDelivery }}
-    azureBuild: ${{ parameters.azureBuild }}
-    azureRegion: ${{ parameters.azureRegion }}
+    azure_backend: $(azure_backend)
+    azure_client_id: $(azure_client_id)
+    azure_client_secret: $(azure_client_secret)
+    azure_subscription_id: $(azure_subscription_id)
+    azure_tenant_id: $(azure_tenant_id)
+    azure_region: ${{ parameters.azureRegion }}
+    azure_delivery: ${{ parameters.azureDelivery }}
+    azure_workspace: ${{ parameters.azureWorkspace }}
+    devops_token: $(devops_token)
 
 # - template: azure/image.yml
 #   parameters:

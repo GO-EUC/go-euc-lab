@@ -1,25 +1,34 @@
 parameters:
-- name: azureEnvironment
+- name: azure_backend
   type: string
 
-- name: azureWorkspace
+- name: azure_client_id
   type: string
 
-- name: azureDelivery
+- name: azure_client_secret
   type: string
 
-- name: azureBuild
+- name: azure_subscription_id
   type: string
 
-- name: azureRegion
+- name: azure_tenant_id
+  type: string
+
+- name: devops_token
+  type: string
+
+- name: azure_region
+  type: string
+
+- name: azure_delivery
+  type: string
+
+- name: azure_workspace
   type: string
 
 stages:
   - stage: InfraBuilder
     displayName: "Building Infra"
-    
-    variables:
-    - group: ${{parameters.azureEnvironment}}
 
     jobs:
       - job: Build
@@ -40,7 +49,7 @@ stages:
           displayName: Download backend configuration
           name: backend
           inputs:
-            secureFile: $(azure_backend)
+            secureFile: ${{ parameters.azure_backend }}
         
         - task: PowerShell@2
           displayName: Terraform variables
@@ -48,17 +57,17 @@ stages:
             targetType: 'inline'
             script: |
               $terraformVariable = @()
-              $terraformVariable += "azure_client_id=`"$(azure_client_id)`""
-              $terraformVariable += "azure_client_secret=`"$(azure_client_secret)`""
-              $terraformVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
-              $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
-              $terraformVariable += "devops_token=`"$(devops_token)`""
-              $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+              $terraformVariable += "azure_client_id=`"${{ parameters.azure_client_id }}`""
+              $terraformVariable += "azure_client_secret=`"${{ parameters.azure_client_secret }}`""
+              $terraformVariable += "azure_subscription_id=`"${{ parameters.azure_subscription_id }}`""
+              $terraformVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
+              $terraformVariable += "devops_token=`"${{ parameters.devops_token }}`""
+              $terraformVariable += "devops_pool=`"${{ parameters.devops_pool }}`""
               $terraformVariable += "devops_project=`"$(System.TeamProject)`""
               $terraformVariable += "devops_url=`"$(System.CollectionUri)`""
-              $terraformVariable += "azure_region=`"${{ parameters.azureRegion }}`""
+              $terraformVariable += "azure_region=`"${{ parameters.azure_region }}`""
 
-              switch ("${{ parameters.azureDelivery }}") {
+              switch ("${{ parameters.azure_delivery }}") {
                 "None" {$delivery = "none"}
                 "Citrix Virtual Apps & Desktop Services" {$delivery = "cvads"}
                 "Azure Virtual Desktop" {$delivery = "avd"}
@@ -81,7 +90,7 @@ stages:
           displayName: Terraform select or create workspace
           inputs:
             script: | 
-              terraform workspace select ${{ lower(parameters.azureWorkspace) }} || terraform workspace new ${{ lower(parameters.azureWorkspace) }}
+              terraform workspace select ${{ lower(parameters.azure_workspace) }} || terraform workspace new ${{ lower(parameters.azure_workspace) }}
             workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
 
         - task: CmdLine@2
