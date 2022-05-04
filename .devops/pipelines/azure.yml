@@ -36,6 +36,12 @@ parameters:
   - westeurope
   - eastus
 
+pool:
+  vmImage: 'ubuntu-latest'
+
+trigger: none
+pull: none
+
 stages:
 - template: azure/infra.yml
   parameters:
