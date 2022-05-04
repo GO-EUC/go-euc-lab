@@ -47,6 +47,10 @@ stages:
       - job: Build
         workspace:
           clean: all
+        
+        pool:
+          vmImage: 'ubuntu-latest'
+
         steps:
 
         - task: TerraformInstaller@0
