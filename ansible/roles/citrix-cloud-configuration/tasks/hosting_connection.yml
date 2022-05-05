@@ -99,11 +99,6 @@
         Zone: "{{ citrix_zone_id }}"
   when: citrix_hypervisor_id == ""
 
-- name: debug post body of the hosting connection
-  ansible.builtin.debug:
-    msg: "{{ hosting_object }}"
-
-
 - name: Post Citrix Cloud hypervisor connection
   uri:
     url: https://api.cloud.com/cvad/manage/hypervisors
