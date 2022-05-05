@@ -151,10 +151,6 @@
       Subnets: [ "{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
   when: citrix_hypervisor_resource_id == ""
 
-- name: debug post body of the resource pool
-  ansible.builtin.debug:
-    msg: "{{ resource_object }}"
-
 - name: Post Citrix Cloud resource pool
   uri:
     url: https://api.cloud.com/cvad/manage/hypervisors/{{ citrix_hypervisor_id }}/resourcePools
