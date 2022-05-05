@@ -45,35 +45,42 @@ variables:
 trigger: none
 pr: none
 
+
 stages:
-- stage: infra_stage
+- stage: infra_build
+  diplayName: Building infrastrcuture
+  
+  pool:
+    vmImage: 'ubuntu-latest'
+  
   jobs:
-  - job: infra_job
-    steps:
-    - template: azure/infra.yml
-      parameters:
-        azure_build: ${{ parameters.azureBuild }}
-        azure_backend: $(azure_backend)
-        azure_client_id: $(azure_client_id)
-        azure_client_secret: $(azure_client_secret)
-        azure_subscription_id: $(azure_subscription_id)
-        azure_tenant_id: $(azure_tenant_id)
-        azure_region: ${{ parameters.azureRegion }}
-        azure_delivery: ${{ parameters.azureDelivery }}
-        azure_workspace: ${{ parameters.azureWorkspace }}
-        devops_token: $(devops_token)
-        devops_pool: ${{ parameters.azureEnvironment }}
+  - template: azure/infra.yml
+    parameters:
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
 
-- stage: image_stage
+- stage: image_build
+  displayName: Building image
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: infra_build
 
   jobs:
-  - job: image_job
-    steps:
-    - template: azure/image.yml
-      parameters:
-        devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-        azure_client_id: $(azure_client_id)
-        azure_client_secret: $(azure_client_secret)
-        azure_subscription_id: $(azure_subscription_id)
-        azure_tenant_id: $(azure_tenant_id)
-        environment: ${{ parameters.azureWorkspace }}
+  - template: azure/image.yml
+    parameters:
+      devops_pool: 
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      environment: ${{ parameters.azureWorkspace }}
