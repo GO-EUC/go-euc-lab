@@ -125,5 +125,5 @@ jobs:
 
         export azure_region="${{ parameters.azure_region }}"
 
-        ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory
+        ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory
       displayName: 'Execute ansible'
