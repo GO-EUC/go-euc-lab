@@ -33,7 +33,7 @@ parameters:
   type: string
 
 jobs:
-  - job: Build
+  - job: BuildInfra
     workspace:
       clean: all
     
