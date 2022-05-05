@@ -1,4 +1,6 @@
 parameters:
+  depends_on: []
+  
 - name: devops_pool
   type: string
   
@@ -16,9 +18,6 @@ parameters:
 
 - name: environment
   type: string
-
-- name: depends_on
-  default: []
 
 jobs:
   - job: BuildImage
