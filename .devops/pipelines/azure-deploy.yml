@@ -78,7 +78,6 @@ stages:
   jobs:
   - template: azure/image.yml
     parameters:
-      devops_pool: 
       azure_client_id: $(azure_client_id)
       azure_client_secret: $(azure_client_secret)
       azure_subscription_id: $(azure_subscription_id)

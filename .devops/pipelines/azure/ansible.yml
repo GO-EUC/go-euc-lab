@@ -1,0 +1,125 @@
+parameters:
+- name: azure_build
+  type: string
+
+- name: azure_backend
+  type: string
+
+- name: azure_client_id
+  type: string
+
+- name: azure_client_secret
+  type: string
+
+- name: azure_subscription_id
+  type: string
+
+- name: azure_tenant_id
+  type: string
+
+- name: azure_region
+  type: string
+
+- name: azure_delivery
+  type: string
+
+- name: azure_workspace
+  type: string
+
+- name: devops_token
+  type: string
+
+- name: devops_pool
+  type: string
+
+- name: citrix_client_id
+  type: string
+
+- name: citrix_client_secret
+  type: string
+
+- name: citrix_org_id
+  type: string
+
+jobs:
+  - job: ansible
+    steps:
+    - script: |
+        pip install --upgrade requests==2.20.1
+        pip install --upgrade azure-mgmt-monitor==0.5.2
+        apt-get -y install zip
+      displayName: 'Python pip upgrade'
+
+    - task: TerraformInstaller@0
+      displayName: Terraform download
+      inputs:
+        terraformVersion: 'latest'
+
+    - task: DownloadSecureFile@1
+      displayName: Download backend configuration
+      name: backend
+      inputs:
+        secureFile: ${{ parameters.azure_backend }}
+
+    - task: PowerShell@2
+      displayName: Terraform variables
+      inputs:
+        targetType: 'inline'
+        script: |
+          $terraformVariable = @()
+          $terraformVariable += "azure_client_id=`"${{ parameters.azure_client_id }}`""
+          $terraformVariable += "azure_client_secret=`"${{ parameters.azure_client_secret }}`""
+          $terraformVariable += "azure_subscription_id=`"${{ parameters.azure_subscription_id }}`""
+          $terraformVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
+          $terraformVariable += "devops_token=`"${{ parameters.devops_token }}`""
+          $terraformVariable += "devops_pool=`"${{ parameters.devops_pool }}`""
+
+          Set-Content -Value $terraformVariable -Path terraform.tfvars -Force
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+    - task: CmdLine@2
+      displayName: Terraform init
+      inputs:
+        script: | 
+          terraform init -backend-config=$(backend.secureFilePath) -input=false 
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+    - task: CmdLine@2
+      displayName: Terraform select or create workspace
+      inputs:
+        script: | 
+          terraform workspace select ${{ lower(parameters.azure_workspace) }} || terraform workspace new ${{ lower(parameters.azure_workspace) }}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+    - task: CmdLine@2
+      displayName: Terraform pull state
+      inputs:
+        script: 'terraform state pull > download.tfstate'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+
+    - task: PowerShell@2
+      displayName: Generate Ansible inventory file 
+      inputs:
+        filePath: '$(Build.Repository.LocalPath)/ansible/powershell/GenerateInventory.ps1'
+        arguments: '-StateFile $(Build.Repository.LocalPath)/terraform/azure/download.tfstate -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
+
+    - script:  ansible --version
+      displayName: 'Ansible version'
+
+    - script: |  
+        export AZURE_CLIENT_ID="${{ parameters.azure_client_id }}"
+        export AZURE_SECRET="${{ parameters.azure_client_secret }}"
+        export AZURE_SUBSCRIPTION_ID="${{ parameters.azure_subscription_id }}"
+        export AZURE_TENANT="${{ parameters.azure_tenant_id }}"
+
+        export citrix_client_id="${{ parameters.citrix_client_id }}" 
+        export citrix_client_secret="${{ parameters.citrix_client_secret }}"
+        export citrix_org_id="${{ parameters.citrix_org_id }}"
+
+        export branch="$(build.sourceBranchName)"
+        export prefix="${{ lower(parameters.devops_pool) }}"
+
+        export azure_region="${{ parameters.azure_region }}"
+
+        ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
+      displayName: 'Execute ansible'

@@ -1,0 +1,86 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureDelivery
+  displayName: Desktop Delivery Model
+  type: string
+  default: Citrix Virtual Apps & Desktop Services
+  values:
+  - None
+  - Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - VMware Horizon Cloud
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+
+trigger: none
+pr: none
+
+
+stages:
+- stage: image_build
+  displayName: Building image
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: infra_build
+
+  jobs:
+  - template: azure/image.yml
+    parameters:
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      environment: ${{ parameters.azureWorkspace }}
+
+- stage: ansible_deploy
+  displayName: Ansible deployment
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: image_build
+
+  jobs:
+  - template: azure/ansible.yml
+    parameters:
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
+      citrix_client_id: $(citrix_client_id)
+      citrix_client_secret: $(citrix_client_secret)
+      citrix_org_id: $(citrix_org_id)
