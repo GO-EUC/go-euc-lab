@@ -41,6 +41,9 @@ parameters:
 - name: citrix_org_id
   type: string
 
+- name: ansible_playbook
+  type: string
+
 jobs:
   - job: ansible
     displayName: Configure infrastructure
@@ -122,5 +125,5 @@ jobs:
 
         export azure_region="${{ parameters.azure_region }}"
 
-        ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
+        ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory
       displayName: 'Execute ansible'
