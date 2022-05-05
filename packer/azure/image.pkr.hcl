@@ -47,11 +47,11 @@ source "azure-arm" "windows" {
 build {
   sources = ["source.azure-arm.windows"]
   provisioner "powershell" {
-    script = "./scripts/ConfigureRemotingForAnsible.ps1"
+    script = "./scripts/windows/windows-ansible.ps1"
   }
 
   provisioner "ansible" {
-    playbook_file = "${var.BuildSourcesDirectory}/ansible/PackerBuilder-Worker-playbook.yml"
+    playbook_file = "${var.BuildSourcesDirectory}/ansible/windows-image.yml"
     user          = "packer"
     use_proxy     = false
     extra_arguments = [
