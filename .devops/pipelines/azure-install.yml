@@ -63,8 +63,6 @@ stages:
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
-  dependsOn: image_build
-
   jobs:
   - template: azure/ansible.yml
     parameters:
