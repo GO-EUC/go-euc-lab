@@ -49,6 +49,7 @@ stages:
 - stage: infra_stage
   jobs:
   - job: infra_job
+    steps:
     - template: azure/infra.yml
       parameters:
         azure_build: ${{ parameters.azureBuild }}
@@ -64,9 +65,10 @@ stages:
         devops_pool: ${{ parameters.azureEnvironment }}
 
 - stage: image_stage
-  dependsOn: [infra_stage]
+
   jobs:
   - job: image_job
+    steps:
     - template: azure/image.yml
       parameters:
         devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
