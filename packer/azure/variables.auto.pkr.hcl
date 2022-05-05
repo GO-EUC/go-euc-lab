@@ -151,14 +151,14 @@ variable "gallery_name" {
 variable "image_name" {
   description = ""
   type      = string
-  default   = "citrixgen1"
+  default   = "Windows10-21h2-avd"
   
 }
 
 variable "image_version" {
   description = ""
   type      = string
-  default   = "1.0.2"  
+  default   = "1.0.0"  
 }
 
 variable "replication_regions" {
