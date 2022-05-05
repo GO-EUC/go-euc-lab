@@ -1,7 +1,4 @@
-parameters:
-- name: devops_pool
-  type: string
-  
+parameters: 
 - name: azure_client_id
   type: string
 
@@ -20,7 +17,7 @@ parameters:
 jobs:
   - job: buildImage
     displayName: Building image
-    
+
     steps:
     - script: |
         curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
