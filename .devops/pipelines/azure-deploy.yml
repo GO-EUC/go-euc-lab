@@ -67,19 +67,3 @@ stages:
       azure_workspace: ${{ parameters.azureWorkspace }}
       devops_token: $(devops_token)
       devops_pool: ${{ parameters.azureEnvironment }}
-
-- stage: image_build
-  displayName: Building image
-  
-  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-  
-  dependsOn: infra_build
-
-  jobs:
-  - template: azure/image.yml
-    parameters:
-      azure_client_id: $(azure_client_id)
-      azure_client_secret: $(azure_client_secret)
-      azure_subscription_id: $(azure_subscription_id)
-      azure_tenant_id: $(azure_tenant_id)
-      environment: ${{ parameters.azureWorkspace }}
