@@ -18,7 +18,6 @@ parameters:
   type: string
 
 - name: depends_on
-  type: string
   default: []
 
 jobs:
