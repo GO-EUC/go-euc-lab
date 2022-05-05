@@ -1,19 +1,11 @@
 - name: Built the environment dictonary and variables
   set_fact:
-    branch: "{{ lookup('env', 'branch') }}"
+    environment_short: "{{ lookup('env', 'branch') }}"
     prefix: "{{ lookup('env', 'prefix') }}"
     citrix_org_id: "{{ lookup('env', 'citrix_org_id') }}"
     citrix_client_id: "{{ lookup('env', 'citrix_client_id') }}"
     citrix_client_secret: "{{ lookup('env', 'citrix_client_secret') }}"
     azure_region: "{{ lookup('env', 'azure_region') }}"
-    branches:
-        default: "pois" 
-        cards:   "card"
-        flowers: "flow"
-
-- name: Set the environment short
-  set_fact:
-    environment_short: "{{branches[branch | lower]}}"
 
 - name: Collect API access token from Citrix Cloud
   uri:
@@ -57,7 +49,7 @@
     citrix_hypervisor_id: "{{ data | json_query(querystr) }}"
   vars:
     data: "{{ citrix_hypervisor.json }}"
-    querystr: "Items[?contains(Name,'{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname }}-azure')].Id | [0]" #First result
+    querystr: "Items[?contains(Name,'{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname | lower }}-azure')].Id | [0]" #First result
 
 - name: Get Citrix Cloud zones
   uri:

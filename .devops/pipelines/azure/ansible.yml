@@ -117,7 +117,7 @@ jobs:
         export citrix_client_secret="${{ parameters.citrix_client_secret }}"
         export citrix_org_id="${{ parameters.citrix_org_id }}"
 
-        export branch="$(build.sourceBranchName)"
+        export branch="${{ parameters.azure_workspace }}"
         export prefix="${{ lower(parameters.devops_pool) }}"
 
         export azure_region="${{ parameters.azure_region }}"
