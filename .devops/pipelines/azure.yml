@@ -48,7 +48,7 @@ pr: none
 
 stages:
 - stage: infra_build
-  diplayName: Building infrastrcuture
+  displayName: Building infrastrcuture
   
   pool:
     vmImage: 'ubuntu-latest'
