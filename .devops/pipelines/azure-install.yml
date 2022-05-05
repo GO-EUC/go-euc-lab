@@ -42,24 +42,9 @@ variables:
 trigger: none
 pr: none
 
-
 stages:
-- stage: image_build
-  displayName: Building image
-  
-  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-  
-  jobs:
-  - template: azure/image.yml
-    parameters:
-      azure_client_id: $(azure_client_id)
-      azure_client_secret: $(azure_client_secret)
-      azure_subscription_id: $(azure_subscription_id)
-      azure_tenant_id: $(azure_tenant_id)
-      environment: ${{ parameters.azureWorkspace }}
-
 - stage: ansible_domain
-  displayName: Ansible domain deployment
+  displayName: Domain deployment
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
@@ -83,7 +68,7 @@ stages:
       citrix_org_id: $(citrix_org_id)
 
 - stage: ansible_management
-  displayName: Ansible management deployment
+  displayName: Management deployment
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
@@ -108,8 +93,24 @@ stages:
       citrix_client_secret: $(citrix_client_secret)
       citrix_org_id: $(citrix_org_id)
 
+- stage: image_build
+  displayName: Building image
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: ansible_domain
+
+  jobs:
+  - template: azure/image.yml
+    parameters:
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      environment: ${{ parameters.azureWorkspace }}
+
 - stage: ansible_cvads
-  displayName: Ansible Citirx DaaS deployment
+  displayName: Citrix DaaS deployment
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
