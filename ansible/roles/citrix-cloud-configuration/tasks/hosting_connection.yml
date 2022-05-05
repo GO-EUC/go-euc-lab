@@ -1,11 +1,19 @@
 - name: Built the environment dictonary and variables
   set_fact:
-    environment_short: "{{ lookup('env', 'branch') | lower }}"
+    branch: "{{ lookup('env', 'azure_workspace') | lower }}"
     prefix: "{{ lookup('env', 'prefix') }}"
     citrix_org_id: "{{ lookup('env', 'citrix_org_id') }}"
     citrix_client_id: "{{ lookup('env', 'citrix_client_id') }}"
     citrix_client_secret: "{{ lookup('env', 'citrix_client_secret') }}"
     azure_region: "{{ lookup('env', 'azure_region') }}"
+    branches:
+        default: "pois" 
+        cards:   "card"
+        flowers: "flow"
+
+- name: Set the environment short
+  set_fact:
+    environment_short: "{{branches[branch | lower]}}"
 
 - name: Collect API access token from Citrix Cloud
   uri:
