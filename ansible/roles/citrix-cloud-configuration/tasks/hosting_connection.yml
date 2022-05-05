@@ -148,7 +148,7 @@
       ConnectionType: AzureRM
       Region: "{{ region }}.region"
       VirtualNetwork: "{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud"
-      Subnets: [ "{{ region }}.region/virtualprivatecloud.folder/{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
+      Subnets: [ "{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
   when: citrix_hypervisor_resource_id == ""
 
 - name: debug post body of the resource pool
