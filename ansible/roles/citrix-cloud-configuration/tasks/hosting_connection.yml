@@ -10,10 +10,14 @@
         default: "pois" 
         cards:   "card"
         flowers: "flow"
+    regions:
+        westeurope: "West Europe"
+        eastus: "East US"
 
 - name: Set the environment short
   set_fact:
-    environment_short: "{{branches[branch | lower]}}"
+    environment_short: "{{ branches[branch | lower] }}"
+    region: "{{ regions[azure_region | lower ] }}"
 
 - name: Collect API access token from Citrix Cloud
   uri:
@@ -147,9 +151,9 @@
     resource_object:
       Name: "{{ environment_short }}-{{ deploymentname }}-default"
       ConnectionType: AzureRM
-      Region: "{{ azure_region }}.region"
-      VirtualNetwork: "{{ azure_region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud"
-      Subnets: [ "{{ azure_region }}.region/virtualprivatecloud.folder/{{ azure_region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
+      Region: "{{ region }}.region"
+      VirtualNetwork: "{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud"
+      Subnets: [ "{{ region }}.region/virtualprivatecloud.folder/{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
   when: citrix_hypervisor_resource_id == ""
 
 - name: debug post body of the resource pool
