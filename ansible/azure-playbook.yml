@@ -36,21 +36,22 @@
     ansible_winrm_server_cert_validation: ignore
     ansible_port: 5985
 
-# - name: Citrix Cloud Connector
-#   hosts: cc
-#   serial: 1
-#   roles:
-#   - domain-join
-#   - citrix-cloud-connector
-#   vars:
-#     dns_domain_name: 'GO.EUC'
-#     domain_admin_user: "GO\\{{ ansible_user }}"
-#     ansible_connection: winrm
-#     ansible_winrm_transport: ntlm
-#     ansible_winrm_server_cert_validation: ignore
-#     ansible_port: 5985
+- name: Citrix Cloud Connector
+  hosts: cc
+  serial: 1
+  roles:
+  - domain-join
+  - citrix-cloud-connector
+  vars:
+    dns_domain_name: 'GO.EUC'
+    domain_admin_user: "GO\\{{ ansible_user }}"
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
 
 - name: Citrix Cloud Configuration
+  hosts: localhost
   connection: local
   roles:
   - citrix-cloud-configuration
