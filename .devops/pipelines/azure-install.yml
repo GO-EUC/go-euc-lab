@@ -49,8 +49,6 @@ stages:
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
   
-  dependsOn: infra_build
-
   jobs:
   - template: azure/image.yml
     parameters:
