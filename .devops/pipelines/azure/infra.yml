@@ -34,6 +34,8 @@ parameters:
 
 jobs:
   - job: buildInfra
+    displayName: Building infrastructure
+    
     steps:
     - task: TerraformInstaller@0
       displayName: Terraform download

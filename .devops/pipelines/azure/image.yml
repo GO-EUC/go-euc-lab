@@ -19,6 +19,8 @@ parameters:
 
 jobs:
   - job: buildImage
+    displayName: Building image
+    
     steps:
     - script: |
         curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -

@@ -43,6 +43,7 @@ parameters:
 
 jobs:
   - job: ansible
+    displayName: Configure infrastructure
     steps:
     - script: |
         pip install --upgrade requests==2.20.1
