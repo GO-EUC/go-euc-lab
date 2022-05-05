@@ -45,27 +45,33 @@ variables:
 trigger: none
 pr: none
 
-jobs:
-- template: azure/infra.yml
-  parameters:
-    azure_build: ${{ parameters.azureBuild }}
-    azure_backend: $(azure_backend)
-    azure_client_id: $(azure_client_id)
-    azure_client_secret: $(azure_client_secret)
-    azure_subscription_id: $(azure_subscription_id)
-    azure_tenant_id: $(azure_tenant_id)
-    azure_region: ${{ parameters.azureRegion }}
-    azure_delivery: ${{ parameters.azureDelivery }}
-    azure_workspace: ${{ parameters.azureWorkspace }}
-    devops_token: $(devops_token)
-    devops_pool: ${{ parameters.azureEnvironment }}
+stages:
+- stage: infra_stage
+  jobs:
+  - job: infra_job
+    - template: azure/infra.yml
+      parameters:
+        azure_build: ${{ parameters.azureBuild }}
+        azure_backend: $(azure_backend)
+        azure_client_id: $(azure_client_id)
+        azure_client_secret: $(azure_client_secret)
+        azure_subscription_id: $(azure_subscription_id)
+        azure_tenant_id: $(azure_tenant_id)
+        azure_region: ${{ parameters.azureRegion }}
+        azure_delivery: ${{ parameters.azureDelivery }}
+        azure_workspace: ${{ parameters.azureWorkspace }}
+        devops_token: $(devops_token)
+        devops_pool: ${{ parameters.azureEnvironment }}
 
-- template: azure/image.yml
-  parameters:
-    devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
-    azure_client_id: $(azure_client_id)
-    azure_client_secret: $(azure_client_secret)
-    azure_subscription_id: $(azure_subscription_id)
-    azure_tenant_id: $(azure_tenant_id)
-    environment: ${{ parameters.azureWorkspace }}
-    depends_on: BuildInfra
+- stage: image_stage
+  dependsOn: [infra_stage]
+  jobs:
+  - job: image_job
+    - template: azure/image.yml
+      parameters:
+        devops_pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+        azure_client_id: $(azure_client_id)
+        azure_client_secret: $(azure_client_secret)
+        azure_subscription_id: $(azure_subscription_id)
+        azure_tenant_id: $(azure_tenant_id)
+        environment: ${{ parameters.azureWorkspace }}
