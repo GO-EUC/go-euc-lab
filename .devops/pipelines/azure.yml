@@ -68,3 +68,4 @@ jobs:
     azure_subscription_id: $(azure_subscription_id)
     azure_tenant_id: $(azure_tenant_id)
     environment: ${{ parameters.azureWorkspace }}
+dependsOn: [BuildInfra]
