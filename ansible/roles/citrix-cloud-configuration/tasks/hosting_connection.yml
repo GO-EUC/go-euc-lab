@@ -1,6 +1,6 @@
 - name: Built the environment dictonary and variables
   set_fact:
-    branch: "{{ lookup('env', 'azure_workspace') | lower }}"
+    branch: "{{ lookup('env', 'branch') | lower }}"
     prefix: "{{ lookup('env', 'prefix') }}"
     citrix_org_id: "{{ lookup('env', 'citrix_org_id') }}"
     citrix_client_id: "{{ lookup('env', 'citrix_client_id') }}"
