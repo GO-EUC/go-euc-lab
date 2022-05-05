@@ -77,7 +77,7 @@
   set_fact: 
     hosting_object:
       ConnectionDetails:
-        Name: "{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname }}-azure"
+        Name: "{{ prefix | lower }}-{{ environment_short | lower }}-{{ deploymentname }}-azure"
         ConnectionType: AzureRM
         ApplicationId: "{{ lookup('env', 'AZURE_CLIENT_ID') }}"
         ApplicationSecret: "{{ lookup('env', 'AZURE_SECRET') }}"
@@ -139,7 +139,11 @@
       Subnets: [ "{{ azure_region }}.region/virtualprivatecloud.folder/{{ azure_region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud/sn-infra-{{ environment_short }}.network" ]
   when: citrix_hypervisor_resource_id == ""
 
-- name: Post Citrix Cloud hypervisor connection
+- name: debug post body of the resource pool
+  ansible.builtin.debug:
+    msg: "{{ resource_object }}"
+
+- name: Post Citrix Cloud resource pool
   uri:
     url: https://api.cloud.com/cvad/manage/hypervisors/{{ citrix_hypervisor_id }}/resourcePools
     method: POST
