@@ -1,6 +1,4 @@
 parameters:
-  depends_on: []
-  
 - name: devops_pool
   type: string
   
@@ -17,6 +15,9 @@ parameters:
   type: string
 
 - name: environment
+  type: string
+
+- name: depends_on
   type: string
 
 jobs:
