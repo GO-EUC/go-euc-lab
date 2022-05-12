@@ -170,7 +170,7 @@ variable "replication_regions" {
 variable "compute_gallery_resource_group" {
   description = ""
   type      = string
-  default   = "cvads"
+  default   = "workers"
 }
 
 variable "BuildSourcesDirectory" {
