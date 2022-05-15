@@ -19,13 +19,13 @@
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
 
-- name: Install Windows Server Features - Shared Desktops
-  win_feature:
-    name:
-    - RDS-RD-Server
-    - Server-Media-Foundation
-    - Remote-Assistance
-    state: present
+# - name: Install Windows Server Features - Shared Desktops
+#   win_feature:
+#     name:
+#     - RDS-RD-Server
+#     - Server-Media-Foundation
+#     - Remote-Assistance
+#     state: present
 
 - name: Reboot to complete Windows Feature installation
   win_reboot:
