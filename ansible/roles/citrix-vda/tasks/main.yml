@@ -41,7 +41,7 @@
     msg: "{{ citrix_username }}"
 
 - name: Download Citrix VDA
-  script: files/Get-CTXBinary.ps1
+  win_shell: files/Get-CTXBinary.ps1
   args:
     DownloadPath: C:\Download\Citrix
     MyCitrixUsername: "{{ citrix_username }}"
