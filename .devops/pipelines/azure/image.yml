@@ -14,11 +14,12 @@ parameters:
 - name: environment
   type: string
 
+- name: version
+  type: string
+
 jobs:
   - job: buildImage
     displayName: Building image
-
-    name: $(Date:yy).$(Date:MM)$(Rev:.r)
 
     steps:
     - script: |
@@ -42,7 +43,7 @@ jobs:
           $packerVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
           $packerVariable += "environment=`"${{ lower(parameters.environment) }}`""
           $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
-          $packerVariable += "image_version=`"$(Build.BuildNumber)`""
+          $packerVariable += "image_version=`"${{ parameters.version }}`""
           Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 

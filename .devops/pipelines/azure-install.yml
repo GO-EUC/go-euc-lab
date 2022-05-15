@@ -39,6 +39,8 @@ parameters:
 variables:
 - group: ${{ parameters.azureEnvironment }}
 
+name: $(Date:yy).$(Date:MM)$(Rev:.r)
+
 trigger: none
 pr: none
 
@@ -108,6 +110,7 @@ stages:
       azure_subscription_id: $(azure_subscription_id)
       azure_tenant_id: $(azure_tenant_id)
       environment: ${{ parameters.azureWorkspace }}
+      version: $(Build.BuildNumber)
 
 - stage: ansible_cvads
   displayName: Citrix DaaS deployment
