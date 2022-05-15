@@ -71,7 +71,7 @@ jobs:
       inputs:
         script: |
           export citrix_username="${{ parameters.citrix_username }}"
-          export citrix_password="${{ lower(parameters.citrix_password) }}"
+          export citrix_password="${{ parameters.citrix_password }}"
 
           packer build -var-file=azure.pkrvars.hcl .
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'

@@ -1,8 +1,8 @@
 ---
 - name: Built the environment dictonary and variables
   set_fact:
-    citrix_username: "{{ lookup('env', 'my_citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'my_citrix_password') }}"
+    citrix_username: "{{ lookup('env', 'citrix_username') }}"
+    citrix_password: "{{ lookup('env', 'citrix_password') }}"
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
   win_package:
