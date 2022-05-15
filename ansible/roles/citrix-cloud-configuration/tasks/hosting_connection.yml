@@ -82,7 +82,7 @@
     citrix_zone_id: "{{ data | json_query(querystr) }}"
   vars:
     data: "{{ citrix_zones.json }}"
-    querystr: Items[?Name == '{{ prefix | lower }}-{{ environment_short | lower }}-{{ deploymentname | lower }}'].Id | [0]
+    querystr: "items[?contains(name,'{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname | lower }}-azure')].id | [0]"
   when: citrix_hypervisor_id == ""
 
 - name: Creating Citrix Cloud hosting body 
