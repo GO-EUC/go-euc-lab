@@ -139,7 +139,7 @@
     citrix_hypervisor_resource_id: "{{ data | json_query(querystr) }}"
   vars:
     data: "{{ citrix_hypervisor_resource.json }}"
-    querystr: "Items[?contains(Name,'{{ environment_short }}-{{ deploymentname }}-default')].Id | [0]" #First result
+    querystr: "items[?contains(name,'{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname | lower }}-azure')].id | [0]"
 
 - name: Creating Citrix Cloud resource body 
   set_fact: 
