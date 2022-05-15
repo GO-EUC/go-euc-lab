@@ -36,6 +36,10 @@
     path: C:\Download\Citrix
     state: directory
 
+- name: Debug Citrix download
+  ansible.builtin.debug:
+    msg: "{{ citrix_username }}"
+
 - name: Download Citrix VDA
   script: files/Get-CTXBinary.ps1
   args:
