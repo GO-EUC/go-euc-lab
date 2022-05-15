@@ -36,12 +36,17 @@
     path: C:\Download\Citrix
     state: directory
 
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: files/Get-CTXBinary.ps1
+    dest: C:\Download\Citrix\Get-CTXBinary.ps1
+
 - name: Debug Citrix download
   ansible.builtin.debug:
     msg: "{{ citrix_username }}"
 
 - name: Download Citrix VDA
-  win_shell: files/Get-CTXBinary.ps1
+  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1
   args:
     DownloadPath: C:\Download\Citrix
     MyCitrixUsername: "{{ citrix_username }}"
