@@ -115,7 +115,7 @@ variable "winrm_username" {
 variable "managed_image_name" {
   description = ""
   type      = string
-  default   = "build-1"  
+  default   = "build"  
 }
 
 variable "managed_image_resource_group_name" {

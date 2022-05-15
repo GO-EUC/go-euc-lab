@@ -26,7 +26,7 @@ source "azure-arm" "windows" {
   winrm_timeout                          = var.winrm_timeout
   winrm_use_ssl                          = var.winrm_use_ssl
   winrm_username                         = var.winrm_username
-  managed_image_name                     = "${local.environment_abbreviations[var.environment]}-${var.managed_image_name}"
+  managed_image_name                     = "${local.environment_abbreviations[var.environment]}-${var.managed_image_name}-${replace(var.image_version, ".", "")}"
   managed_image_resource_group_name      = "rg-golab-${local.environment_abbreviations[var.environment]}-workers"
   virtual_network_resource_group_name    = "rg-golab-${local.environment_abbreviations[var.environment]}-vnet"
   virtual_network_name                   = "vnet-infra-${local.environment_abbreviations[var.environment]}"
