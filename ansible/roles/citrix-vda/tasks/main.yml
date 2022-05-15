@@ -5,21 +5,20 @@
     citrix_password: "{{ lookup('env', 'my_citrix_password') }}"
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
-  ansible.windows.win_package:
+  win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
     arguments: /q /norestart
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X64"
-  ansible.windows.win_package:
+  win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x64.exe
     arguments: /q /norestart
 
 - name: Install Microsoft .NET Framework 4.8 - Offline installer
-  ansible.windows.win_package:
+  win_package:
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
 
-#When Windows Server, the following roles are needed
 - name: Install Windows Server Features - Shared Desktops
   win_feature:
     name:
