@@ -25,7 +25,7 @@
     - RDS-RD-Server
     - Server-Media-Foundation
     - Remote-Assistance
-  state: present
+    state: present
 
 - name: Reboot to complete Windows Feature installation
   win_reboot:
