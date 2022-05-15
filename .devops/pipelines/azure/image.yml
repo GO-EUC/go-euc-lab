@@ -14,11 +14,11 @@ parameters:
 - name: environment
   type: string
 
-name: $(Date:yy).$(Date:MM)$(Rev:.r)
-
 jobs:
   - job: buildImage
     displayName: Building image
+
+    name: $(Date:yy).$(Date:MM)$(Rev:.r)
 
     steps:
     - script: |
