@@ -17,6 +17,12 @@ parameters:
 - name: version
   type: string
 
+- name: citrix_username
+  type: string
+
+- name: citrix_password
+  type: string
+
 jobs:
   - job: buildImage
     displayName: Building image
@@ -63,6 +69,9 @@ jobs:
     - task: CmdLine@2
       displayName: Deploy Packer build image
       inputs:
-        script: | 
+        script: |
+          export citrix_username="${{ parameters.citrix_username }}"
+          export cirix_password="${{ lower(parameters.cirix_password) }}"
+
           packer build -var-file=azure.pkrvars.hcl .
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'

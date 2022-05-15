@@ -1,0 +1,79 @@
+---
+- name: Built the environment dictonary and variables
+  set_fact:
+    citrix_username: "{{ lookup('env', 'my_citrix_username') }}"
+    citrix_password: "{{ lookup('env', 'my_citrix_password') }}"
+
+- name: Install Microsoft Visual C++ Redistributable Latest - X86"
+  ansible.windows.win_package:
+    path: https://aka.ms/vs/17/release/vc_redist.x86.exe
+    arguments: /q /norestart
+
+- name: Install Microsoft Visual C++ Redistributable Latest - X64"
+  ansible.windows.win_package:
+    path: https://aka.ms/vs/17/release/vc_redist.x64.exe
+    arguments: /q /norestart
+
+- name: Install Microsoft .NET Framework 4.8 - Offline installer
+  ansible.windows.win_package:
+    path: https://go.microsoft.com/fwlink/?linkid=2088631
+    arguments: /q /norestart
+
+#When Windows Server, the following roles are needed
+- name: Install Windows Server Features - Shared Desktops
+  win_feature:
+    name:
+    - RDS-RD-Server
+    - Server-Media-Foundation
+    - Remote-Assistance
+  state: present
+
+- name: Reboot to complete Windows Feature installation
+  win_reboot:
+    reboot_timeout: 3600
+
+- name: Create directory structure
+  win_file:
+    path: C:\Download\Citrix
+    state: directory
+
+- name: Download Citrix VDA
+  script: files/Get-CTXBinary.ps1
+  args:
+    DownloadPath: C:\Download\Citrix
+    MyCitrixUsername: "{{ citrix_username }}"
+    MyCitrixPassword: "{{ citrix_password }}"
+    VDAVersion: latest
+    VDAType: workstation
+    CitrixEULAAccept: true
+  register: citrix_download
+
+- name: Debug Citrix download
+  ansible.builtin.debug:
+    msg: "{{ citrix_download }}"
+
+- name: Install Citrix VDA 
+  win_package:
+    chdir: C:\Download\Citrix
+    path: "{{ citrix_download.stdout | trim }}"
+    arguments: /components VDA /controllers `"$($env:CitrixDeliveryControllers)`" /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /enable_remote_assistance /enable_ss_ports /exclude `"Citrix Telemetry Service`",`"Citrix Personalization for App-V - VDA`",`"Citrix Files for Windows`",`"Citrix Files for Outlook`",`"User personalization layer`",`"Citrix WEM Agent`",`"Citrix VDA Upgrade Agent`" /includeadditional `"Citrix MCS IODriver`" /masterimage /noreboot /quiet
+    state: present
+    expected_return_code: [0, 3, 3010]
+  register: vda_install
+
+- name: Reboot after VDA
+  win_reboot:
+  when: vda_install.changed
+
+- name: Resume VDA Install
+  win_package:
+    path: "{{ citrix_download.stdout | trim }}"
+    state: present
+    expected_return_code: [0, 3, 3010]
+    creates_service: BrokerAgent
+  when: vda_install.changed
+  register: vda_resume
+
+- name: Reboot after vda install
+  win_reboot:
+  when: vda_resume.changed

@@ -137,7 +137,7 @@ if ($VDAVersion -eq "latest") {
   $vda = $dls | Where-Object { $_.family -eq "cvad" -and $_.product -like $product -and $_.version -eq $VDAVersion }
 }
 
-Write-host "Downloading version $($vda.version) of $($vda.filename)"
+Write-Verbose "Downloading version $($vda.version) of $($vda.filename)"
 
 #Call above function to download binary
 $file = get-ctxbinary -DLobj $vda -CitrixUserName $MyCitrixUsername -CitrixPassword $MyCitrixPassword -DLPATH "$($DownloadPath)\"
@@ -150,5 +150,7 @@ If ($filehash.Hash -ne $hash) {
   throw "Checksum failed! for $file. Got $($filehash.Hash), expected $hash)"
 }
 else {
-  Write-host "Checksum passed!"
+  Write-Verbose "Checksum passed!"
 }
+
+return $file
