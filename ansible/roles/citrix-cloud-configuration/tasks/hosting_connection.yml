@@ -144,7 +144,7 @@
 - name: Creating Citrix Cloud resource body 
   set_fact: 
     resource_object:
-      Name: "{{ environment_short }}-{{ deploymentname }}-default"
+      Name: "{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname }}-default"
       ConnectionType: AzureRM
       Region: "{{ region }}.region"
       VirtualNetwork: "{{ region }}.region/virtualprivatecloud.folder/rg-golab-{{ environment_short }}-vnet.resourcegroup/vnet-infra-{{ environment_short }}.virtualprivatecloud"
