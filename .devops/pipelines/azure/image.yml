@@ -40,6 +40,7 @@ jobs:
           $packerVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
           $packerVariable += "environment=`"${{ lower(parameters.environment) }}`""
           $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
+          $packerVariable += "image_version=`"$(Date:yy).$(Date:MM)$(Rev:.r)`""
           Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
