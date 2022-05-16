@@ -54,7 +54,6 @@
       - MyCitrixPassword: "{{ citrix_password }}" 
       - VDAVersion: latest 
       - VDAType: workstation 
-      - CitrixEULAAccept: $true
   register: citrix_download
 
 - name: Debug Citrix download

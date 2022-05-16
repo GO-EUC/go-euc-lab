@@ -36,13 +36,8 @@ Param(
   [Parameter(Mandatory = $true)] [string]$MyCitrixUsername,
   [Parameter(Mandatory = $true)] [string]$MyCitrixPassword,
   [Parameter(Mandatory = $false)][string]$VDAVersion = "latest",
-  [Parameter(Mandatory = $false)][ValidateSet('workstation','server')][string]$VDAType = "server",
-  [Parameter(Mandatory = $true)][bool]$CitrixEULAAccept = $false
+  [Parameter(Mandatory = $false)][ValidateSet('workstation','server')][string]$VDAType = "server"
 )
-
-if ($CitrixEULAAccept -ne $true) {
-  Write-Error "STOPPED! You did not accept all Citrix EULA dialogs" 
-}
 
 function get-ctxbinary {
   <#
