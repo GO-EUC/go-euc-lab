@@ -12,6 +12,6 @@
   hosts: all
   roles:
   - citrix-vda
-  - microsoft365apps
+  # - microsoft365apps
   - citrix-optimizer
   - bis-f
