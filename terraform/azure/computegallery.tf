@@ -13,7 +13,7 @@ resource "azurerm_shared_image" "image" {
   os_type                = "Windows"
   specialized            = false
   hyper_v_generation     = "V2"
-  trusted_launch_enabled = true
+  trusted_launch_enabled = false
 
   identifier {
     publisher = "microsoftwindowsdesktop"
