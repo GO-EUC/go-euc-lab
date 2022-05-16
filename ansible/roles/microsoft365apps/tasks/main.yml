@@ -17,6 +17,11 @@
     url: https://raw.githubusercontent.com/GO-EUC/go-euc-lab/main/ansible/roles/microsoft365/xml/GO-EUC.yml
     dest: C:\ODTSetup\GO-EUC.yml
 
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: files/GO-EUC.xml
+    dest: C:\ODTSetup\GO-EUC.yml
+
 - name: Install "Microsoft 365 Apps for Enterprise - Semi-Anual enterprise channel"
   ansible.windows.win_package:
     path: C:\ODTSetup\setup.exe
