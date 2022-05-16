@@ -46,8 +46,9 @@
     msg: "{{ citrix_username }}"
 
 - name: Download Citrix VDA
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1
-    args: -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}" -VDAVersion latest -VDAType workstation -CitrixEULAAccept $true
+  win_powershell: 
+    script: C:\Download\Citrix\Get-CTXBinary.ps1
+    arguments: -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}" -VDAVersion latest -VDAType workstation -CitrixEULAAccept $true
   register: citrix_download
 
 - name: Debug Citrix download
