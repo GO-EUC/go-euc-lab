@@ -9,7 +9,7 @@
 
 - name: Built the environment dictonary and variables
   set_fact:
-    environment_short: "{{environments[environment | lower]}}"
+    environment_short: "{{ environments[environment] }}"
     citrix_username: "{{ lookup('env', 'citrix_username') }}"
     citrix_password: "{{ lookup('env', 'citrix_password') }}"
 
