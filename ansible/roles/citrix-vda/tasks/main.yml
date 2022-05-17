@@ -1,7 +1,7 @@
 ---
 - name: Built the environment dictonary and variables
   set_fact:
-    environment: "{{ lookup('env', 'environment') | lower }}"
+    branch: "{{ lookup('env', 'environment') | lower }}"
     environments:
         default: "pois" 
         cards:   "card"
@@ -9,9 +9,9 @@
 
 - name: Built the environment dictonary and variables
   set_fact:
-    environment_short: "{{ environments[environment] }}"
     citrix_username: "{{ lookup('env', 'citrix_username') }}"
     citrix_password: "{{ lookup('env', 'citrix_password') }}"
+    environment_short: "{{ environments[branch] }}"
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
   win_package:
