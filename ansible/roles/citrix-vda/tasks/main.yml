@@ -58,7 +58,7 @@
   win_package:
     chdir: C:\Download\Citrix
     path: "{{ citrix_download.stdout | trim }}"
-    arguments: /components VDA /controllers `"{{ environment_short }}-cc-1, {{ environment_short }}-cc-2`" /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /enable_remote_assistance /enable_ss_ports /exclude `"Citrix Telemetry Service`",`"Citrix Personalization for App-V - VDA`",`"Citrix Files for Windows`",`"Citrix Files for Outlook`",`"User personalization layer`",`"Citrix WEM Agent`",`"Citrix VDA Upgrade Agent`" /includeadditional `"Citrix MCS IODriver`" /masterimage /noreboot /quiet
+    arguments: /components VDA /controllers "{{ environment_short }}-cc-1.go.euc, {{ environment_short }}-cc-2.go.euc" /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /enable_remote_assistance /enable_ss_ports /exclude `"Citrix Telemetry Service`",`"Citrix Personalization for App-V - VDA`",`"Citrix Files for Windows`",`"Citrix Files for Outlook`",`"User personalization layer`",`"Citrix WEM Agent`",`"Citrix VDA Upgrade Agent`" /includeadditional `"Citrix MCS IODriver`" /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]
   register: vda_install
