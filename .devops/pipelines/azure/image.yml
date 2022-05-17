@@ -11,6 +11,9 @@ parameters:
 - name: azure_tenant_id
   type: string
 
+- name: azure_region
+  type: string
+
 - name: environment
   type: string
 
@@ -47,6 +50,8 @@ jobs:
           $packerVariable += "azure_client_secret=`"${{ parameters.azure_client_secret }}`""
           $packerVariable += "azure_subscription_id=`"${{ parameters.azure_subscription_id }}`""
           $packerVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
+          $packerVariable += "replication_regions=`"${{ parameters.azure_region }}`""
+
           $packerVariable += "environment=`"${{ lower(parameters.environment) }}`""
           $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
           $packerVariable += "image_version=`"${{ parameters.version }}`""

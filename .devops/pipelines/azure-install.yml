@@ -109,6 +109,7 @@ stages:
       azure_client_secret: $(azure_client_secret)
       azure_subscription_id: $(azure_subscription_id)
       azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
       citrix_username: $(citrix_username)
       citrix_password: $(citrix_password)
       environment: ${{ parameters.azureWorkspace }}
