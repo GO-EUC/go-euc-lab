@@ -13,9 +13,13 @@
   win_shell: C:\Download\Citrix\Get-CTXOptimizer.ps1 -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
   register: citrix_download
 
+- name: Debug Citrix download
+  ansible.builtin.debug:
+    msg: "{{ citrix_download }}"
+
 - name: Unzip Citrix Optimizer
   community.windows.win_unzip:
-    src: "{{ citrix_download | trim }}"
+    src: "{{ citrix_download.stdout | trim }}"
     dest: C:\Download\Citrix\Optimizer
     creates: C:\Download\Citrix\Optimizer
 
