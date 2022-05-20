@@ -151,7 +151,7 @@ variable "gallery_name" {
 variable "image_name" {
   description = ""
   type      = string
-  default   = "Windows10-21h2-avd"
+  default   = "Windows10-21h2"
   
 }
 
