@@ -14,6 +14,9 @@ parameters:
 - name: job
   type: string
 
+- name: delivery
+  type: string
+
 - name: azure_region
   type: string
 
@@ -80,13 +83,13 @@ jobs:
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
 
     - task: CmdLine@2
-      displayName: Deploy Packer build image
+      displayName: Packer build
       inputs:
         script: |
           export citrix_username="${{ parameters.citrix_username }}"
           export citrix_password="${{ parameters.citrix_password }}"
           export environment="${{ lower(parameters.environment) }}"
-          export delivery=${{ parameters.job }}
+          export delivery=${{ parameters.delivery }}
 
           packer build -var-file=azure.pkrvars.hcl .
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'

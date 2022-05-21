@@ -106,6 +106,8 @@ stages:
   - template: azure/image.yml
     parameters:
       job: avd
+      delivery: avd
+      image: Windows10-21h2-avd
       azure_client_id: $(azure_client_id)
       azure_client_secret: $(azure_client_secret)
       azure_subscription_id: $(azure_subscription_id)
@@ -114,12 +116,13 @@ stages:
       citrix_username: $(citrix_username)
       citrix_password: $(citrix_password)
       environment: ${{ parameters.azureWorkspace }}
-      image: Windows10-21h2-avd
       version: $(Build.BuildNumber)
 
   - template: azure/image.yml
     parameters:
       job: citrix
+      delivery: citrix
+      image: Windows10-21h2-citrix
       azure_client_id: $(azure_client_id)
       azure_client_secret: $(azure_client_secret)
       azure_subscription_id: $(azure_subscription_id)
@@ -128,7 +131,6 @@ stages:
       citrix_username: $(citrix_username)
       citrix_password: $(citrix_password)
       environment: ${{ parameters.azureWorkspace }}
-      image: Windows10-21h2-citrix
       version: $(Build.BuildNumber)
 
 - stage: ansible_cvads
