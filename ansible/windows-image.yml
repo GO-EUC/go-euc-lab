@@ -12,7 +12,7 @@
   hosts: all
   roles:
   - role: citrix-vda
-    when: lookup('env', 'environment') == 'citrix' 
+    when: lookup('env', 'delivery') == 'citrix' 
    
   - role: microsoft365apps
 
