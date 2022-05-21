@@ -34,7 +34,7 @@ parameters:
 
 jobs:
   - job: buildImage_${{parameters.job}}
-    displayName: Building image 
+    displayName: Building ${{ parameters.image }}
 
     steps:
     - script: |
