@@ -11,6 +11,9 @@
 - name: Packer Worker Playbook
   hosts: all
   roles:
-  - microsoft365apps
-  - citrix-optimizer
-  - bis-f
+  - role: citrix-vda
+    when: ansible_facts['env'].delivery == 'citrix'
+    
+  - role: microsoft365apps
+
+  - role: citrix-optimizer
