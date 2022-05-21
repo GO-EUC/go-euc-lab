@@ -10,6 +10,11 @@
 
 - name: Packer Worker Playbook
   hosts: all
+  tasks:
+  - name: Print all available facts
+    ansible.builtin.debug:
+      var: ansible_facts
+      
   roles:
   - role: citrix-vda
     when: ansible_facts['env'].delivery == 'citrix'
