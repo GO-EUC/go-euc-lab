@@ -17,6 +17,10 @@ parameters:
 - name: delivery
   type: string
 
+- name: vgpu
+  type: boolean
+  default: false
+
 - name: azure_region
   type: string
 
@@ -89,7 +93,8 @@ jobs:
           export citrix_username="${{ parameters.citrix_username }}"
           export citrix_password="${{ parameters.citrix_password }}"
           export environment="${{ lower(parameters.environment) }}"
-          export delivery=${{ parameters.delivery }}
+          export delivery="${{ parameters.delivery }}"
+          export vgpu="${{ parameters.vgpu }}"
 
           packer build -var-file=azure.pkrvars.hcl .
         workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
