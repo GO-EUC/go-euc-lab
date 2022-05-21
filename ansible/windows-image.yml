@@ -11,9 +11,6 @@
 - name: Packer Worker Playbook
   hosts: all
   roles:
-  - role: nvidia-driver
-    when: lookup('env', 'vgpu') == 'true' 
-    
   - role: citrix-vda
     when: lookup('env', 'delivery') == 'citrix' 
    
