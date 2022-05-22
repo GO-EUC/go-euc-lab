@@ -138,7 +138,7 @@ stages:
   
   pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
  
-  condition: eq('${{ parameters,azureDelivery }}', 'Citrix Virtual Apps & Desktop Services')
+  condition: eq('${{ parameters.azureDelivery }}', 'Citrix Virtual Apps & Desktop Services')
   
   dependsOn: ansible_domain
 
