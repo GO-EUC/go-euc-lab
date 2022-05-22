@@ -6,6 +6,13 @@
 #     - Testing in Sandbox etc
 
 # Patrick van den Born 5th april 2022: Need to change this peace, so latest URL is grabbed from https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117
+- name: Microsoft Teams System installer
+  win_regedit:
+    path: HKLM:\Software\Microsoft\Teams
+    name: IsWVDEnvironment
+    data: 1
+    type: dword
+
 - name: Extract "Office Deployment Tool"
   win_package:
     path: https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_14931-20120.exe
@@ -43,16 +50,3 @@
     name: AcceptAllEulas
     data: 1
     type: dword
-
-
-- name: Microsoft Teams System installer
-  win_regedit:
-    path: HKLM:\Software\Microsoft\Teams
-    name: IsWVDEnvironment
-    data: 1
-    type: dword
-
-- name: Install Microsoft Teams system
-  win_package:
-    path: https://statics.teams.cdn.office.net/production-windows-x64/1.5.00.11865/Teams_windows_x64.msi
-    arguments: /qn ALLUSER=1 ALLUSERS=1
