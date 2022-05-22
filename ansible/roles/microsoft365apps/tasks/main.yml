@@ -13,6 +13,12 @@
     data: 1
     type: dword
 
+- name: Install the Teams WebSocket Service for AVD
+  win_package:
+    path: https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWQ1UW
+    arguments: /qn
+  when: lookup('env', 'delivery') == 'avd' 
+
 - name: Extract "Office Deployment Tool"
   win_package:
     path: https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_14931-20120.exe
