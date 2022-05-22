@@ -68,6 +68,8 @@ jobs:
           $packerVariable += "environment=`"${{ lower(parameters.environment) }}`""
           $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
 
+          $packerVariable += "delivery=`"${{ parameters.delivery }}`""
+
           $packerVariable += "image_name=`"${{ parameters.image }}`""
           $packerVariable += "image_version=`"${{ parameters.version }}`""
           Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force

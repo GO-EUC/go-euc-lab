@@ -148,6 +148,12 @@ variable "gallery_name" {
   
 }
 
+variable "delivery" {
+  description = ""
+  type      = string
+  default   = "default"
+}
+
 variable "image_name" {
   description = ""
   type      = string
