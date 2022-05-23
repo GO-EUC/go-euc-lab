@@ -71,11 +71,3 @@ build {
     ]
   }
 }
-
-dynamic "build" {
-  for_each = var.delivery == "avd" ? [1] : []
-  content {
-    sources = ["source.azure-arm.windows"]
-
-  }
-}
