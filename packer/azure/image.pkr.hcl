@@ -62,12 +62,16 @@ build {
   }
 
   provisioner "powershell" {
+    environment_vars = [
+      "delivery=${var.delivery}"
+    ],
     inline = [
-      "$delivery = ${var.delivery}",
-      "Write-Host \"delivery:\" $delivery",
-      "if ($delivery -ne \"avd\") {exit 0 }",
+      "$delivery = $ENV:delivery",
+      "Write-Host \"delivery: $delivery\"",
+      "if ($delivery -eq \"avd\") {",
       "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit",
-      "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }"
+      "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }",
+      "}"
     ]
   }
 }
