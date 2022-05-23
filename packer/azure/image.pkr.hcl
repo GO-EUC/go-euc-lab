@@ -62,7 +62,7 @@ build {
   }
 
   dynamic "powershell" {
-    for_each = var.delivery == 'avd' ? [1] : []
+    for_each = var.delivery == "avd" ? [1] : []
     content {
       inline = [
         "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit",
