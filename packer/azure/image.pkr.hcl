@@ -63,8 +63,8 @@ build {
 
   provisioner "powershell" {
     environment_vars = [
-      "delivery=${var.delivery}"
-    ],
+      "delivery=${var.delivery}",
+    ]
     inline = [
       "$delivery = $ENV:delivery",
       "Write-Host \"delivery: $delivery\"",
