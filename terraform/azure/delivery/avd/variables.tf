@@ -52,24 +52,3 @@ variable "local_admin_password" {
   type        = string
   sensitive   = true
 }
-
-variable "AD_domain" {
-    description = "Name of AD Domain"
-    type = string
-}
-
-variable "AD_oupath" {
-  type = string
-  description = "OU Path for Session Hosts in Active Directory"
-}
-
-variable "AD_joinuser" {
-  type = string
-  description = "User to join computers to AD"
-}
-
-variable "AD_joinpassword" {
-  type = string
-  description = "Password for joining computer to AD"
-  sensitive = true
-}
