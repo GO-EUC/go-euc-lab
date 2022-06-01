@@ -74,4 +74,12 @@ variable "AD_oupath" {
   type        = string
 }
 
+variable "avd_users" {
+  description = "Users with access to the AVD Desktop"
+  default = [
+    "patrick@vandenborn.it",
+    "kelly@vandenborn.it"
+  ]
+}
+
 
