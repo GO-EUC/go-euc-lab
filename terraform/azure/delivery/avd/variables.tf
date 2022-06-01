@@ -52,3 +52,26 @@ variable "local_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "AD_joinuser" {
+  description = "UPN for user to join domain"
+  type        = string
+}
+
+variable "AD_joinpassword" {
+  description = "Password for domain join"
+  type        = string
+  sensitive   = true
+}
+
+variable "AD_domain" {
+  description = "Domain to join"
+  type        = string
+}
+
+variable "AD_oupath" {
+  description = "Path to the OU in AD Domain OU= format"
+  type        = string
+}
+
+
