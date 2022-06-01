@@ -8,7 +8,7 @@ resource "azurerm_virtual_desktop_host_pool" "hostpool" {
   load_balancer_type       = "BreadthFirst"
   description              = "${var.deployment_name}: A pooled host pool - BreadthFirst"
   validate_environment     = true
-  start_vm_on_connect      = true  
+  start_vm_on_connect      = true
   maximum_sessions_allowed = 50
   preferred_app_group_type = "Desktop"
 
