@@ -30,7 +30,7 @@
 
 - name: Get Citrix Cloud sites
   uri:
-    url: https://api.cloud.com/cvad/manage/Sites/{{ citrix_org_id }}
+    url: https://api.cloud.com/cvad/manage/me
     method: GET
     body_format: json
     headers: 
@@ -39,9 +39,17 @@
     return_content: yes
   register: citrix_sites
 
-- name: Set Citrix Cloud site ID
+# This section requires some refactoring
+- name: Set Citrix Cloud site
   set_fact:
-    citrix_site_id: "{{ citrix_sites.json.Id }}"
+    citrix_site: "{{ data | json_query(querystr) }}"
+  vars:
+    data: "{{ citrix_sites.content }}"
+    querystr: "Customers[?contains(Id,'{{ citrix_org_id | lower }}')].Sites | [0]" #First result
+
+- name: Set Citrix Cloud site id
+  set_fact:
+    citrix_site_id: "{{ citrix_site[0].Id }}" # Harcoded to the first element for now
 
 - name: Get Citrix Cloud hypervisor connection
   uri:
