@@ -16,4 +16,4 @@
    
   - role: microsoft365apps
 
-  - role: citrix-optimizer
+  # - role: citrix-optimizer
