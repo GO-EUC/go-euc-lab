@@ -1,6 +1,8 @@
 trigger:
 - none
 
+pr: none
+
 pool: GO-EUC Linux
 
 extends:
@@ -8,12 +10,12 @@ extends:
   parameters:
     variable_group: VMware
 
-# - template: /vmware/domain.yml
-#   parameters:
-#     name: Linux
-#     vmImage: 'ubuntu-latest'
+- template: /vmware/infra.yml
+  parameters:
+    name: Linux
+    vmImage: 'ubuntu-latest'
 
-# - template: /vmware/infra.yml
+# - template: /vmware/domain.yml
 #   parameters:
 #     name: Linux
 #     vmImage: 'ubuntu-latest'

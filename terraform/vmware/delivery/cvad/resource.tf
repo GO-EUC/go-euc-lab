@@ -18,7 +18,7 @@ module "citrix_license_server" {
   vsphere_datacenter      = local.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = local.vsphere_cluster
-  vsphere_source_template = local.vsphere_source_template_ws2019
+  vsphere_source_template = local.vsphere_source_template_windows
 }
 
 
@@ -42,7 +42,7 @@ module "citrix_delivery_controller" {
   vsphere_datacenter      = local.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = local.vsphere_cluster
-  vsphere_source_template = local.vsphere_source_template_ws2019
+  vsphere_source_template = local.vsphere_source_template_windows
 }
 
 module "citrix_storefront" {
@@ -65,5 +65,5 @@ module "citrix_storefront" {
   vsphere_datacenter      = local.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = local.vsphere_cluster
-  vsphere_source_template = local.vsphere_source_template_ws2019
+  vsphere_source_template = local.vsphere_source_template_windows
 }

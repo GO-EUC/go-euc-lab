@@ -1,12 +1,12 @@
 ## Local variables uses by resources
 
 locals {
-  ad_domain_fqdn                 = "go.euc" #Active Directory Domain Name
-  vsphere_datacenter             = "GO"
-  vsphere_datastore              = "datastore-infra-02-02"
-  vsphere_cluster                = "Infra"
-  vsphere_source_template_ws2019 = "server2019-2204.5"
-  vsphere_source_template_ubuntu = "ubuntu_test"
+  ad_domain_fqdn                  = "go.euc" #Active Directory Domain Name
+  vsphere_datacenter              = "GO"
+  vsphere_datastore               = "qnap-datastore-01"
+  vsphere_cluster                 = "Infra"
+  vsphere_source_template_windows = "windows-server-2022-standard-dexp-v22.07"
+  vsphere_source_template_ubuntu  = "ubuntu_test"
 
   environment_abbreviations = {
     poison       = "pois"
