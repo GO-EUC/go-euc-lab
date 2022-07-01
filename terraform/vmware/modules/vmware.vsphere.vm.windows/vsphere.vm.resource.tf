@@ -50,7 +50,7 @@ resource "vsphere_virtual_machine" "vm_static" {
   }
 
   dynamic "clone" {
-    for_each = var.network_address != "" ? [1] : []
+    for_each = var.network_address == "" ? [1] : []
     content {
       template_uuid = data.vsphere_virtual_machine.template.id
 
