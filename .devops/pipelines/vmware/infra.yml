@@ -2,6 +2,9 @@ parameters:
 - name: vmware_build
   type: string
 
+- name: variable_group
+  type: string
+
 jobs:
   - job: buildInfra
     displayName: Building infrastructure
