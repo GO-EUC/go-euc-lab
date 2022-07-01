@@ -10,10 +10,10 @@ jobs:
     displayName: Building infrastructure
     
     steps:
-    - task: TerraformInstaller@0
-      displayName: Terraform download
-      inputs:
-        terraformVersion: 'latest'
+    # - task: TerraformInstaller@0
+    #   displayName: Terraform download
+    #   inputs:
+    #     terraformVersion: 'latest'
 
     - task: PowerShell@2
       displayName: Terraform variables
