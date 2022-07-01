@@ -49,37 +49,37 @@ jobs:
       inputs:
         script: | 
           terraform init -backend-config=$(backend.secureFilePath) -input=false 
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform select or create workspace
       inputs:
         script: | 
-          terraform workspace select ${{ lower(parameters.azure_workspace) }} || terraform workspace new ${{ lower(parameters.azure_workspace) }}
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+          terraform workspace select flowers || terraform workspace new flowers
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform validate
       inputs:
         script: 'terraform validate'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
         script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
     - task: CmdLine@2
       displayName: Terraform plan destroy
       inputs:
         script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Destroy')
 
     - task: CmdLine@2
       displayName: Terraform apply
       inputs:
         script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
