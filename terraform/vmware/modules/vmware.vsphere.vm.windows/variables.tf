@@ -98,6 +98,7 @@ variable "network_gateway" {
   description = "Network gateway"
   type        = string
   sensitive   = false
+  default     = ""
 }
 
 variable "virtual_network_portgroup_name" {
