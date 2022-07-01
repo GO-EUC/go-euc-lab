@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl1.0 \
     python3.8 \
     python3-pip \
-    ansible \
     gnupg \
     wget \
     xorriso \
@@ -34,13 +33,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsS https://aka.ms/InstallAzureCLIDeb | bash \
   && rm -rf /var/lib/apt/lists/*
 
-# WinRM for Ansible
-RUN pip install "pywinrm>=0.3.0"
-
 # Ansible and the azure requirements
+RUN pip3 install ansible
+RUN pip3 install "pywinrm>=0.3.0"
+
+RUN ansible --version
+
+RUN ansible-galaxy collection install azure.azcollection --force
+
 RUN curl https://raw.githubusercontent.com/ansible-collections/azure/dev/requirements-azure.txt --output requirements-azure.txt
-RUN pip install -r requirements-azure.txt
-# RUN ansible-galaxy collection install azure.azcollection
+RUN pip3 install -r requirements-azure.txt
+
 
 # Microsoft PowerShell
 RUN wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
