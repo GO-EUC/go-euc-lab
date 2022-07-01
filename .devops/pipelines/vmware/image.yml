@@ -2,55 +2,50 @@ parameters:
 - name: variable_group
   type: string
 
-stages:
-  - stage: ImageBuilder
+jobs:
+  - job: ImageBuilder
     displayName: "Building Images"
     
     variables:
     - group: ${{parameters.variable_group}}
 
-    jobs:
-      - job: Build
-        workspace:
-          clean: all
-        steps:
+    steps:
+    - task: PowerShell@2
+      displayName: Terraform variables
+      inputs:
+        targetType: 'inline'
+        script: |
 
-        - task: PowerShell@2
-          displayName: Terraform variables
-          inputs:
-            targetType: 'inline'
-            script: |
+          $variables = @()
+          $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
 
-              $variables = @()
-              $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
+          $variables += "build_username=`"$(build_username)`""
+          $variables += "build_password=`"$(build_password)`""
 
-              $variables += "build_username=`"$(build_username)`""
-              $variables += "build_password=`"$(build_password)`""
+          $variables += "vsphere_endpoint=`"$(vsphere_endpoint)`""
+          $variables += "vsphere_username=`"$(vsphere_username)`""
+          $variables += "vsphere_password=`"$(vsphere_password)`""
 
-              $variables += "vsphere_endpoint=`"$(vsphere_endpoint)`""
-              $variables += "vsphere_username=`"$(vsphere_username)`""
-              $variables += "vsphere_password=`"$(vsphere_password)`""
+          $variables += "vsphere_datacenter=`"$(vsphere_datacenter)`""
+          $variables += "vsphere_cluster=`"$(vsphere_cluster)`""
+          $variables += "vsphere_datastore=`"$(vsphere_datastore)`""
+          $variables += "vsphere_network=`"$(vsphere_network)`""
+          $variables += "vsphere_folder=`"$(vsphere_folder)`""
 
-              $variables += "vsphere_datacenter=`"$(vsphere_datacenter)`""
-              $variables += "vsphere_cluster=`"$(vsphere_cluster)`""
-              $variables += "vsphere_datastore=`"$(vsphere_datastore)`""
-              $variables += "vsphere_network=`"$(vsphere_network)`""
-              $variables += "vsphere_folder=`"$(vsphere_folder)`""
+          $variables += "iso_path=`"$(iso_path)`""
+          $variables += "iso_file=`"$(iso_file)`""
 
-              $variables += "iso_path=`"$(iso_path)`""
-              $variables += "iso_file=`"$(iso_file)`""
+          Set-Content -Value $variables -Path packer/vmware/vsphere.pkrvars.hcl -Force
+        workingDirectory: '$(Build.SourcesDirectory)'
 
-              Set-Content -Value $variables -Path packer/vmware/vsphere.pkrvars.hcl -Force
-            workingDirectory: '$(Build.SourcesDirectory)'
+    - task: CmdLine@2
+      displayName: 'Packer init'
+      inputs:
+        script: 'packer init packer/vmware/windows/server/2022/.'
+        workingDirectory: '$(Build.SourcesDirectory)'
 
-        - task: CmdLine@2
-          displayName: 'Packer init'
-          inputs:
-            script: 'packer init packer/vmware/windows/server/2022/.'
-            workingDirectory: '$(Build.SourcesDirectory)'
-
-        - task: CmdLine@2
-          displayName: 'Packer build'
-          inputs:
-            script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
-            workingDirectory: '$(Build.SourcesDirectory)'
+    - task: CmdLine@2
+      displayName: 'Packer build'
+      inputs:
+        script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
+        workingDirectory: '$(Build.SourcesDirectory)'
