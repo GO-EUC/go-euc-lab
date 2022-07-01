@@ -19,7 +19,8 @@ stages:
   displayName: Infra deployment
 
   dependsOn: image_creation
-
+  
+  jobs:
   - template: vmware/infra.yml
     parameters:
       vmware_build: Create
