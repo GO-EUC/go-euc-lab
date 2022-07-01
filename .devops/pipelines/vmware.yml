@@ -12,8 +12,8 @@ extends:
 
 - template: /vmware/infra.yml
   parameters:
-    name: Linux
-    vmImage: 'ubuntu-latest'
+    build: 'Create'
+    variable_group: VMware
 
 # - template: /vmware/domain.yml
 #   parameters:
