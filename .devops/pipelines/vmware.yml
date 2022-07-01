@@ -5,15 +5,25 @@ pr: none
 
 pool: GO-EUC Linux
 
-extends:
-  template: vmware/image.yml
-  parameters:
-    variable_group: VMware
 
-- template: vmware/infra.yml
-  parameters:
-    build: 'Create'
-    variable_group: VMware
+stages:
+- stage: image_creation
+  displayName: Image creation
+
+  jobs:
+  - template: vmware/image.yml
+    parameters:
+      variable_group: VMware
+
+- stage: infra_deployment
+  displayName: Infra deployment
+
+  dependsOn: image_creation
+
+  - template: vmware/infra.yml
+    parameters:
+      vmware_build: Create
+      variable_group: VMware
 
 # - template: /vmware/domain.yml
 #   parameters:

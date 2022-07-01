@@ -1,5 +1,5 @@
 parameters:
-- name: build
+- name: vmware_build
   type: string
 
 jobs:
@@ -66,14 +66,14 @@ jobs:
       inputs:
         script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-      condition: eq('${{ parameters.build }}', 'Create')
+      condition: eq('${{ parameters.vmware_build }}', 'Create')
 
     - task: CmdLine@2
       displayName: Terraform plan destroy
       inputs:
         script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/azure'
-      condition: eq('${{ parameters.build }}', 'Destroy')
+      condition: eq('${{ parameters.vmware_build }}', 'Destroy')
 
     - task: CmdLine@2
       displayName: Terraform apply
