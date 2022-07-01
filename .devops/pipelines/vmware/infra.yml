@@ -8,6 +8,9 @@ parameters:
 jobs:
   - job: buildInfra
     displayName: Building infrastructure
+
+    variables:
+    - group: ${{parameters.variable_group}}
     
     steps:
     # - task: TerraformInstaller@0
@@ -22,7 +25,7 @@ jobs:
         script: |
 
           $variables = @()
-          # $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
+          $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
 
           $variables += "domain_admin=`"$(build_username)`""
           $variables += "domain_admin_password=`"$(build_password)`""
