@@ -65,35 +65,35 @@ variable "domain_admin_password" {
   sensitive   = true
 }
 
-variable "certificate_file" {
-  description = "Certificate file location"
-  type        = string
-  sensitive   = false
-}
+# variable "certificate_file" {
+#   description = "Certificate file location"
+#   type        = string
+#   sensitive   = false
+# }
 
-variable "certificate_password" {
-  description = "Certificate PFX password"
-  type        = string
-  sensitive   = true
-}
+# variable "certificate_password" {
+#   description = "Certificate PFX password"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "certificate_thumbprint" {
-  description = "Certificate tumbprint"
-  type        = string
-  sensitive   = true
-}
+# variable "certificate_thumbprint" {
+#   description = "Certificate tumbprint"
+#   type        = string
+#   sensitive   = true
+# }
 
-variable "installsrc_storageaccountsmb" {
-  description = "Specify the storageaccount SMB path for the restriced install sources"
-  type        = string
-}
+# variable "installsrc_storageaccountsmb" {
+#   description = "Specify the storageaccount SMB path for the restriced install sources"
+#   type        = string
+# }
 
-variable "installsrc_storageaccountusername" {
-  description = "Specify the username for accessing storageaccount SMB path for the restriced install sources"
-  type        = string
-}
+# variable "installsrc_storageaccountusername" {
+#   description = "Specify the username for accessing storageaccount SMB path for the restriced install sources"
+#   type        = string
+# }
 
-variable "installsrc_storageaccountpwd" {
-  description = "Specify the password for accessing storageaccount SMB path for the restriced install sources"
-  type        = string
-}
+# variable "installsrc_storageaccountpwd" {
+#   description = "Specify the password for accessing storageaccount SMB path for the restriced install sources"
+#   type        = string
+# }
