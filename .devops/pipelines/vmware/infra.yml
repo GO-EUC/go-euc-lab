@@ -29,7 +29,7 @@ jobs:
 
           $variables += "domain_admin=`"$(build_username)`""
           $variables += "domain_admin_password=`"$(build_password)`""
-          $variables += "local_admin_password=`"$(local_admin_password)`""
+          $variables += "local_admin_password=`"$(build_password)`""
 
           $variables += "vsphere_server=`"$(vsphere_endpoint)`""
           $variables += "vsphere_user=`"$(vsphere_username)`""
