@@ -116,11 +116,11 @@ module "SQLServer" {
   vsphere_source_template = local.vsphere_source_template_windows
 }
 
-module "CVAD" {
-  count  = local.delivery_solutions[var.delivery] == "cvad" ? 1 : 0
-  source = "./delivery/cvad"
+# module "CVAD" {
+#   count  = local.delivery_solutions[var.delivery] == "cvad" ? 1 : 0
+#   source = "./delivery/cvad"
 
-}
+# }
 
 # module "Bots" {
 #   source    = "./modules/vmware.vsphere.vm.windows"
