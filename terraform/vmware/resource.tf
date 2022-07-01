@@ -49,7 +49,7 @@ module "FileServer" {
   vm_disks = [{
     unit_number = 0
     label       = "os"
-    size        = 64
+    size        = 100
     }, {
     unit_number = 1
     label       = "data"
@@ -97,7 +97,7 @@ module "SQLServer" {
   vm_disks = [{
     unit_number = 0
     label       = "os"
-    size        = 64
+    size        = 100
     }, {
     unit_number = 1
     label       = "mssqldata"
