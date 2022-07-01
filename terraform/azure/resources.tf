@@ -1,17 +1,16 @@
 module "ActiveDirectory" {
-  source = "./modules/azure.mp.vm.windows.static"
+  source = "./modules/azure.mp.vm.windows"
 
   vm_name = "${local.environment_abbreviations[terraform.workspace]}-dc"
 
   azure_resource_group_name = azurerm_resource_group.InfraBackend.name
-  azure_location            = local.azure_location
+  azure_location            = var.azure_region  
 
   azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
   azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
   azure_subnet_name              = azurerm_subnet.backend.name
   azure_cidr_host_start          = 10
-  
-
+  azure_vnet_allocation          = "static"
 
   local_admin_password = azurerm_key_vault_secret.admin.value
   local_admin          = azurerm_key_vault_secret.admin.name
@@ -24,11 +23,17 @@ module "ManagementServer" {
   vm_name                         = "${local.environment_abbreviations[terraform.workspace]}-mgnt"
 
   azure_resource_group_name       = azurerm_resource_group.InfraBackend.name
-  azure_location                  = local.azure_location
+  azure_location                  = var.azure_region  
 
   azure_vnet_name                = azurerm_virtual_network.AzurevNet.name
   azure_vnet_resource_group_name = azurerm_virtual_network.AzurevNet.resource_group_name
   azure_subnet_name              = azurerm_subnet.backend.name
+
+  managed_disks                  = [{
+    storage_account_type = "Standard_LRS"
+    create_option = "Empty"
+    disk_size_gb = 20
+  }]
 
   local_admin_password = azurerm_key_vault_secret.admin.value
   local_admin          = azurerm_key_vault_secret.admin.name
@@ -40,7 +45,7 @@ module "CVADs" {
   count    = local.delivery_solutions[var.delivery] == "cvads" ? 1 : 0
   source = "./delivery/cvads"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]
@@ -59,7 +64,7 @@ module "AVD" {
   count    = local.delivery_solutions[var.delivery] == "avd" ? 1 : 0
   source = "./delivery/avd"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]
@@ -71,7 +76,7 @@ module "HorizonC" {
   count    = local.delivery_solutions[var.delivery] == "horizonc" ? 1 : 0
   source = "./delivery/horizonc"
 
-  location              = local.azure_location
+  location              = var.azure_region
 
   deployment_name       = local.deploymentname
   workspace             = local.environment_abbreviations[terraform.workspace]

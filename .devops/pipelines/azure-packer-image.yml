@@ -1,0 +1,78 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+trigger:
+- none
+
+pr: none
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+
+name: ${{ parameters.azureEnvironment }}_${{ parameters.azureWorkspace }}_$(Date:yyyyMMdd)$(Rev:.r)
+
+jobs:
+- job: packer
+  displayName: Packer image deployment
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  workspace:
+    clean: all
+
+  steps:
+  - script: |
+      curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+      apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      apt-get update && apt-get install packer
+      pip install --upgrade requests==2.20.1
+      pip install --upgrade azure-mgmt-monitor==0.5.2
+      apt-get -y install zip
+    displayName: 'Download and install Packer'
+
+  - task: PowerShell@2
+    displayName: Setting Packer variables
+    inputs:
+      targetType: 'inline'
+      script: |
+        $packerVariable = @()
+        $packerVariable += "azure_client_id=`"$(azure_client_id)`""
+        $packerVariable += "azure_client_secret=`"$(azure_client_secret)`""
+        $packerVariable += "azure_subscription_id=`"$(azure_subscription_id)`""
+        $packerVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
+        $packerVariable += "environment=`"${{ lower(parameters.azureWorkspace) }}`""
+        $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
+        Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force
+      workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+  - task: CmdLine@2
+    displayName: Packer init
+    inputs:
+      script: | 
+        packer init image.pkr.hcl
+      workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+  - task: CmdLine@2
+    displayName: Packer validate
+    inputs:
+      script: | 
+      workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+  - task: CmdLine@2
+    displayName: Deploy Packer build image
+    inputs:
+      script: | 
+        packer build -var-file=azure.pkrvars.hcl .
+      workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+

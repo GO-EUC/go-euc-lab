@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="yes"?>
+<RunAsProfileDataset xmlns="http://tempuri.org/RunAsProfileDataset.xsd">
+  <RunAsProfiles>
+    <profileName></profileName>
+    <Domain></Domain>
+    <DomainController></DomainController>
+    <DomainDnsName></DomainDnsName>
+    <Password></Password>
+    <Username></Username>
+    <Workgroup></Workgroup>
+  </RunAsProfiles>
+</RunAsProfileDataset>

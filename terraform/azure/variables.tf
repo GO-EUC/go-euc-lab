@@ -17,9 +17,6 @@ locals {
   deploymentname = "golab"
   ad_domain_fqdn = "go.euc" #Active Directory Domain Name
 
-  #geographical details about Azure Datacenter
-  azure_location = "eastus"
-
   #network locals
   infra_cidr = {
     default = "10.100.0.0/16"
@@ -44,6 +41,11 @@ locals {
     cards   = "10.200.25.0/24"
     flowers = "10.220.26.0/24"
   }
+}
+
+variable "azure_region" {
+  type    = string
+  default = "westeurope"
 }
 
 variable "delivery" {
@@ -86,6 +88,12 @@ variable "devops_token" {
 variable "devops_pool" {
   type        = string
   description = "Azure DevOps pool name."
+}
+
+variable "devops_agents" {
+  type        = number
+  description = "Azure DevOps Agents."
+  default     = 3
 }
 
 variable "devops_project" {

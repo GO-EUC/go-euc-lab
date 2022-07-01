@@ -1,0 +1,159 @@
+<?xml version="1.0" standalone="yes"?>
+<Options xmlns="http://tempuri.org/Options.xsd">
+  <OptionTable>
+    <optionName>LoadBotTimeOutFailure</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">120</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Loadbot connect timeout</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">120</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Program Files folder</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">C:\Program Files (x86);C:\Program Files</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>overwrite.loadgenIca</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Loadbot disconnect timeout</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">120</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>defaults.baselinememory</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">64</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>TunnelDUAFThroughDirector</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>TimeOutFailure</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">120</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>LoadBotInstallFolder</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">C:\Program Files</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>IcaEnableOss</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">*</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>IcaSpeedScreenIa</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">*</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>IcaFontSmoothingType</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">*</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ReleaseLoadBotAfterDnkEvent</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>messages.queueinterval</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">30</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>messages.director.queueinterval</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">2</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>LoadGen Director Skin</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Office 2013</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.loadbotstatus.autoscroll</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.splitter.loadbots</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">325</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.SUT.OrderColumn</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">GridColumn1</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.SUT.SortOrder</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">1</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard refresh interval</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">15</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard charts aggregate period in seconds</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">60</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard timespan</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">False</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard timespan count</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">1</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard timespan scale</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Hours</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Canvas vertical dividers</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">False</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Rescan agents on startup</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>RememberLocationAndSize</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>WindowState</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Normal</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Size</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">1262x800</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Location</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">450.316</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>AskForProjectsFolder</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.startupwizard.show</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.dashboard.autoscroll</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.splitter.execute.userstatus</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">218</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.splitter.execute.systemmessages</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">297</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ui.splitter.execute.charts</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">218</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>Dashboard Palette</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Median</optionValue>
+  </OptionTable>
+  <OptionTable>
+    <optionName>ExitConfirmation</optionName>
+    <optionValue xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">True</optionValue>
+  </OptionTable>
+</Options>

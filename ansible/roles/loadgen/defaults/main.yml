@@ -1,1 +1,19 @@
-loadgen_version: 7524
+loadgen_version: 7657
+
+datasource_name: GO-Datastore
+datasource_active: true
+datasource_integrated_security: false
+datasource_table_create_on_load_test: true
+datasource_tablename_duaf: DUAF
+datasource_tablename_performance_counters: PM
+datasource_tableprefix_duaf: DUAF
+datasource_tableprefix_performance_counters: PM
+datasource_update_interval: 5
+datasource_debug_sql_update_count: false
+datasource_table_smd_create_on_load_test: true
+
+
+profile_name: GO-Admin
+profile_workgroup: false 
+
+

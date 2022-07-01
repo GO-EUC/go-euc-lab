@@ -1,0 +1,162 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureDelivery
+  displayName: Desktop Delivery Model
+  type: string
+  default: Citrix Virtual Apps & Desktop Services
+  values:
+  - None
+  - Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - VMware Horizon Cloud
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+
+name: $(Date:yy).$(Date:MM)$(Rev:.r)
+
+trigger: none
+pr: none
+
+stages:
+- stage: ansible_domain
+  displayName: Domain deployment
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  jobs:
+  - template: azure/ansible.yml
+    parameters:
+      ansible_playbook: domain.yml
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
+      citrix_client_id: $(citrix_client_id)
+      citrix_client_secret: $(citrix_client_secret)
+      citrix_org_id: $(citrix_org_id)
+
+- stage: ansible_management
+  displayName: Management deployment
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: ansible_domain
+
+  jobs:
+  - template: azure/ansible.yml
+    parameters:
+      ansible_playbook: management.yml
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
+      citrix_client_id: $(citrix_client_id)
+      citrix_client_secret: $(citrix_client_secret)
+      citrix_org_id: $(citrix_org_id)
+
+- stage: image_build
+  displayName: Building image
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+  
+  dependsOn: ansible_domain
+
+  jobs:
+  - template: azure/image.yml
+    parameters:
+      job: avd
+      delivery: avd
+      image: Windows10-21h2-avd
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      citrix_username: $(citrix_username)
+      citrix_password: $(citrix_password)
+      environment: ${{ parameters.azureWorkspace }}
+      version: $(Build.BuildNumber)
+
+  - template: azure/image.yml
+    parameters:
+      job: citrix
+      delivery: citrix
+      image: Windows10-21h2-citrix
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      citrix_username: $(citrix_username)
+      citrix_password: $(citrix_password)
+      environment: ${{ parameters.azureWorkspace }}
+      version: $(Build.BuildNumber)
+
+- stage: ansible_cvads
+  displayName: Citrix DaaS deployment
+  
+  pool: ${{ parameters.azureEnvironment }}-${{ lower(parameters.azureWorkspace) }}
+ 
+  condition: eq('${{ parameters.azureDelivery }}', 'Citrix Virtual Apps & Desktop Services')
+  
+  dependsOn: ansible_domain
+
+  jobs:
+  - template: azure/ansible.yml
+    parameters:
+      ansible_playbook: cvads.yml
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
+      citrix_client_id: $(citrix_client_id)
+      citrix_client_secret: $(citrix_client_secret)
+      citrix_org_id: $(citrix_org_id)
