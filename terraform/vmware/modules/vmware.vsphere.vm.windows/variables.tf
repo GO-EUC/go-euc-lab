@@ -46,7 +46,7 @@ variable "vm_guest_id" {
   description = "GuestID"
   type        = string
   sensitive   = false
-  default     = "windows9Server64Guest"
+  default     = "windows2019srv_64Guest"
 }
 
 variable "local_admin" {
