@@ -10,7 +10,7 @@ extends:
   parameters:
     variable_group: VMware
 
-- template: /vmware/infra.yml
+- template: vmware/infra.yml
   parameters:
     build: 'Create'
     variable_group: VMware
