@@ -23,7 +23,7 @@ locals {
   virtual_network_portgroup_name = {
     poison       = "poison"
     playing_card = "card"
-    flowers      = "flowers"
+    flowers      = "vlan30"
   }
 }
 
