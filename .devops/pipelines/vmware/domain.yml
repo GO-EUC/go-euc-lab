@@ -88,8 +88,8 @@ jobs:
       displayName: 'Ansible version'
 
     - script: |  
-        export ANSIBLE_USER="$(vsphere_username)"
-        export ANSIBLE_PASSWORD="$(vsphere_password)"
+        export ANSIBLE_USER="$(build_username)"
+        export ANSIBLE_PASSWORD="$(build_password)"
 
         ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory -e ansible_user='{{ lookup("env", "ANSIBLE_USER") }}' -e ansible_password='{{ lookup("env", "ANSIBLE_PASSWORD") }}'
       displayName: 'Execute ansible'
