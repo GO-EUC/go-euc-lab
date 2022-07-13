@@ -5,9 +5,6 @@ parameters:
 - name: ansible_playbook
   type: string
 
-- name: azure_backend
-  type: string
-
 jobs:
   - job: ansible
     displayName: Configure infrastructure
@@ -30,7 +27,7 @@ jobs:
       displayName: Download backend configuration
       name: backend
       inputs:
-        secureFile: ${{ parameters.azure_backend }}
+        secureFile: $(azure_backend)
 
     - task: PowerShell@2
       displayName: Terraform variables
