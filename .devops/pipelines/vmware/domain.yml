@@ -2,6 +2,9 @@ parameters:
 - name: variable_group
   type: string
 
+- name: ansible_playbook
+  type: string
+
 jobs:
   - job: ansible
     displayName: Configure infrastructure

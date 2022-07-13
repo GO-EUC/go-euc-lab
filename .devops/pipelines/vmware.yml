@@ -34,6 +34,7 @@ stages:
   jobs:
   - template: vmware/domain.yml
     parameters:
+      ansible_playbook: domain.yml
       variable_group: VMware
 
 
