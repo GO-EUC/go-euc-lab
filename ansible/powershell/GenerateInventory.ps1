@@ -10,6 +10,8 @@ param (
 
 $state = Get-Content -Path $StateFile -Raw | ConvertFrom-Json
 
+Write-Host $state
+
 $machines = $state.outputs.PSObject.Properties | Where-Object { 
     $_.Name -ne "admin" -and 
     $_.Name -ne "vault" -and 
@@ -53,5 +55,7 @@ if ($inventoryDir -ne ".") {
         }
     }
 }
+
+Write-Host $content
 
 Set-Content -Path $InventoryFile -Value $content
