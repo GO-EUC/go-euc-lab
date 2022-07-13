@@ -5,6 +5,9 @@ parameters:
 - name: variable_group
   type: string
 
+- name: azure_backend
+  type: string
+
 jobs:
   - job: buildInfra
     displayName: Building infrastructure
@@ -17,6 +20,12 @@ jobs:
     #   displayName: Terraform download
     #   inputs:
     #     terraformVersion: 'latest'
+
+    - task: DownloadSecureFile@1
+      displayName: Download backend configuration
+      name: backend
+      inputs:
+        secureFile: ${{ parameters.azure_backend }}
 
     - task: PowerShell@2
       displayName: Terraform variables
