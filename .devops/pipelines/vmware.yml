@@ -15,10 +15,32 @@ stages:
     parameters:
       variable_group: VMware
 
+- stage: infra_dc
+  displayName: Infra domain controller
+
+  dependsOn: image_creation
+  
+  jobs:
+  - template: vmware/infra-dc.yml
+    parameters:
+      vmware_build: Create
+      variable_group: VMware
+
+- stage: infra_dc_config
+  displayName: Infra domain controller config
+
+  dependsOn: infra_dc
+  
+  jobs:
+  - template: vmware/domain.yml
+    parameters:
+      variable_group: VMware
+
+
 - stage: infra_deployment
   displayName: Infra deployment
 
-  dependsOn: image_creation
+  dependsOn: infra_dc_config
   
   jobs:
   - template: vmware/infra.yml

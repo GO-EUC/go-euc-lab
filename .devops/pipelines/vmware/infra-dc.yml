@@ -1,0 +1,88 @@
+parameters:
+- name: vmware_build
+  type: string
+
+- name: variable_group
+  type: string
+
+jobs:
+  - job: buildInfra
+    displayName: Building infrastructure
+
+    variables:
+    - group: ${{parameters.variable_group}}
+    
+    steps:
+    # - task: TerraformInstaller@0
+    #   displayName: Terraform download
+    #   inputs:
+    #     terraformVersion: 'latest'
+
+    - task: PowerShell@2
+      displayName: Terraform variables
+      inputs:
+        targetType: 'inline'
+        script: |
+
+          $variables = @()
+          $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
+
+          $variables += "domain_admin=`"$(build_username)`""
+          $variables += "domain_admin_password=`"$(build_password)`""
+          $variables += "local_admin_password=`"$(build_password)`""
+
+          $variables += "vsphere_server=`"$(vsphere_endpoint)`""
+          $variables += "vsphere_user=`"$(vsphere_username)`""
+          $variables += "vsphere_password=`"$(vsphere_password)`""
+
+          $variables += "vsphere_datacenter=`"$(vsphere_datacenter)`""
+          $variables += "vsphere_cluster=`"$(vsphere_cluster)`""
+          $variables += "vsphere_datastore=`"$(vsphere_datastore)`""
+          $variables += "vsphere_network=`"$(vsphere_network)`""
+          $variables += "vsphere_folder=`"$(vsphere_folder)`""
+
+          $variables += "iso_path=`"$(iso_path)`""
+          $variables += "iso_file=`"$(iso_file)`""
+
+          Set-Content -Value $variables -Path terraform/vmware/terraform.tfvars -Force
+        workingDirectory: '$(Build.SourcesDirectory)'
+
+    - task: CmdLine@2
+      displayName: Terraform init
+      inputs:
+        script: | 
+          terraform init -backend-config=$(backend.secureFilePath) -input=false 
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+
+    - task: CmdLine@2
+      displayName: Terraform select or create workspace
+      inputs:
+        script: | 
+          terraform workspace select flowers || terraform workspace new flowers
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+
+    - task: CmdLine@2
+      displayName: Terraform validate
+      inputs:
+        script: 'terraform validate'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+
+    - task: CmdLine@2
+      displayName: Terraform plan
+      inputs:
+        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan --target module.ActiveDirectory'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+      condition: eq('${{ parameters.vmware_build }}', 'Create')
+
+    - task: CmdLine@2
+      displayName: Terraform plan destroy
+      inputs:
+        script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+      condition: eq('${{ parameters.vmware_build }}', 'Destroy')
+
+    - task: CmdLine@2
+      displayName: Terraform apply
+      inputs:
+        script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
