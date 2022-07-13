@@ -23,7 +23,7 @@ jobs:
       displayName: Download backend configuration
       name: backend
       inputs:
-        secureFile: $(azure_backend)
+        secureFile: "ryan-backend.conf"
 
     - task: PowerShell@2
       displayName: Terraform variables
