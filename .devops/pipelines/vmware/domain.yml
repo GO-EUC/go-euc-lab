@@ -91,5 +91,5 @@ jobs:
         export ANSIBLE_USER="$(vsphere_username)"
         export ANSIBLE_PASSWORD="$(vsphere_password)"
 
-        ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory -e ansible_password='{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+        ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory -e ansible_user='{{ lookup("env", "ANSIBLE_USER") }}'
       displayName: 'Execute ansible'
