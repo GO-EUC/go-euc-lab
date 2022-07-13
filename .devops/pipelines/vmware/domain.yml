@@ -8,6 +8,10 @@ parameters:
 jobs:
   - job: ansible
     displayName: Configure infrastructure
+
+    variables:
+    - group: ${{parameters.variable_group}}
+
     steps:
     - script: |
         pip install --upgrade requests==2.20.1
