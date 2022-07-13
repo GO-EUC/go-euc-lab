@@ -25,6 +25,7 @@ stages:
     parameters:
       vmware_build: Create
       variable_group: VMware
+      azure_backend: $(azure_backend)
 
 - stage: infra_dc_config
   displayName: Infra domain controller config
@@ -36,6 +37,7 @@ stages:
     parameters:
       ansible_playbook: domain.yml
       variable_group: VMware
+      azure_backend: $(azure_backend)
 
 
 - stage: infra_deployment
@@ -48,6 +50,7 @@ stages:
     parameters:
       vmware_build: Create
       variable_group: VMware
+      azure_backend: $(azure_backend)
 
 # - template: /vmware/domain.yml
 #   parameters:
