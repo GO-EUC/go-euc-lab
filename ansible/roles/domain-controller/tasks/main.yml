@@ -32,6 +32,25 @@
     include_management_tools: yes
   register: result
 
+- name: Install DHCP Services
+  ansible.windows.win_feature:
+    name: DHCP
+    state: present
+    include_sub_features: yes
+    include_management_tools: yes
+  when: lookup('env', 'platform') != 'azure' 
+
+- name: Create DHCP config
+  win_shell: |
+    $scope = Get-DhcpServerv4Scope
+    if (!($scope.Name -eq '{{ dns_domain_name }}-Scope')) {
+    Add-DhcpServerv4Scope -Name '{{ dns_domain_name }}-Scope' -StartRange {{ dhcp_start_range }} -EndRange {{ dhcp_end_range }} -SubnetMask {{ dhcp_subnetmask }} -State Active
+    Set-DhcpServerv4OptionValue -OptionID 3 -Value {{ dhcp_router }} -ScopeID {{ dhcp_start_range }} -ComputerName {{ hostname }}.{{ dns_domain_name }} 
+    Set-DhcpServerv4OptionValue -DnsDomain {{ dns_domain_name }} -DnsServer {{ host_ipaddress }} -Router {{ dhcp_router }}
+    Add-DhcpServerInDC -DnsName {{ hostname }}.{{ dns_domain_name }} -IPAddress {{ host_ipaddress }}
+    }
+  when: lookup('env', 'platform') != 'azure' 
+
 - name: Create Domain
   win_domain:
     dns_domain_name: '{{ dns_domain_name }}'
