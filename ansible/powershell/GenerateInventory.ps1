@@ -42,7 +42,13 @@ $content += "[all:vars]"
 $content += "vault_name=$($state.outputs.vault.value)"
 $content += "resource_group=$($state.outputs.vault_resource_group.value)"
 $content += "ansible_user=$($state.outputs.admin.value)"
+
 $content += "reverse_dns_zone=$($state.outputs.reverse_dns_zone.value)"
+$content += "dhcp_start_range=$($state.outputs.dhcp_start_range.value)"
+$content += "dhcp_end_range=$($state.outputs.dhcp_end_range.value)"
+$content += "dhcp_subnetmask=$($state.outputs.dhcp_subnetmask.value)"
+$content += "dhcp_router=$($state.outputs.dhcp_router.value)"
+
 $content += "sql_admin=$($state.outputs.sql_admin.value)"
 $content += "sql_server=$($state.outputs.sql_server.value)"
 $content += "sql_database=$($state.outputs.sql_database.value)"
