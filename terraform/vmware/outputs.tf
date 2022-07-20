@@ -8,21 +8,21 @@ output "mgnt" {
 
 # Output for DHCP configuration
 output "reverse_dns_zone" {
-  value = local.virtual_network_cidr_address[terraform.workspace]
+  value = module.ActiveDirectory.reverse_dns_zone
 }
 
 output "dhcp_start_range" {
-  value = cidrhost(local.virtual_network_cidr_address[terraform.workspace], 11)
+  value = module.ActiveDirectory.dhcp_start_range
 }
 
 output "dhcp_end_range" {
-  value = cidrhost(local.virtual_network_cidr_address[terraform.workspace], 253)
+  value = module.ActiveDirectory.dhcp_end_range
 }
 
 output "dhcp_subnetmask" {
-  value = cidrnetmask(local.virtual_network_cidr_address[terraform.workspace])
+  value = module.ActiveDirectory.dhcp_subnetmask
 }
 
 output "dhcp_router" {
-  value = cidrhost(local.virtual_network_cidr_address[terraform.workspace], 254)
+  value = module.ActiveDirectory.dhcp_router
 }
