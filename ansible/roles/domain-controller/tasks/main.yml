@@ -35,7 +35,7 @@
 - name: Create Domain
   win_domain:
     dns_domain_name: '{{ dns_domain_name }}'
-    safe_mode_password: '{{ recovery_password }}'
+    safe_mode_password: '{{ ansible_password }}' #'{{ recovery_password }}'
   register: ad
 
 - name: Reboot
