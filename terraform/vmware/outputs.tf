@@ -2,9 +2,9 @@ output "dc" {
   value = module.ActiveDirectory.vm_info
 }
 
-output "mgnt" {
-  value = module.ManagementServer.vm_info
-}
+# output "mgnt" {
+#   value = module.ManagementServer.vm_info
+# }
 
 # Output for DHCP configuration
   output "reverse_dns_zone" {

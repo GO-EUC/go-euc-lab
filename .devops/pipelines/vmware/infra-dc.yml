@@ -76,7 +76,7 @@ jobs:
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
-        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan --target module.ActiveDirectory --target output.reverse_dns_zone --target output.dhcp_start_range --target output.dhcp_end_range --target output.dhcp_subnetmask --target output.dhcp_router'
+        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
