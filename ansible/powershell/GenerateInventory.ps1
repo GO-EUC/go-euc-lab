@@ -17,6 +17,10 @@ $machines = $state.outputs.PSObject.Properties | Where-Object {
     $_.Name -ne "vault" -and 
     $_.Name -ne "vault_resource_group" -and 
     $_.Name -ne "reverse_dns_zone" -and 
+    $_.Name -ne "dhcp_start_range" -and 
+    $_.Name -ne "dhcp_end_range" -and 
+    $_.Name -ne "dhcp_subnetmask" -and 
+    $_.Name -ne "dhcp_router" -and 
     $_.Name -ne "sql_admin" -and
     $_.Name -ne "sql_server" -and
     $_.Name -ne "sql_database" } | Select-Object Name
