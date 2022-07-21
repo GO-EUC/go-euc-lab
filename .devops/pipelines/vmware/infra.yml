@@ -80,14 +80,14 @@ jobs:
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
-        script: 'terraform plan ${{parameters.variable_group}} -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan ${{parameters.variable_group}}'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
     - task: CmdLine@2
       displayName: Terraform plan destroy
       inputs:
-        script: 'terraform plan ${{parameters.variable_group}} -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
+        script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan ${{parameters.variable_group}}'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Destroy')
 

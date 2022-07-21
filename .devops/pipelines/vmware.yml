@@ -23,7 +23,7 @@ stages:
   jobs:
   - template: vmware/infra.yml
     parameters:
-      terraform_argument: '-target="module.ActiveDirectory"'
+      terraform_argument: '--target module.ActiveDirectory'
       vmware_build: Create
       variable_group: VMware
       
