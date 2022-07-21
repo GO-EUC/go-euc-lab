@@ -32,31 +32,6 @@
     include_management_tools: yes
   register: result
 
-- name: Install DHCP Services
-  ansible.windows.win_feature:
-    name: DHCP
-    state: present
-    include_sub_features: yes
-    include_management_tools: yes
-  when: lookup('env', 'platform') != 'azure' 
-
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ inventory_hostname }}.{{ dns_domain_name }}"
-
-- name: Create DHCP config
-  win_shell: |
-    $scope = Get-DhcpServerv4Scope
-    if (!($scope.Name -eq '{{ dns_domain_name }}-Scope')) {
-      Add-DhcpServerv4Scope -Name '{{ dns_domain_name }}-Scope' -StartRange {{ dhcp_start_range }} -EndRange {{ dhcp_end_range }} -SubnetMask {{ dhcp_subnetmask }} -State Active
-
-      Set-DhcpServerv4OptionValue -OptionID 3 -Value {{ dhcp_router }} -ScopeID {{ dhcp_start_range }} -ComputerName {{ inventory_hostname }}.{{ dns_domain_name }} 
-      Set-DhcpServerv4OptionValue -DnsDomain {{ dns_domain_name }} -DnsServer {{ ansible_host }} -Router {{ dhcp_router }}
-      
-      Add-DhcpServerInDC -DnsName {{ inventory_hostname }}.{{ dns_domain_name }} -IPAddress {{ ansible_host }}
-    }
-  when: lookup('env', 'platform') != 'azure' 
-
 - name: Create Domain
   win_domain:
     dns_domain_name: '{{ dns_domain_name }}'
@@ -116,3 +91,28 @@
 
 - name: Create forward DNS zone
   win_shell: Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru 
+
+- name: Install DHCP Services
+  ansible.windows.win_feature:
+    name: DHCP
+    state: present
+    include_sub_features: yes
+    include_management_tools: yes
+  when: lookup('env', 'platform') != 'azure' 
+
+- name: Debug
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }}.{{ dns_domain_name }}"
+
+- name: Create DHCP config
+  win_shell: |
+    $scope = Get-DhcpServerv4Scope
+    if (!($scope.Name -eq '{{ dns_domain_name }}-Scope')) {
+      Add-DhcpServerv4Scope -Name '{{ dns_domain_name }}-Scope' -StartRange {{ dhcp_start_range }} -EndRange {{ dhcp_end_range }} -SubnetMask {{ dhcp_subnetmask }} -State Active
+
+      Set-DhcpServerv4OptionValue -OptionID 3 -Value {{ dhcp_router }} -ScopeID {{ dhcp_start_range }} -ComputerName {{ inventory_hostname }}.{{ dns_domain_name | lower }} 
+      Set-DhcpServerv4OptionValue -DnsDomain {{ dns_domain_name }} -DnsServer {{ ansible_host }} -Router {{ dhcp_router }}
+      
+      Add-DhcpServerInDC -DnsName {{ inventory_hostname }}.{{ dns_domain_name | lower }} -IPAddress {{ ansible_host }}
+    }
+  when: lookup('env', 'platform') != 'azure' 
