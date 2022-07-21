@@ -116,3 +116,7 @@
       Add-DhcpServerInDC -DnsName {{ inventory_hostname }}.{{ dns_domain_name | lower }} -IPAddress {{ ansible_host }}
     }
   when: lookup('env', 'platform') != 'azure' 
+  vars:
+    ansible_become: yes
+    ansible_become_user: system
+    ansible_become_method: runas
