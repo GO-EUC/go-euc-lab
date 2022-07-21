@@ -53,7 +53,7 @@ jobs:
           $variables += "iso_path=`"$(iso_path)`""
           $variables += "iso_file=`"$(iso_file)`""
 
-          Set-Content -Value $variables -Path terraform/vmware/terraform.tfvars -Force
+          Set-Content -Value $variables -Path ${{parameters.working_dir}}/terraform.tfvars -Force
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: CmdLine@2
