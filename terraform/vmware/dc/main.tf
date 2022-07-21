@@ -8,7 +8,7 @@ terraform {
   }
 
   backend "azurerm" {
-    key = "infra"
+    key = "dc"
   }
 }
 

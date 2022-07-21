@@ -5,6 +5,8 @@ parameters:
 - name: variable_group
   type: string
 
+- name: working_dir
+  type: string
 
 jobs:
   - job: buildInfra
@@ -59,37 +61,37 @@ jobs:
       inputs:
         script: | 
           terraform init -backend-config=$(backend.secureFilePath) -input=false 
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}
 
     - task: CmdLine@2
       displayName: Terraform select or create workspace
       inputs:
         script: | 
           terraform workspace select flowers || terraform workspace new flowers
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}
 
     - task: CmdLine@2
       displayName: Terraform validate
       inputs:
         script: 'terraform validate'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}
 
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
         script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
     - task: CmdLine@2
       displayName: Terraform plan destroy
       inputs:
         script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}
       condition: eq('${{ parameters.vmware_build }}', 'Destroy')
 
     - task: CmdLine@2
       displayName: Terraform apply
       inputs:
         script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
+        workingDirectory: ${{parameters.working_dir}}

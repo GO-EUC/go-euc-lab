@@ -21,19 +21,21 @@ stages:
   dependsOn: image_creation
   
   jobs:
-  - template: vmware/infra-dc.yml
+  - template: vmware/infra.yml
     parameters:
+      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware/dc'
       vmware_build: Create
       variable_group: VMware
-
+      
 - stage: infra_dc_config
   displayName: Infra domain controller config
 
   dependsOn: infra_dc
   
   jobs:
-  - template: vmware/domain.yml
+  - template: vmware/ansible.yml
     parameters:
+      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware/dc'
       ansible_playbook: domain.yml
       variable_group: VMware
 
@@ -46,6 +48,7 @@ stages:
   jobs:
   - template: vmware/infra.yml
     parameters:
+      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware'
       vmware_build: Create
       variable_group: VMware
 
