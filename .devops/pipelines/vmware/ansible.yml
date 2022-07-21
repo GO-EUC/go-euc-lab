@@ -5,9 +5,6 @@ parameters:
 - name: ansible_playbook
   type: string
 
-- name: working_dir
-  type: string
-
 jobs:
   - job: ansible
     displayName: Configure infrastructure
@@ -66,26 +63,26 @@ jobs:
       inputs:
         script: | 
           terraform init -backend-config=$(backend.secureFilePath) -input=false 
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform select or create workspace
       inputs:
         script: | 
           terraform workspace select flowers || terraform workspace new flowers
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform pull state
       inputs:
         script: 'terraform state pull > download.tfstate'
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: PowerShell@2
       displayName: Generate Ansible inventory file 
       inputs:
         filePath: '$(Build.Repository.LocalPath)/ansible/powershell/GenerateInventory.ps1'
-        arguments: '-StateFile  ${{parameters.working_dir}}/download.tfstate -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
+        arguments: '-StateFile $(Build.Repository.LocalPath)/terraform/vmware/download.tfstate -InventoryFile $(Build.Repository.LocalPath)/ansible/inventory'
 
     - script:  ansible --version
       displayName: 'Ansible version'

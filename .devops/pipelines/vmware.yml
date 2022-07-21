@@ -23,7 +23,7 @@ stages:
   jobs:
   - template: vmware/infra.yml
     parameters:
-      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware/dc'
+      terraform_argument: '--target="module.ActiveDirectory"'
       vmware_build: Create
       variable_group: VMware
       
@@ -35,7 +35,6 @@ stages:
   jobs:
   - template: vmware/ansible.yml
     parameters:
-      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware/dc'
       ansible_playbook: domain.yml
       variable_group: VMware
 
@@ -48,7 +47,6 @@ stages:
   jobs:
   - template: vmware/infra.yml
     parameters:
-      working_dir: '$(Build.Repository.LocalPath)/terraform/vmware'
       vmware_build: Create
       variable_group: VMware
 

@@ -5,8 +5,9 @@ parameters:
 - name: variable_group
   type: string
 
-- name: working_dir
+- name: terraform_argument
   type: string
+  default: ""
 
 jobs:
   - job: buildInfra
@@ -53,7 +54,7 @@ jobs:
           $variables += "iso_path=`"$(iso_path)`""
           $variables += "iso_file=`"$(iso_file)`""
 
-          Set-Content -Value $variables -Path ${{parameters.working_dir}}/terraform.tfvars -Force
+          Set-Content -Value $variables -Path terraform/vmware/terraform.tfvars -Force
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: CmdLine@2
@@ -61,37 +62,37 @@ jobs:
       inputs:
         script: | 
           terraform init -backend-config=$(backend.secureFilePath) -input=false 
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform select or create workspace
       inputs:
         script: | 
           terraform workspace select flowers || terraform workspace new flowers
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform validate
       inputs:
         script: 'terraform validate'
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
 
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
-        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: ${{parameters.working_dir}}
+        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan ${{parameters.variable_group}}'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
     - task: CmdLine@2
       displayName: Terraform plan destroy
       inputs:
-        script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: ${{parameters.working_dir}}
+        script: 'terraform plan -destroy -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan ${{parameters.variable_group}}'
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Destroy')
 
     - task: CmdLine@2
       displayName: Terraform apply
       inputs:
         script: 'terraform apply $(Build.Repository.LocalPath)/terraform/infra.tfplan'
-        workingDirectory: ${{parameters.working_dir}}
+        workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
