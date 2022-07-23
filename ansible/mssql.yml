@@ -1,0 +1,27 @@
+---
+# - hosts: localhost
+#   connection: local
+#   gather_facts: yes
+#   collections:
+#     - azure.azcollection
+
+#   tasks:
+#   - name: Start the Azure Key Vault actions
+#     include_tasks: azure-keyvault.yml
+
+- name: SQL Server
+  hosts: sql
+  roles:
+  - domain-join
+  - mssql
+  vars:
+    dns_domain_name: 'GO.EUC'
+    domain_name: GO
+    domain_controller: "{{ groups['dc'][0] }}"
+    domain_admin_user: "GO\\{{ ansible_user }}"
+    ansible_connection: winrm
+    ansible_winrm_transport: ntlm
+    ansible_winrm_server_cert_validation: ignore
+    ansible_port: 5985
+
+

@@ -61,6 +61,17 @@ stages:
       ansible_playbook: management.yml
       variable_group: VMware
 
+- stage: sql_server_config
+  displayName: SQL server configuration
+
+  dependsOn: infra_deployment
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: mssql.yml
+      variable_group: VMware
+
 - stage: gateway_server_config
   displayName: RDGateway server configuration
 
