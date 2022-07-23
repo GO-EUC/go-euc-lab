@@ -80,7 +80,7 @@ jobs:
     - task: CmdLine@2
       displayName: Terraform plan
       inputs:
-        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan -target=module.ActiveDirectory'
+        script: 'terraform plan -out=$(Build.Repository.LocalPath)/terraform/infra.tfplan ${{parameters.variable_group}}'
         workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware'
       condition: eq('${{ parameters.vmware_build }}', 'Create')
 
