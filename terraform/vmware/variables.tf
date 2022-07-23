@@ -8,6 +8,14 @@ locals {
   vsphere_source_template_windows = "windows-server-2022-standard-dexp-v22.07"
   vsphere_source_template_ubuntu  = "ubuntu_test"
 
+  delivery_solutions = {
+    none     = "none"
+    cvads    = "cvads"
+    cvad     = "cvad"
+    avd      = "avd"
+    horizonc = "horizonc"
+  }
+
   environment_abbreviations = {
     poison       = "pois"
     playing_card = "card"
@@ -27,7 +35,12 @@ locals {
   }
 }
 
-
+variable "delivery" {
+  description = "Delivery model"
+  type        = string
+  sensitive   = false
+  default     = "cvad"
+}
 
 variable "vsphere_user" {
   description = "VMware vSphere username"

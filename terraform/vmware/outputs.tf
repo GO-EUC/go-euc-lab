@@ -18,6 +18,17 @@ output "sql" {
   value = module.SQLServer.vm_info
 }
 
+output "ctx_ddc" {
+ value = module.CitrixDeliveryControler[*].vm_info
+}
+
+output "ctx_lic" {
+ value = module.CitrixLicenseServer[*].vm_info
+}
+
+output "ctx_sf" {
+ value = module.CitrixStorefront[*].vm_info
+}
 
 # Output for DHCP configuration
 output "reverse_dns_zone" {
