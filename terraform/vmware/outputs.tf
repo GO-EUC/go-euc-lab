@@ -6,6 +6,19 @@ output "mgnt" {
   value = module.ManagementServer.vm_info
 }
 
+output "fs" {
+  value = module.FileServer.vm_info
+}
+
+output "rdgw" {
+  value = module.RemoteGateway.vm_info
+}
+
+output "sql" {
+  value = module.SQLServer.vm_info
+}
+
+
 # Output for DHCP configuration
 output "reverse_dns_zone" {
   value = local.virtual_network_cidr_address[terraform.workspace]
