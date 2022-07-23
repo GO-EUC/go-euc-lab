@@ -50,6 +50,40 @@ stages:
       vmware_build: Create
       variable_group: VMware
 
+- stage: management_server_config
+  displayName: Management server configuration
+
+  dependsOn: infra_dc_config
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: management.yml
+      variable_group: VMware
+
+- stage: gateway_server_config
+  displayName: RDGateway server configuration
+
+  dependsOn: infra_dc_config
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: rdgateway.yml
+      variable_group: VMware
+
+- stage: file_server_config
+  displayName: File server configuration
+
+  dependsOn: infra_dc_config
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: file.yml
+      variable_group: VMware
+
+
 # - template: /vmware/domain.yml
 #   parameters:
 #     name: Linux

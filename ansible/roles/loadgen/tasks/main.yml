@@ -128,12 +128,12 @@
     path: C:\ProgramData\LoadGen\Director
     state: directory
 
-- name: Configure the LoadGen Datasource
-  include: datasource.yml
+# - name: Configure the LoadGen Datasource
+#   include: datasource.yml
 
-- name: Configure the LoadGen Options
-  include: options.yml
+# - name: Configure the LoadGen Options
+#   include: options.yml
 
-- name: Configure the LoadGen RunAsProfiles
-  include: profiles.yml
+# - name: Configure the LoadGen RunAsProfiles
+#   include: profiles.yml
 

@@ -9,12 +9,10 @@
 #   - name: Start the Azure Key Vault actions
 #     include_tasks: azure-keyvault.yml
 
-- name: Management Server
-  hosts: mgnt
+- name: RDGateway Server
+  hosts: rdgw
   roles:
   - domain-join
-  - visual-studio-code
-  - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
