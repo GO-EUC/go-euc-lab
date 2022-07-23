@@ -53,7 +53,7 @@ stages:
 - stage: management_server_config
   displayName: Management server configuration
 
-  dependsOn: infra_dc_config
+  dependsOn: infra_deployment
   
   jobs:
   - template: vmware/ansible.yml
@@ -64,7 +64,7 @@ stages:
 - stage: gateway_server_config
   displayName: RDGateway server configuration
 
-  dependsOn: infra_dc_config
+  dependsOn: infra_deployment
   
   jobs:
   - template: vmware/ansible.yml
@@ -75,7 +75,7 @@ stages:
 - stage: file_server_config
   displayName: File server configuration
 
-  dependsOn: infra_dc_config
+  dependsOn: infra_deployment
   
   jobs:
   - template: vmware/ansible.yml
