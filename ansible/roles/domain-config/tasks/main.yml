@@ -17,7 +17,7 @@
 - name: Create OU
   win_dsc:
     resource_name: ADOrganizationalUnit
-    name: Accounts
+    name: "{{ item }}"
     path: "OU=GO,{{ domain_path }}"
   loop:
     - Accounts
@@ -29,7 +29,7 @@
 - name: Create OU
   win_dsc:
     resource_name: ADOrganizationalUnit
-    name: Accounts
+    name: "{{ item }}"
     path: "OU=Machines,OU=GO,{{ domain_path }}"
   loop:
     - Bots
