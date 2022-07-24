@@ -1,9 +1,9 @@
 ---
-- name: Citrix Delivery Controller
-  hosts: ctx_ddc
+- name: Citrix Storefront
+  hosts: ctx_sf
   roles:
   - domain-join
-  - citrix-delivery-controller
+  - citrix-storefront
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO

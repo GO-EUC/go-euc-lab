@@ -1,15 +1,4 @@
 ---
-- name: Install Citrix Delivery Controller
-  include: install.yml
-
-# - name: Configure Citrix Delivery Controller
-#   include: config.yml
-
-
-# - name: Dismount Citrix Virtual Applications and Desktops ISO
-#   win_shell: Dismount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
-#   changed_when: false
-
 # - name: Install Site Script
 #   win_copy:
 #     src: "{{ item }}"

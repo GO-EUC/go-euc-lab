@@ -95,17 +95,27 @@ stages:
       variable_group: VMware
 
 
-- stage: citrix_config
-  displayName: Citrix configuration
+- stage: citrix_delivery_controller
+  displayName: Citrix Delivery Controller configuration
 
   dependsOn: sql_server_config
   
   jobs:
   - template: vmware/ansible.yml
     parameters:
-      ansible_playbook: cvad.yml
+      ansible_playbook: citrix-delivery-controller.yml
       variable_group: VMware
 
+- stage: citrix_storefront
+  displayName: Citrix Storefront configuration
+
+  dependsOn: citrix_delivery_controller
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: citrix-storefront.yml
+      variable_group: VMware
 
 # - template: /vmware/domain.yml
 #   parameters:
