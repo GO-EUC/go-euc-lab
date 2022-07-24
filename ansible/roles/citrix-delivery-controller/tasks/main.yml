@@ -70,6 +70,11 @@
     path: C:\Download
     state: directory
 
+- name: Create Citrix Download Folder
+  win_file:
+    path: C:\Download\Citrix
+    state: directory
+
 - name: Copy a single file
   ansible.windows.win_copy:
     src: files/Get-CTXBinary.ps1
