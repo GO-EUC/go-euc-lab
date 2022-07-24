@@ -96,14 +96,17 @@
 
 - name: Install DDC Components
   win_package:
-    path: "{{disk_image_out}}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+    path: "{{disk_image_out.mount_paths[0]}}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
     arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /logpath C:\Logs
     state: present
     expected_return_code: [0, 3, 3010]
     creates_path: C:\Program Files\Citrix\Desktop Studio
     product_id: '{07EBAA9B-5D49-4C86-9571-834F4BE05FA8}'
-    user_name: GO\Administrator
-    user_password: "{{ ansible_password }}"
+  vars:
+    ansible_become: yes
+    ansible_become_user: GO\Administrator
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
 
 # - name: Dismount Citrix Virtual Applications and Desktops ISO
 #   win_shell: Dismount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
