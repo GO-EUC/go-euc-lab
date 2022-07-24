@@ -1,93 +1,56 @@
+- name: Set fac
+  set_fact:
+    domain_path: "dc=GO,dc=EUC"
 
 - name: Check for ActiveDirectory DSC Powershell module
   win_psmodule:
     name: ActiveDirectoryDsc
-    state: present    
+    state: present
+  retry: 5 
 
 - name: Create OU
   win_dsc:
     resource_name: ADOrganizationalUnit
     name: GO
-    path: "dc=GO,dc=euc"
+    path: "{{ domain_path }}"
 
 - name: Create OU
   win_dsc:
     resource_name: ADOrganizationalUnit
     name: Accounts
-    path: "OU=GO,dc=GO,dc=euc"
+    path: "OU=GO,{{ domain_path }}"
+  loop:
+    - Accounts
+    - Groups
+    - LoadGen
+    - ServiceAccounts
+    - Machines
 
 - name: Create OU
   win_dsc:
     resource_name: ADOrganizationalUnit
-    name: Groups
-    path: "OU=GO,dc=GO,dc=euc"
-
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: Loadgen
-    path: "OU=GO,dc=GO,dc=euc"
-
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: ServiceAccounts
-    path: "OU=GO,dc=GO,dc=euc"
-
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: Machines
-    path: "OU=GO,dc=GO,dc=euc"
-
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: Bots
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
-    
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: Builds
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
-    
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: GPU
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
-    
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: Infra
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
-    
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: RDS
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
-    
-- name: Create OU
-  win_dsc:
-    resource_name: ADOrganizationalUnit
-    name: VDI
-    path: "OU=Machines,OU=GO,dc=GO,dc=euc"
+    name: Accounts
+    path: "OU=Machines,OU=GO,{{ domain_path }}"
+  loop:
+    - Bots
+    - Builds
+    - GPU
+    - Infra
+    - RDS
+    - VDI
 
 - name: Ensure the group Loadgen exists using sAMAccountName
   win_domain_group:
-    name: Loadgen
+    name: LoadGen
     scope: global
-    path: "OU=Groups,OU=GO,dc=GO,dc=euc"
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
 
 - name: Create Service accounts
   win_domain_user:
     name: sql_svc
     password: '{{ ansible_password }}'
     state: present
-    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Server - Service Account
 
 - name: Create Service accounts
@@ -95,7 +58,7 @@
     name: sql_agt
     password: '{{ ansible_password }}'
     state: present
-    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Agent - Service Account
 
 - name: Create Service accounts
@@ -103,15 +66,16 @@
     name: mdt
     password: '{{ ansible_password }}'
     state: present
-    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     groups:
     - Domain Admins
+
 - name: Create Service accounts
   win_domain_user:
     name: loadgen_bot
     password: '{{ ansible_password }}'
     state: present
-    path: "OU=ServiceAccounts,OU=GO,dc=GO,dc=euc"
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Server - Service Account
     groups:
-    - Loadgen
+    - LoadGen
