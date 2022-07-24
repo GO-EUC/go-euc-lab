@@ -6,7 +6,7 @@
   win_psmodule:
     name: ActiveDirectoryDsc
     state: present
-  retry: 5 
+  retries: 5 
 
 - name: Create OU
   win_dsc:
