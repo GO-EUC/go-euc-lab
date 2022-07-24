@@ -72,8 +72,8 @@
 
 - name: Copy a single file
   ansible.windows.win_copy:
-    src: files/Get-CTXOptimizer.ps1
-    dest: C:\Download\Citrix\Get-CTXOptimizer.ps1
+    src: files/Get-CTXBinary.ps1
+    dest: C:\Download\Citrix\Get-CTXBinary.ps1
 
 - name: Download Citrix Optimizer Tool
   win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
