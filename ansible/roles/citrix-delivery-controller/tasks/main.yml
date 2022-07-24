@@ -1,0 +1,164 @@
+---
+- name: Built the environment dictonary and variables
+  set_fact:
+    citrix_username: "{{ lookup('env', 'citrix_username') }}"
+    citrix_password: "{{ lookup('env', 'citrix_password') }}"
+
+- name: Install DDC Pre-Reqs
+  win_feature:
+    name:
+    - NET-Framework-Core
+    - NET-Framework-45-Core
+    - NET-Framework-45-ASPNET
+    - GPMC
+    - RSAT-ADDS-Tools
+    - RDS-Licensing-UI
+    - WAS
+    - Telnet-Client
+    - GPMC
+    - Remote-Assistance
+    - RSAT-AD-Tools
+    - Web-Server
+    - Web-WebServer
+    - Web-Common-Http
+    - Web-Default-Doc
+    - Web-Dir-Browsing
+    - Web-Http-Errors
+    - Web-Static-Content
+    - Web-Http-Redirect
+    - Web-Health
+    - Web-Http-Logging
+    - Web-Log-Libraries
+    - Web-Http-Tracing
+    - Web-Performance
+    - Web-Stat-Compression
+    - Web-Dyn-Compression
+    - Web-Security
+    - Web-Filtering
+    - Web-Basic-Auth
+    - Web-Windows-Auth
+    - Web-Net-Ext45
+    - Web-ASP
+    - Web-ASP-Net45
+    - Web-CGI
+    - Web-ISAPI-Ext
+    - Web-ISAPI-Filter
+    - Web-Includes
+    - Web-WebSockets
+    - Web-Mgmt-Tools
+    - Web-Mgmt-Console
+    - Web-Mgmt-Compat
+    - Web-Metabase
+    - Web-Lgcy-Mgmt-Console
+    - Web-Lgcy-Scripting
+    - Web-WMI
+    - Web-Scripting-Tools
+    state: present
+  register: win_feature
+
+- name: Reboot to complete domain join
+  ansible.windows.win_reboot:
+  when: win_feature.reboot_required
+
+- name: Create Log Folder
+  win_file:
+    path: C:\Logs
+    state: directory
+
+- name: Create Download Folder
+  win_file:
+    path: C:\Download
+    state: directory
+
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: files/Get-CTXOptimizer.ps1
+    dest: C:\Download\Citrix\Get-CTXOptimizer.ps1
+
+- name: Download Citrix Optimizer Tool
+  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
+  register: citrix_download
+
+- name: Ensure an ISO is mounted
+  community.windows.win_disk_image:
+    image_path: "{{ citrix_download | trim }}"
+    state: present
+  register: disk_image_out
+
+- name: Install DDC Components
+  win_package:
+    path: "{{disk_image_out}}\x64\XenDesktop Setup\XenDesktopServerSetup.exe"
+    #arguments: /components controller,desktopstudio /configure_firewall /nosql /noreboot /quiet
+    arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /logpath C:\Logs
+    state: present
+    expected_return_code: [0, 3, 3010]
+    creates_path: C:\Program Files\Citrix\Desktop Studio
+    product_id: '{07EBAA9B-5D49-4C86-9571-834F4BE05FA8}'
+    user_name: GO\Administrator
+    user_password: "{{ ansible_password }}"
+
+# - name: Dismount Citrix Virtual Applications and Desktops ISO
+#   win_shell: Dismount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
+#   changed_when: false
+
+- name: Reboot to complete DDC Install
+  ansible.windows.win_reboot:
+
+# - name: Mount Citrix Virtual Applications and Desktops ISO
+#   win_shell: |
+#     $mountResult = Mount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
+#     $driveLetter = ($mountResult | Get-Volume).DriveLetter
+#     return $driveLetter
+#   register: mounted_iso_drive_letter
+#   changed_when: false
+
+- name: Remove DDC RunOnce Key
+  win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+    name: "!XenDesktopSetup"
+    state: absent
+  register: ddc_resume
+
+- name: Resume DDC Install
+  win_package:
+    path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
+    state: present
+    expected_return_code: [0, 3, 3010]
+    creates_path: C:\Program Files\Citrix\Desktop Studio
+  when: ddc_resume.changed
+
+# - name: Dismount Citrix Virtual Applications and Desktops ISO
+#   win_shell: Dismount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
+#   changed_when: false
+
+# - name: Install Site Script
+#   win_copy:
+#     src: "{{ item }}"
+#     dest: C:\Logs\
+#   with_fileglob:
+#   - "*.ps1"
+
+# - name: Create or Join Site
+#   win_shell: |
+#     $env:SiteName = '{{ SiteName }}'
+#     $env:DatabaseServer = '{{ environment_abbreviations }}-{{ DatabaseServer }}'
+#     $env:DatabaseServerPort = '{{ DatabaseServerPort }}'
+#     $env:DatabaseName_Site = '{{ DatabaseName_Site }}'
+#     $env:DatabaseName_Logging = '{{ DatabaseName_Logging }}'
+#     $env:DatabaseName_Monitoring = '{{ DatabaseName_Monitoring }}'
+#     $env:LicenseServer = '{{ environment_abbreviations }}-{{ LicenseServerName }}'
+#     $env:LicenseServerPort = '{{ LicenseServerPort }}'
+#     $env:LicensingModel = '{{ LicensingModel }}'                  
+#     $env:ProductCode = '{{ ProductCode }}'                                   
+#     $env:ProductEdition = '{{ ProductEdition }}'
+#     $env:AdminGroup = '{{ netbios_domain }}\{{ AdminGroup }}'
+#     $env:Role =   '{{ Role }}'
+#     $env:Scope = '{{ Scope }}'                                 
+#     $env:GroomingDays = '{{ GroomingDays }}'
+#     C:\Logs\createsite.ps1 -creates C:\Logs\sitedone.txt
+#   register: result
+#   become: yes
+#   become_method: runas
+#   become_user: GO\Administrator
+#   vars:
+#     ansible_become_password: "{{ ansible_password }}"

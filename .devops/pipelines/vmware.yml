@@ -95,6 +95,18 @@ stages:
       variable_group: VMware
 
 
+- stage: citrix_config
+  displayName: Citrix configuration
+
+  dependsOn: sql_server_config
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: cvad.yml
+      variable_group: VMware
+
+
 # - template: /vmware/domain.yml
 #   parameters:
 #     name: Linux
