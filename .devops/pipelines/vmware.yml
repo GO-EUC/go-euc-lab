@@ -95,6 +95,17 @@ stages:
       variable_group: VMware
 
 
+- stage: citrix_license_server
+  displayName: Citrix License Server configuration
+
+  dependsOn: infra_deployment
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: citrix-license-server.yml
+      variable_group: VMware
+
 - stage: citrix_delivery_controller
   displayName: Citrix Delivery Controller configuration
 
