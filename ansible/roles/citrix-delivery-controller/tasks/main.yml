@@ -87,8 +87,7 @@
 
 - name: Install DDC Components
   win_package:
-    path: "{{disk_image_out}}\x64\XenDesktop Setup\XenDesktopServerSetup.exe"
-    #arguments: /components controller,desktopstudio /configure_firewall /nosql /noreboot /quiet
+    path: "{{disk_image_out}}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
     arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /logpath C:\Logs
     state: present
     expected_return_code: [0, 3, 3010]
