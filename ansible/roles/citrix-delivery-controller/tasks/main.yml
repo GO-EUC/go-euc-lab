@@ -90,7 +90,7 @@
 
 - name: Ensure an ISO is mounted
   win_disk_image:
-    image_path: "{{ citrix_download | trim }}"
+    image_path: "{{ citrix_download.stdout | trim }}"
     state: present
   register: disk_image_out
 
