@@ -1,3 +1,7 @@
+#####
+# Variables for administrative connection to the ADC
+#####
+
 variable adc-base-username {
   description = "ADC username"
   type        = string
@@ -13,8 +17,12 @@ variable adc-base-password {
 variable adc-base-ip-mgmt-address {
   description = "ADC mgmt IP address"
   type        = string
-  default       = ""
+  default     = ""
 }
+
+#####
+# Variables for license file upload
+#####
 
 variable adc-lic-filename {
   description = "ADC licensefile filename"

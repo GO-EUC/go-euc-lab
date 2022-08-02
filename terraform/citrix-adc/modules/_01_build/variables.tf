@@ -1,3 +1,7 @@
+#####
+# vSphere configuration variables
+#####
+
 variable "vsphere_server" {
   description   = "vSphere server for the environment"
   type          = string
@@ -33,6 +37,10 @@ variable "vsphere_resourcepool" {
   type          = string
   default       = ""
 }
+
+#####
+# ADC VM configuration variables
+#####
 
 variable "vm_network" {
   description   = "vSphere network for ADC VM"

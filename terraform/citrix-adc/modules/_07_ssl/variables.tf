@@ -19,13 +19,3 @@ variable adc-base-ip-mgmt-address {
   type        = string
   default     = ""
 }
-
-#####
-# New ADC password. Password needs to be reset on first logon by default.
-#####
-
-variable adc-base-newpassword {
-  description = "New ADC password"
-  type        = string
-  default     = ""
-}

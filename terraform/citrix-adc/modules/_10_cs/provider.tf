@@ -9,10 +9,11 @@ terraform {
 }
 
 provider "citrixadc" {
+
   endpoint = var.adc-base-ip-mgmt-address
   username = var.adc-base-username
   password = var.adc-base-password
-  
+
   # If you have a self-signed cert
   insecure_skip_verify = true
 }

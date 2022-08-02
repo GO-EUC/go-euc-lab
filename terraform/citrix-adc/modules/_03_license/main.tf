@@ -6,14 +6,13 @@ resource "citrixadc_systemfile" "license" {
     filename     = var.adc-lic-filename
     filelocation = var.adc-lic-filelocation
     filecontent  = file(var.adc-lic-filecontent)
-
 }
 
 #####
 # Save Configuration
 #####
 
-resource "citrixadc_nsconfig_save" "license_save" {
+resource "citrixadc_nsconfig_save" "ns_save_license" {
     all        = true
     timestamp  = timestamp()
 
@@ -32,6 +31,6 @@ resource "citrixadc_rebooter" "license_reboot" {
     wait_until_reachable = false
 
     depends_on           = [
-        citrixadc_nsconfig_save.license_save
+        citrixadc_nsconfig_save.ns_save_license
     ]
 }

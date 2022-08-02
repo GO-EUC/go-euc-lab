@@ -96,8 +96,8 @@ resource "citrixadc_nsfeature" "nsfeature" {
 # Add a http Profile  / Static for now
 #####
 
-resource "citrixadc_nshttpprofile" "http_prof_goeuc" {
-    name = "http_prof_goeuc"
+resource "citrixadc_nshttpprofile" "http_prof_democloud" {
+    name = "http_prof_democloud"
     dropinvalreqs = "ENABLED"
     markhttp09inval = "ENABLED"
     markconnreqinval = "ENABLED"
@@ -109,8 +109,8 @@ resource "citrixadc_nshttpprofile" "http_prof_goeuc" {
 # Add a TCP Profile  / Static for now
 #####
 
-resource "citrixadc_nstcpprofile" "tcp_prof_goeuc" {
-    name = "tcp_prof_goeuc"
+resource "citrixadc_nstcpprofile" "tcp_prof_democloud" {
+    name = "tcp_prof_democloud"
     ws = "ENABLED"
     sack = "ENABLED"
     wsval = "8"
@@ -134,7 +134,7 @@ resource "citrixadc_nstcpprofile" "tcp_prof_goeuc" {
 # Save config - Only if all previous resources have been created successfully.
 #####
 
-resource "citrixadc_nsconfig_save" "tf_ns_save" {    
+resource "citrixadc_nsconfig_save" "ns_save_base" {    
     all        = true
     timestamp  = timestamp()
 
@@ -142,7 +142,7 @@ resource "citrixadc_nsconfig_save" "tf_ns_save" {
         citrixadc_nsip.nsip,
         citrixadc_nsmode.nsmode,
         citrixadc_nsfeature.nsfeature,
-        citrixadc_nshttpprofile.http_prof_goeuc,
-        citrixadc_nstcpprofile.tcp_prof_goeuc
+        citrixadc_nshttpprofile.http_prof_democloud,
+        citrixadc_nstcpprofile.tcp_prof_democloud
     ]
 }

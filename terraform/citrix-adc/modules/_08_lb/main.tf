@@ -1,5 +1,5 @@
 #####
-# ADC Loadbalancing Server
+# Add LB Server
 #####
 
 resource "citrixadc_server" "lb_server" {
@@ -9,7 +9,7 @@ resource "citrixadc_server" "lb_server" {
 }
 
 #####
-# ADC Loadbalancing Servicegroups
+# Add LB Service Groups
 #####
 
 resource "citrixadc_servicegroup" "lb_servicegroup" {
@@ -23,7 +23,7 @@ resource "citrixadc_servicegroup" "lb_servicegroup" {
 }
 
 #####
-# ADC Loadbalancing Servicegroup-Server-Bindings
+# Bind LB Server to Service Groups
 #####
 
 resource "citrixadc_servicegroup_servicegroupmember_binding" "lb_sg_server_binding" {
@@ -38,7 +38,7 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "lb_sg_server_bindi
 }
 
 #####
-# ADC Loadbalancing vServer - Type SSL
+# Add and configure LB vServer - Type SSL
 #####
 
 resource "citrixadc_lbvserver" "lb_vserver_ssl" {
@@ -59,19 +59,19 @@ resource "citrixadc_lbvserver" "lb_vserver_ssl" {
 }
 
 #####
-# ADC Loadbalancing vServer - Type DNS
+# Add and configure LB vServer - Type not SSL
 #####
 
 resource "citrixadc_lbvserver" "lb_vserver_dns" {
-  count   = length(var.adc-lb-vserver-dns.name)
-  name    = element(var.adc-lb-vserver-dns["name"],count.index)
+  count   = length(var.adc-lb-vserver-notssl.name)
+  name    = element(var.adc-lb-vserver-notssl["name"],count.index)
 
-  servicetype = element(var.adc-lb-vserver-dns["servicetype"],count.index)
-  ipv46 = element(var.adc-lb-vserver-dns["ipv46"],count.index)
-  port = element(var.adc-lb-vserver-dns["port"],count.index)
-  lbmethod = element(var.adc-lb-vserver-dns["lbmethod"],count.index)
-  persistencetype = element(var.adc-lb-vserver-dns["persistencetype"],count.index)
-  timeout = element(var.adc-lb-vserver-dns["timeout"],count.index)
+  servicetype = element(var.adc-lb-vserver-notssl["servicetype"],count.index)
+  ipv46 = element(var.adc-lb-vserver-notssl["ipv46"],count.index)
+  port = element(var.adc-lb-vserver-notssl["port"],count.index)
+  lbmethod = element(var.adc-lb-vserver-notssl["lbmethod"],count.index)
+  persistencetype = element(var.adc-lb-vserver-notssl["persistencetype"],count.index)
+  timeout = element(var.adc-lb-vserver-notssl["timeout"],count.index)
 
   depends_on = [
     citrixadc_servicegroup_servicegroupmember_binding.lb_sg_server_binding
@@ -79,7 +79,7 @@ resource "citrixadc_lbvserver" "lb_vserver_dns" {
 }
 
 #####
-# ADC Loadbalancing vServer-Servicegroup-Bindings
+# Bind LB Service Groups to LB vServers
 #####
 
 resource "citrixadc_lbvserver_servicegroup_binding" "lb_vserver_sg_binding" {
@@ -94,14 +94,31 @@ resource "citrixadc_lbvserver_servicegroup_binding" "lb_vserver_sg_binding" {
 }
 
 #####
+# Bind SSL certificate to SSL LB vServers
+#####
+
+resource "citrixadc_sslvserver_sslcertkey_binding" "sslvserver_sslcertkey_binding_lb" {
+  count       = length(var.adc-lb-vserver-ssl.name)
+  vservername = element(var.adc-lb-vserver-ssl["name"],count.index)
+  certkeyname = "ssl_cert_democloud"
+  snicert     = true
+
+  depends_on = [
+    citrixadc_lbvserver_servicegroup_binding.lb_vserver_sg_binding
+  ]
+}
+
+#####
 # Save config
 #####
 
-resource "citrixadc_nsconfig_save" "tf_ns_save" {  
+resource "citrixadc_nsconfig_save" "ns_save_lb" {
+    
     all        = true
     timestamp  = timestamp()
 
     depends_on = [
-        citrixadc_lbvserver_servicegroup_binding.lb_vserver_sg_binding
+        citrixadc_sslvserver_sslcertkey_binding.sslvserver_sslcertkey_binding_lb
     ]
+
 }

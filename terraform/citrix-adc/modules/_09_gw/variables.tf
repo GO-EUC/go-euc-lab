@@ -1,23 +1,28 @@
-variable adc-base-username {
+#####
+# Variables for administrative connection to the ADC
+#####
 
+variable adc-base-username {
   description = "ADC username"
-  default = "nsroot"
-  
+  type        = string
+  default     = "nsroot"
 }
 
 variable adc-base-password {
-
   description = "ADC password"
-  default = ""
-
+  type        = string
+  default     = ""
 }
 
 variable adc-base-ip-mgmt-address {
-
   description = "ADC mgmt IP address"
-  default = ""
-
+  type        = string
+  default     = ""
 }
+
+#####
+# ADC GW vServer
+#####
 
 variable "adc-gw-vserver" {
   type = map
@@ -52,6 +57,10 @@ variable "adc-gw-vserver" {
 
 }
 
+#####
+# ADC GW vServer STA Bindings
+#####
+
 variable "adc-gw-vserver-staserverbinding" {
   type = map
   default = {
@@ -72,6 +81,10 @@ variable "adc-gw-vserver-staserverbinding" {
 
 }
 
+#####
+# ADC GW vServer VPN Session Policy Bindings
+#####
+
 variable "adc-gw-vserver-vpnsessionpolicybinding" {
   type = map
   default = {
@@ -81,12 +94,12 @@ variable "adc-gw-vserver-vpnsessionpolicybinding" {
       "YourGWvServerName"
     ]
     policy = [
-      "YourReceiverWebPolicy",
-      "YourReceiverPolicy"
+      "sess_prof_sf_receiverweb",
+      "sess_prof_sf_receiver"
     ]
     priority = [
-      "YourReceiverWebPriority",
-      "YourReceiverPriority"
+      "10",
+      "20"
     ]
 
   }
