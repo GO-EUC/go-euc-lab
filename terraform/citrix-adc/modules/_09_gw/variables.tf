@@ -105,3 +105,92 @@ variable "adc-gw-vserver-vpnsessionpolicybinding" {
   }
 
 }
+
+#####
+# ADC Authentication LDAP Action
+#####
+
+variable "adc-gw-vserver-authenticationldapaction" {
+  type = map
+  default = {
+
+    name = [
+      "auth_act_secureldap_goeuc.local"
+    ]
+    servername = [
+      "9.9.9.9"
+    ]
+    ldapBase = [
+      "dc=goeuc,dc=local" 
+    ]
+    ldapBindDn = [
+      "svc_ldap@goeuc.local"
+    ]
+    ldapBindDnPassword = [
+      ""
+    ]
+    ldapLoginName = [
+      "sAMAccountName"
+    ]
+    groupAttrName = [
+      "memberOf"
+    ]    
+    subAttributeName = [
+      "cn"
+    ]
+    ssoNameAttribute = [
+      "cn"
+    ]
+    secType = [
+      "TLS"
+    ]
+    passwdChange = [
+      "ENABLED"
+    ]
+
+  }
+}
+
+#####
+# ADC Authentication LDAP Policy
+#####
+
+variable "adc-gw-vserver-authenticationldappolicy" {
+  type = map
+  default = {
+
+    name = [
+      "auth_pol_secureldap_goeuc.local"
+    ]
+    rule = [
+      "ns_true"
+    ]
+    reqaction = [
+      "auth_act_secureldap_goeuc.local"
+    ]
+
+  }
+}
+
+#####
+# ADC Authentication LDAP Policy GW vServer Binding
+#####
+
+variable "adc-gw-vserver-authenticationldappolicy_binding" {
+  type = map
+  default = {
+
+    name = [
+      "YourGWvServerName"
+    ]
+    policy = [
+      "auth_pol_secureldap_goeuc.local"
+    ]
+    priority = [
+      "100"
+    ]
+    bindpoint = [
+      "REQUEST"
+    ]
+  }
+}
