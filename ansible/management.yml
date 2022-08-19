@@ -20,6 +20,9 @@
     domain_name: GO
     domain_controller: "{{ groups['dc'][0] }}"
     domain_admin_user: "GO\\{{ ansible_user }}"
+    sql_admin: "GO\\sql_svc"
+    sql_password: "{{ ansible_password }}"
+    sql_server: "{{ groups['sql'][0] }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
