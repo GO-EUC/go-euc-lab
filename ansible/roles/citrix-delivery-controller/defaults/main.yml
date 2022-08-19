@@ -1,3 +1,5 @@
+
+environment_abbreviations: flow
 # The name of your XenDesktop site. For example: "MySite".
 SiteName: GOEUC
 # The name of your SQL server or SQL server instance (e.g. "SQLServer1.mycompany.com" or "SQLCTX01.mycompany.com\InStance1").
@@ -27,4 +29,4 @@ Role: Full Administrator
 # The scope (the objects) to which the permissions (defined in the role) apply                      
 Scope: All
 # The number of days you want to monitoring data to be saved in the database, for example 365 days.                                                    
-GroomingDays: 365 
+GroomingDays: 365
