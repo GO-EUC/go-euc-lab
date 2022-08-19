@@ -1,4 +1,5 @@
 ---
+
 - name: Install Site Script
   win_copy:
     src: "{{ item }}"
@@ -19,7 +20,7 @@
     $env:LicensingModel = '{{ LicensingModel }}'                  
     $env:ProductCode = '{{ ProductCode }}'                                   
     $env:ProductEdition = '{{ ProductEdition }}'
-    $env:AdminGroup = '{{ netbios_domain }}\{{ AdminGroup }}'
+    $env:AdminGroup = '{{ domain_name }}\{{ AdminGroup }}'
     $env:Role =   '{{ Role }}'
     $env:Scope = '{{ Scope }}'                                 
     $env:GroomingDays = '{{ GroomingDays }}'
