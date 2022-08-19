@@ -77,6 +77,7 @@
   when: loadgen_director.stat.exists == False
   vars:
     ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
     ansible_become_method: runas
 
 - name: Check if LoadGen Studio is installed
@@ -101,6 +102,7 @@
   when: loadgen_studio.stat.exists == False
   vars:
     ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
     ansible_become_method: runas
 
 - name: Check if LoadGen Analyzer is installed
@@ -125,6 +127,7 @@
   when: loadgen_analyzer.stat.exists == False
   vars:
     ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
     ansible_become_method: runas
 
 - name: Remove ProgramData download directory structure for Director
