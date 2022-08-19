@@ -2,42 +2,5 @@
 - name: Install Citrix Delivery Controller
   include: install.yml
 
-# - name: Configure Citrix Delivery Controller
-#   include: config.yml
-
-
-# - name: Dismount Citrix Virtual Applications and Desktops ISO
-#   win_shell: Dismount-DiskImage -ImagePath 'C:\Citrix_Virtual_Apps_and_Desktops_7_2103.iso'
-#   changed_when: false
-
-# - name: Install Site Script
-#   win_copy:
-#     src: "{{ item }}"
-#     dest: C:\Logs\
-#   with_fileglob:
-#   - "*.ps1"
-
-# - name: Create or Join Site
-#   win_shell: |
-#     $env:SiteName = '{{ SiteName }}'
-#     $env:DatabaseServer = '{{ environment_abbreviations }}-{{ DatabaseServer }}'
-#     $env:DatabaseServerPort = '{{ DatabaseServerPort }}'
-#     $env:DatabaseName_Site = '{{ DatabaseName_Site }}'
-#     $env:DatabaseName_Logging = '{{ DatabaseName_Logging }}'
-#     $env:DatabaseName_Monitoring = '{{ DatabaseName_Monitoring }}'
-#     $env:LicenseServer = '{{ environment_abbreviations }}-{{ LicenseServerName }}'
-#     $env:LicenseServerPort = '{{ LicenseServerPort }}'
-#     $env:LicensingModel = '{{ LicensingModel }}'                  
-#     $env:ProductCode = '{{ ProductCode }}'                                   
-#     $env:ProductEdition = '{{ ProductEdition }}'
-#     $env:AdminGroup = '{{ netbios_domain }}\{{ AdminGroup }}'
-#     $env:Role =   '{{ Role }}'
-#     $env:Scope = '{{ Scope }}'                                 
-#     $env:GroomingDays = '{{ GroomingDays }}'
-#     C:\Logs\createsite.ps1 -creates C:\Logs\sitedone.txt
-#   register: result
-#   become: yes
-#   become_method: runas
-#   become_user: GO\Administrator
-#   vars:
-#     ansible_become_password: "{{ ansible_password }}"
+- name: Configure Citrix Delivery Controller
+  include: config.yml
