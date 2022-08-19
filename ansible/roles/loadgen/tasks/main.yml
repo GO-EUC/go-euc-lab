@@ -75,6 +75,9 @@
 - name: Run AutoUpdater for LoadGen Director
   win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
   when: loadgen_director.stat.exists == False
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
 
 - name: Check if LoadGen Studio is installed
   win_stat:
@@ -96,6 +99,9 @@
 - name: Run AutoUpdater for LoadGen Studio
   win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"'
   when: loadgen_studio.stat.exists == False
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
 
 - name: Check if LoadGen Analyzer is installed
   win_stat:
@@ -117,6 +123,9 @@
 - name: Run AutoUpdater for LoadGen Analyzer
   win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
   when: loadgen_analyzer.stat.exists == False
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
 
 - name: Remove ProgramData download directory structure for Director
   win_file:
