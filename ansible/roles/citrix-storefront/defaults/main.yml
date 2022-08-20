@@ -1,0 +1,7 @@
+HostbaseUrl: http://citrix.go.euc
+FarmServers: "{{ environment_abbreviations }}-ctxsf-1"
+StoreVirtualPath: /Citrix/Store
+TransportType: HTTP
+GatewayUrl: https://adc.go.euc
+GatewaySTAUrls: http://{{ environment_abbreviations }}-ctxddc-1/scripts/ctxa.dll
+GatewayName: ADCGW1

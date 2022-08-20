@@ -7,6 +7,7 @@
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
+    environment_abbreviations: flow
     domain_controller: "{{ groups['dc'][0] }}"
     domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
