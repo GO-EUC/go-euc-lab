@@ -5,7 +5,7 @@
     description: Run a PowerShell script
     actions:
     - path: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-      arguments: -ExecutionPolicy Unrestricted -NonInteractive -File "C:\Program Files\Citrix\Receiver StoreFront\PowerShellSDK\Examples\MultiServerJoinGroup.ps1" -Server "{{ hostvars[groups['storefront.0'][0]]['ansible_hostname'] }}" -Passcode {{ hostvars[groups['storefront.0'][0]].passcode['content'] | b64decode }}
+      arguments: -ExecutionPolicy Unrestricted -NonInteractive -File "C:\Program Files\Citrix\Receiver StoreFront\PowerShellSDK\Examples\MultiServerJoinGroup.ps1" -Server "{{ hostvars[groups['ctx_sf.0'][0]]['ansible_hostname'] }}" -Passcode {{ hostvars[groups['ctx_sf.0'][0]].passcode['content'] | b64decode }}
     username: SYSTEM
     run_level: highest
     state: present
