@@ -5,5 +5,5 @@
 - name: Init Citrix Storefront
   include: init.yml
 
-- name: Join Citrix Storefront
-  include: join.yml
+# - name: Join Citrix Storefront
+#   include: join.yml
