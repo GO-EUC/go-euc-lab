@@ -48,6 +48,10 @@
   community.windows.win_rds_settings:
     certificate_hash: '{{ cert_import.thumbprints[0] }}'
     max_connections: 10
+  vars:
+    ansible_become: yes
+    ansible_become_user: '{{ ansible_user }}'
+    ansible_become_method: runas
 
 - name: Create a new RDS CAP with a 30 minutes timeout and clipboard redirection enabled
   community.windows.win_rds_cap:
