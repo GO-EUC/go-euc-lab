@@ -101,7 +101,7 @@ jobs:
         export citrix_username="$(citrix_username)"
         export citrix_password="$(citrix_password)"
 
-        export cert_file="$(cert_file)"
+        export cert_file="$(cert.secureFilePath)"
         export cert_password="$(cert_password)"
 
         ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory -e ansible_user='{{ lookup("env", "ANSIBLE_USER") }}' -e ansible_password='{{ lookup("env", "ANSIBLE_PASSWORD") }}'
