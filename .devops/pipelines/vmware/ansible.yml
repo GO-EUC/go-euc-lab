@@ -28,7 +28,7 @@ jobs:
       name: cert
       inputs:
         secureFile: $(cert_file)
-      condition: $[eq(variables['parameters.ansible_playbook'], 'rdgateway.yml')]
+      condition: eq(variables['parameters.ansible_playbook'], 'rdgateway.yml')
 
     - task: DownloadSecureFile@1
       displayName: Download backend configuration
