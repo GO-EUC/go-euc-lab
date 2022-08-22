@@ -75,6 +75,8 @@ module "RemoteGateway" {
   vm_cpu    = 4
   vm_memory = 4096
 
+  network_address                = cidrhost(local.virtual_network_cidr_address[terraform.workspace], 11)  
+  network_gateway                = cidrhost(local.virtual_network_cidr_address[terraform.workspace], 254)
   virtual_network_portgroup_name = local.virtual_network_portgroup_name[terraform.workspace]
 
   local_admin_password  = var.local_admin_password
