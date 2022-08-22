@@ -3,7 +3,7 @@
   set_fact:
     citrix_username: "{{ lookup('env', 'citrix_username') }}"
     citrix_password: "{{ lookup('env', 'citrix_password') }}"
-    
+
 - name: Install Citrix Studio prerequisites
   win_feature:
     name:
@@ -64,7 +64,7 @@
   win_package:
     path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
     product_id: '{11C5CDBC-3850-4543-ABB2-F1ECC881B6A8}'
-    arguments: /components desktopstudio /configure_firewall /nosql /noreboot /quiet /logpath "{{ citrix_cvad_log }}" /IGNORE_HW_CHECK_FAILURE
+    arguments: /components desktopstudio /configure_firewall /nosql /noreboot /quiet /IGNORE_HW_CHECK_FAILURE
     expected_return_code: [0, 3, 3010]
     creates_path: C:\Program Files\Citrix\Desktop Studio
     state: present
