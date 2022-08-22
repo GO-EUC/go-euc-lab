@@ -42,16 +42,12 @@
 
 - name: Debug
   ansible.builtin.debug:
-    msg: '{{ cert_import }}'
+    msg: '{{ cert_import.thumbprints | last }}'
 
 - name: Configure the Remote Desktop Gateway
   community.windows.win_rds_settings:
-    certificate_hash: '{{ cert_import.thumbprints[2] }}'
+    certificate_hash: '{{ cert_import.thumbprints | last }}'
     max_connections: 10
-  vars:
-    ansible_become: yes
-    ansible_become_user: system
-    ansible_become_method: runas
 
 - name: Create a new RDS CAP with a 30 minutes timeout and clipboard redirection enabled
   community.windows.win_rds_cap:
