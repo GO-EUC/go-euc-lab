@@ -1,0 +1,82 @@
+---
+- name: Install Citrix Studio prerequisites
+  win_feature:
+    name:
+    - NET-Framework-45-Core
+    state: present
+  register: win_feature
+
+- name: Reboot machine
+  win_reboot:
+  when: win_feature.reboot_required
+
+- name: Create Download Folder
+  win_file:
+    path: C:\Download
+    state: directory
+
+- name: Create Citrix Download Folder
+  win_file:
+    path: C:\Download\Citrix
+    state: directory
+
+- name: Check if Citrix ISO is downloaded yet
+  win_stat:
+    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
+  register: download_file
+
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: files/Get-CTXBinary.ps1
+    dest: C:\Download\Citrix\Get-CTXBinary.ps1
+
+- name: Download Citrix Virtual Apps and Desktops 2203
+  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
+  register: citrix_download
+  when: download_file.stat.exists == False
+
+- name: Register iso path
+  set_fact:
+    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
+  when: download_file.stat.exists == True
+
+- name: Register iso path
+  set_fact:
+    iso_path: "{{citrix_download.stdout | trim }}"
+  when: download_file.stat.exists == False
+
+- name: Debug Citrix download
+  ansible.builtin.debug:
+    msg: "{{ iso_path }}"
+
+- name: Ensure an ISO is mounted
+  win_disk_image:
+    image_path: "{{ iso_path }}"
+    state: present
+  register: disk_image_out
+
+- name: Run installer from mounted Citrix ISO
+  win_package:
+    path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+    product_id: '{11C5CDBC-3850-4543-ABB2-F1ECC881B6A8}'
+    arguments: /components desktopstudio /configure_firewall /nosql /noreboot /quiet /logpath "{{ citrix_cvad_log }}" /IGNORE_HW_CHECK_FAILURE
+    expected_return_code: [0, 3, 3010]
+    creates_path: C:\Program Files\Citrix\Desktop Studio
+    state: present
+  register: citrix_install
+
+- name: Unmount the Citrix ISO
+  win_disk_image:
+    image_path: "{{ iso_path }}"
+    state: absent
+
+- name: Reboot after Citrix Studio installation
+  win_reboot:
+  when: citrix_install.changed
+
+
+
+
+
+
+
