@@ -46,7 +46,7 @@
 
 - name: Configure the Remote Desktop Gateway
   community.windows.win_rds_settings:
-    certificate_hash: '{{ cert_import.thumbprints[0] }}'
+    certificate_hash: '{{ cert_import.thumbprints[2] }}'
     max_connections: 10
   vars:
     ansible_become: yes
