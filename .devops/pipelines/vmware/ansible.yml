@@ -24,6 +24,13 @@ jobs:
         terraformVersion: 'latest'
 
     - task: DownloadSecureFile@1
+      displayName: 'Downloading Certificate file'
+      name: cert
+      inputs:
+        secureFile: $(cert_file)
+      condition: $[eq(variables['parameters.ansible_playbook'], 'rdgateway.yml')]
+
+    - task: DownloadSecureFile@1
       displayName: Download backend configuration
       name: backend
       inputs:
@@ -93,6 +100,9 @@ jobs:
 
         export citrix_username="$(citrix_username)"
         export citrix_password="$(citrix_password)"
+
+        export cert_file="$(cert_file)"
+        export cert_password="$(cert_password)"
 
         ansible-playbook $(Build.Repository.LocalPath)/ansible/${{ parameters.ansible_playbook }} -i $(Build.Repository.LocalPath)/ansible/inventory -e ansible_user='{{ lookup("env", "ANSIBLE_USER") }}' -e ansible_password='{{ lookup("env", "ANSIBLE_PASSWORD") }}'
       displayName: 'Execute ansible'

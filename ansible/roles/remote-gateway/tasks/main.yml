@@ -1,0 +1,75 @@
+---
+- name: Built the environment dictonary and variables
+  set_fact:
+    certificate_file: "{{ lookup('env', 'cert_file') }}"
+    certificate_password: "{{ lookup('env', 'cert_password') }}"
+
+- name: Install Remote Desktop Gateway
+  ansible.windows.win_feature:
+    name: RDS-Gateway
+    state: present
+    include_sub_features: yes
+    include_management_tools: yes
+
+- name: Create directory structure
+  ansible.windows.win_file:
+    path: C:\Certs
+    state: directory
+    
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: '{{ certificate_file }}'
+    dest: C:\Certs\cert.pfx
+    force: yes
+
+- name: Import pfx wildcard certificate
+  ansible.windows.win_certificate_store:
+    path: C:\Certs\cert.pfx
+    state: present
+    password: '{{ certificate_password }}'
+  register: cert_import
+
+- name: Firewall rule to allow HTTPS on TCP port 443
+  community.windows.win_firewall_rule:
+    name: Remote Desktop Gateway
+    localport: 443
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: [domain, private, public]
+    state: present
+    enabled: yes
+
+- name: Configure the Remote Desktop Gateway
+  community.windows.win_rds_settings:
+    certificate_hash: '{{ cert_import.thumbprints[0] }}'
+    max_connections: 10
+
+- name: Create a new RDS CAP with a 30 minutes timeout and clipboard redirection enabled
+  community.windows.win_rds_cap:
+    name: Remote Gateway CAP
+    user_groups:
+      - 'GO\Domain Admins'
+    session_timeout: 120
+    session_timeout_action: disconnect
+    allow_only_sdrts_servers: yes
+    redirect_clipboard: yes
+    redirect_drives: no
+    redirect_printers: no
+    redirect_serial: no
+    redirect_pnp: no
+    state: enabled
+
+- name: Create a new RDS RAP
+  community.windows.win_rds_rap:
+    name: Remote Gateway RAP
+    description: Allow all users to connect to any resource through ports 3389
+    user_groups:
+      - 'GO\Domain Admins'
+    computer_group_type: allow_any
+    allowed_ports:
+      - 3389
+    state: enabled
+
+- name: Reboot the machine to complete
+  ansible.windows.win_reboot:

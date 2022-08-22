@@ -13,6 +13,7 @@
   hosts: rdgw
   roles:
   - domain-join
+  - remote-gateway
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
