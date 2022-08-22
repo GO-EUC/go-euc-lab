@@ -45,6 +45,12 @@
     scope: global
     path: "OU=Groups,OU=GO,{{ domain_path }}"
 
+- name: Create RDGateway Group
+  win_domain_group:
+    name: 'RD Gateway Users'
+    scope: global
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
+
 - name: Create Service accounts
   win_domain_user:
     name: sql_svc
