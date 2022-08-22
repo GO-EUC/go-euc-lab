@@ -42,7 +42,7 @@
 
 - name: Debug
   ansible.builtin.debug:
-    msg: '{{ cert_import.thumbprints }}'
+    msg: '{{ cert_import }}'
 
 - name: Configure the Remote Desktop Gateway
   community.windows.win_rds_settings:
