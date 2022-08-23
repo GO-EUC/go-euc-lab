@@ -17,7 +17,7 @@
   - mssql-studio
   - visual-studio-code
   - citrix-studio
-  # - loadgen
+  - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
