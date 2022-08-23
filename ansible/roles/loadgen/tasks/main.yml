@@ -73,7 +73,7 @@
   when: loadgen_director.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Director
-  win_shell: & AutoUpdater.exe -i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
+  win_shell: Start-Process -FilePath "AutoUpdater.exe" --ArgumentList "-i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"
   args:
     chdir: C:\Program Files\LoadGen
   when: loadgen_director.stat.exists == False
