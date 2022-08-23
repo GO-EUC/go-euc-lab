@@ -77,6 +77,10 @@
   args:
     chdir: C:\Program Files\LoadGen
   when: loadgen_director.stat.exists == False
+  vars:
+    ansible_become: yes
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
 
 - name: Check if LoadGen Studio is installed
   win_stat:
