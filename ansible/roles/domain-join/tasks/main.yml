@@ -13,7 +13,7 @@
     ansible_become_method: runas
 
 - name: Install NuGet
-  win_shell: Install-Module PowershellGet -Force -Confirm:$false
+  win_shell: Find-PackageProvider -Name Nuget -ForceBootstrap -IncludeDependencies -Force
 
 - name: Check for xDSCDomainjoin DSC Powershell module
   win_psmodule:
