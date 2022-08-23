@@ -73,9 +73,7 @@
   when: loadgen_director.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Director
-  win_command: AutoUpdater.exe -i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
-  args:
-    chdir: C:\Program Files\LoadGen\
+  win_command: C:\Program Files\LoadGen\AutoUpdater.exe -i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
   when: loadgen_director.stat.exists == False
 
 - name: Check if LoadGen Studio is installed
