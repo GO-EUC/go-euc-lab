@@ -3,17 +3,6 @@
       $env:COMPUTERNAME
   register: hostname
 
-- name: Set strong cryptography & register NuGet
-  win_shell: |
-      Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
-      Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
-
-      Install-PackageProvider -Name NuGet -Confirm:$false
-  vars:
-    ansible_become: yes
-    ansible_become_user: system
-    ansible_become_method: runas
-
 - name: Check for xDSCDomainjoin DSC Powershell module
   win_psmodule:
     name: xDSCDomainjoin
