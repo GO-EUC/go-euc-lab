@@ -114,6 +114,21 @@
   win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
   when: loadgen_analyzer.stat.exists == False
 
+- name: Create shortcuts
+  win_file:
+    path: C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LoadGen
+    state: directory
+
+- name: Create LoadGen shortcuts
+  community.windows.win_shortcut:
+    src: "C:\Program Files\LoadGen\{{ item }}\{{ item }}.exe"
+    dest: "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LoadGen\{{ item }}.lnk"
+    icon: "C:\Program Files\LoadGen\{{ item }}\{{ item }}.exe.0"
+  loop:
+    - LoadGen Studio
+    - LoadGen Director
+    - LoadGen Analyzer
+
 - name: Remove ProgramData download directory structure for Director
   win_file:
     path: C:\ProgramData\LoadGen\Download
