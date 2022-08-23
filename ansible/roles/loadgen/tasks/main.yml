@@ -52,7 +52,7 @@
   when: loadgen_director.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Director
-  win_command: C:\Program Files\LoadGen\AutoUpdater.exe -i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
+  win_command: 'C:\Program Files\LoadGen\AutoUpdater.exe' -i C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
   when: loadgen_director.stat.exists == False
   vars:
     ansible_become: yes
