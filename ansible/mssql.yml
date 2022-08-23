@@ -20,6 +20,11 @@
       win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
       loop:
       - LoadGen
+      vars:
+        ansible_become: yes
+        ansible_become_user: "GO\\Administrator"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
