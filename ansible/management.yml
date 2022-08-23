@@ -14,10 +14,10 @@
   roles:
   - domain-join
   - management
+  - loadgen
   - mssql-studio
   - visual-studio-code
   - citrix-studio
-  - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
