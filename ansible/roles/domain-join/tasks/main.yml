@@ -9,8 +9,6 @@
     state: present
   retries: 5
   delay: 30
-  register: result
-  until: result.rc == 0
 
 - name: Domain join
   win_dsc:
