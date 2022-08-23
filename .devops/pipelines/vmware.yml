@@ -53,7 +53,7 @@ stages:
 - stage: management_server_config
   displayName: Management server configuration
 
-  dependsOn: infra_deployment
+  dependsOn: sql_server_config
   
   jobs:
   - template: vmware/ansible.yml
