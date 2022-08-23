@@ -8,7 +8,7 @@
       Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
       Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
 
-      Register-PackageSource -provider NuGet -name nugetRepository -location https://www.nuget.org/api/v2
+      Install-Module PowershellGet -Force -Confirm:$true
   vars:
     ansible_become: yes
     ansible_become_user: system
