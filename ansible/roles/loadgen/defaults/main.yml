@@ -2,7 +2,6 @@ loadgen_version: 7903
 
 datasource_name: GO-Datastore
 datasource_active: true
-datasource_integrated_security: false
 datasource_table_create_on_load_test: true
 datasource_tablename_duaf: DUAF
 datasource_tablename_performance_counters: PM

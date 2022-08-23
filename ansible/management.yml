@@ -26,6 +26,7 @@
     sql_admin: "GO\\sql_svc"
     sql_password: "{{ ansible_password }}"
     sql_server: "{{ groups['sql'][0] }}"
+    sql_database: "LoadGen"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
