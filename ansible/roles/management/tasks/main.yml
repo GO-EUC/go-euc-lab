@@ -1,5 +1,5 @@
 ---
-- name: Install CTXC Pre-Reqs
+- name: Install remote management tools
   win_feature:
     name:
     - NET-Framework-45-Core
