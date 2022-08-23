@@ -1,0 +1,7 @@
+---
+- name: Install Microsoft SQL Server Management Studio
+  win_package:
+    path: "https://aka.ms/ssmsfullsetup"
+    state: present
+    expected_return_code: [0, 3, 3010]
+    creates_path: "C:\\Program Files (x86)\\Microsoft SQL Server Management Studio 18\\Common7\\IDE"

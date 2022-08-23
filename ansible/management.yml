@@ -13,8 +13,11 @@
   hosts: mgnt
   roles:
   - domain-join
+  - management
+  - mssql-studio
   - visual-studio-code
   - citrix-studio
+  
   # - loadgen
   vars:
     dns_domain_name: 'GO.EUC'

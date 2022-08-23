@@ -1,0 +1,12 @@
+---
+- name: Install CTXC Pre-Reqs
+  win_feature:
+    name:
+    - NET-Framework-45-Core
+    - GPMC
+    - RSAT-ADDS-Tools
+    - RDS-Licensing-UI
+    - WAS
+    - Telnet-Client
+    state: present
+  register: win_feature
