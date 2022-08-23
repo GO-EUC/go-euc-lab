@@ -10,3 +10,7 @@
     - Telnet-Client
     state: present
   register: win_feature
+
+- name: Reboot
+  win_reboot:
+  when: win_feature.changed

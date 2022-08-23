@@ -11,9 +11,8 @@
     state: present
   register: win_feature
 
-- name: Reboot machine
+- name: Force reboot machine
   win_reboot:
-  when: win_feature.reboot_required
 
 - name: Create Download Folder
   win_file:
