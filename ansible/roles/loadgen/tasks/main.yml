@@ -73,9 +73,10 @@
   when: loadgen_director.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Director
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
+  win_command: AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"
+  args:
+    chdir: C:\Program Files\LoadGen\
   when: loadgen_director.stat.exists == False
-
 
 - name: Check if LoadGen Studio is installed
   win_stat:
@@ -95,7 +96,9 @@
   when: loadgen_studio.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Studio
-  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"'
+  win_command: AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"
+  args:
+    chdir: C:\Program Files\LoadGen\
   when: loadgen_studio.stat.exists == False
 
 - name: Check if LoadGen Analyzer is installed
@@ -116,7 +119,9 @@
   when: loadgen_analyzer.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Analyzer
-  win_command: 'AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
+  win_command: AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"
+  args:
+    chdir: C:\Program Files\LoadGen\
   when: loadgen_analyzer.stat.exists == False
 
 - name: Remove ProgramData download directory structure for Director
