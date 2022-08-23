@@ -1,3 +1,9 @@
+- name: Set the WinRM memory to 4GB # This is required to download LoadGen data
+  win_shell: Set-Item -Path WSMan:\localhost\Shell\MaxMemoryPerShellMB -Value 4096
+
+- name: Force reboot to apply WinRM config
+  win_reboot:
+
 - name: Create directory structure
   win_file:
     path: C:\Download\LoadGen
@@ -51,24 +57,9 @@
     dest: C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
   when: loadgen_director.stat.exists == False
 
-
-- name: Run AutoUpdater for LoadGen Director PSEXEC style
-  community.windows.win_psexec:
-    command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
-    interactive: yes
+- name: Run AutoUpdater for LoadGen Director
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
   when: loadgen_director.stat.exists == False
-
-
-# - name: Run AutoUpdater for LoadGen Director
-#   win_command: 'AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat"'
-#   args:
-#     chdir: C:\Program Files\LoadGen\
-#   when: loadgen_director.stat.exists == False
-#   vars:
-#     ansible_become: yes
-#     ansible_become_user: "{{ ansible_user }}" #administrator@go.euc
-#     ansible_become_password: "{{ ansible_password }}"
-#     ansible_become_method: runas
 
 - name: Check if LoadGen Studio is installed
   win_stat:
@@ -88,9 +79,7 @@
   when: loadgen_studio.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Studio
-  win_command: AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"
-  args:
-    chdir: C:\Program Files\LoadGen\
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat"'
   when: loadgen_studio.stat.exists == False
 
 - name: Check if LoadGen Analyzer is installed
@@ -111,9 +100,7 @@
   when: loadgen_analyzer.stat.exists == False
 
 - name: Run AutoUpdater for LoadGen Analyzer
-  win_command: AutoUpdater.exe -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"
-  args:
-    chdir: C:\Program Files\LoadGen\
+  win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat"'
   when: loadgen_analyzer.stat.exists == False
 
 - name: Remove ProgramData download directory structure for Director
@@ -127,7 +114,7 @@
     state: directory
 
 - name: Configure the LoadGen Datasource
-  include: datasource.yml
+  include_tasks: datasource.yml
 
 # - name: Configure the LoadGen Options
 #   include: options.yml
