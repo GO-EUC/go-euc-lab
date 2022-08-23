@@ -42,6 +42,7 @@ resource "vsphere_virtual_machine" "vm_static" {
         network_interface {
           ipv4_address = var.network_address
           ipv4_netmask = var.network_netmask
+          dns_server_list = var.network_dns_list
         }
 
         ipv4_gateway = var.network_gateway

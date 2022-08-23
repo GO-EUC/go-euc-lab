@@ -101,6 +101,13 @@ variable "network_gateway" {
   default     = ""
 }
 
+variable "network_dns_list" {
+  description = "Network DNS list"
+  type        = list(string)
+  sensitive   = false
+  default     = [ "" ]
+}
+
 variable "virtual_network_portgroup_name" {
   description = "The name of the VMware portgroup"
   type        = string
