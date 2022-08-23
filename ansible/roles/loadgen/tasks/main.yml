@@ -121,9 +121,9 @@
 
 - name: Create LoadGen shortcuts
   community.windows.win_shortcut:
-    src: "C:\Program Files\LoadGen\{{ item }}\{{ item }}.exe"
-    dest: "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LoadGen\{{ item }}.lnk"
-    icon: "C:\Program Files\LoadGen\{{ item }}\{{ item }}.exe.0"
+    src: "C:\\Program Files\\LoadGen\\{{ item }}\\{{ item }}.exe"
+    dest: "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\LoadGen\\{{ item }}.lnk"
+    icon: "C:\\Program Files\\LoadGen\\{{ item }}\\{{ item }}.exe.0"
   loop:
     - LoadGen Studio
     - LoadGen Director
