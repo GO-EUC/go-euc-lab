@@ -95,8 +95,6 @@ jobs:
       displayName: 'Ansible version'
 
     - script: |  
-        ansible-galaxy collection install community.general
-        
         export ANSIBLE_USER="$(build_username)"
         export ANSIBLE_PASSWORD="$(build_password)"
 

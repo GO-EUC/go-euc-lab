@@ -17,9 +17,7 @@
   
   tasks:
     - name: Create databases
-      community.general.mssql_db:
-        name: "{{ item }}"
-        state: present
+      win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
       loop:
       - LoadGen
   vars:
