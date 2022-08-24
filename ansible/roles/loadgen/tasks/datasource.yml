@@ -45,7 +45,7 @@
    xpath: "/*[local-name()='DatasourcesDataset']/*[local-name()='Datasources']/*[local-name()='IntegratedSecurity']"
    fragment: "true"
    type: text
-  when: lookup('env', 'platform') == 'azure' 
+  when: lookup('env', 'platform') != 'azure' 
 
 - name: Set the LoadGen Datasources configuration property Password
   win_xml:
