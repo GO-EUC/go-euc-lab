@@ -42,7 +42,7 @@
   win_xml:
    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Password']"
-   fragment: "{{ ansible_user }}"
+   fragment: "Administrator"
    type: text
    
 - name: Set the LoadGen RunAsProfiles configuration property Username
