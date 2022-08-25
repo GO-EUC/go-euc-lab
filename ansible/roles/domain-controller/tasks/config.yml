@@ -85,3 +85,14 @@
     description: SQL Server - Service Account
     groups:
     - LoadGen
+
+- name: Create LoadGen accounts
+  win_domain_user:
+    name: "LoadGen{{ item }}"
+    password: '{{ ansible_password }}'
+    state: present
+    path: "OU=LoadGen,OU=GO,{{ domain_path }}"
+    description: LoadGen simulation account
+    groups:
+    - LoadGen
+  loop: "{{ range(250) | list }}"
