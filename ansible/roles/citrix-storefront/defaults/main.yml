@@ -1,10 +1,6 @@
 HostbaseUrl: http://citrix.go.euc
 FarmServers: "{{ environment_abbreviations }}-ctxsf-1"
-
-StoreVirtualPathAuth: /Citrix/Authentication
 StoreVirtualPath: /Citrix/Store
-StoreVirtualPathWeb: /Citrix/StoreWeb
-
 TransportType: HTTP
 GatewayUrl: https://adc.go.euc
 GatewaySTAUrls: http://{{ environment_abbreviations }}-ctxddc-1/scripts/ctxa.dll
