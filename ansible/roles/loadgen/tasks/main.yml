@@ -138,6 +138,11 @@
     path: C:\ProgramData\LoadGen\Director
     state: directory
 
+- name: Download Workload
+  ansible.windows.win_get_url:
+    url: https://github.com/GO-EUC/go-euc-workloads/raw/master/KnowledgeWorker_v2110.1.lgs
+    dest: C:\ProgramData\LoadGen
+
 - name: Configure the LoadGen Datasource
   include_tasks: datasource.yml
 
