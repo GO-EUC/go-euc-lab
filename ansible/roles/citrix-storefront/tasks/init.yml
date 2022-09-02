@@ -24,8 +24,6 @@
 
 - name: Start storefront script
   win_shell: C:\Windows\Temp\createsfsite.ps1
-  async: 300
-  poll: 0
   when: sf_info.stat.exists == False
   vars:
     ansible_become: yes
