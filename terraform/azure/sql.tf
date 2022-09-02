@@ -19,3 +19,9 @@ resource "azurerm_mssql_database" "loadgen" {
   license_type   = "LicenseIncluded"
   sku_name       = "Basic"
 }
+
+resource "azurerm_mssql_virtual_network_rule" "sql_rule" {
+  name      = "sql-vnet-rule"
+  server_id = azurerm_mssql_server.sql.id
+  subnet_id = azurerm_subnet.backend.id
+}

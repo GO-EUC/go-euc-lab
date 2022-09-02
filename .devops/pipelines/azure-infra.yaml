@@ -7,6 +7,7 @@ parameters:
   - Patrick
   - Ryan
   - Tom
+  - Eltjo
 - name: azureWorkspace
   displayName: Workspace
   type: string
@@ -28,6 +29,12 @@ parameters:
   values:
   - Create
   - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
 
 trigger:
 - none
@@ -66,6 +73,9 @@ steps:
       $terraformVariable += "azure_tenant_id=`"$(azure_tenant_id)`""
       $terraformVariable += "devops_token=`"$(devops_token)`""
       $terraformVariable += "devops_pool=`"${{ parameters.azureEnvironment }}`""
+      $terraformVariable += "devops_project=`"$(System.TeamProject)`""
+      $terraformVariable += "devops_url=`"$(System.CollectionUri)`""
+      $terraformVariable += "azure_region=`"${{ parameters.azureRegion }}`""
 
       switch ("${{ parameters.azureDelivery }}") {
         "None" {$delivery = "none"}

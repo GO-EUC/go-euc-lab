@@ -1,0 +1,102 @@
+parameters: 
+- name: azure_client_id
+  type: string
+
+- name: azure_client_secret
+  type: string
+
+- name: azure_subscription_id
+  type: string
+
+- name: azure_tenant_id
+  type: string
+
+- name: job
+  type: string
+
+- name: delivery
+  type: string
+
+- name: vgpu
+  type: boolean
+  default: false
+
+- name: azure_region
+  type: string
+
+- name: environment
+  type: string
+
+- name: image
+  type: string
+
+- name: version
+  type: string
+
+- name: citrix_username
+  type: string
+
+- name: citrix_password
+  type: string
+
+jobs:
+  - job: buildImage_${{parameters.job}}
+    displayName: Building ${{ parameters.image }}
+
+    steps:
+    - script: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+        apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        apt-get update && apt-get install packer
+        pip install --upgrade requests==2.20.1
+        pip install --upgrade azure-mgmt-monitor==0.5.2
+        apt-get -y install zip
+      displayName: 'Download and install Packer'
+
+    - task: PowerShell@2
+      displayName: Setting Packer variables
+      inputs:
+        targetType: 'inline'
+        script: |
+          $packerVariable = @()
+          $packerVariable += "azure_client_id=`"${{ parameters.azure_client_id }}`""
+          $packerVariable += "azure_client_secret=`"${{ parameters.azure_client_secret }}`""
+          $packerVariable += "azure_subscription_id=`"${{ parameters.azure_subscription_id }}`""
+          $packerVariable += "azure_tenant_id=`"${{ parameters.azure_tenant_id }}`""
+          $packerVariable += "replication_regions=`"${{ parameters.azure_region }}`""
+
+          $packerVariable += "environment=`"${{ lower(parameters.environment) }}`""
+          $packerVariable += "BuildSourcesDirectory=`"$(Build.SourcesDirectory)`""
+
+          $packerVariable += "delivery=`"${{ parameters.delivery }}`""
+
+          $packerVariable += "image_name=`"${{ parameters.image }}`""
+          $packerVariable += "image_version=`"${{ parameters.version }}`""
+          Set-Content -Value $packerVariable -Path azure.pkrvars.hcl -Force
+        workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+    - task: CmdLine@2
+      displayName: Packer init
+      inputs:
+        script: | 
+          packer init image.pkr.hcl
+        workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+    - task: CmdLine@2
+      displayName: Packer validate
+      inputs:
+        script: | 
+        workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'
+
+    - task: CmdLine@2
+      displayName: Packer build
+      inputs:
+        script: |
+          export citrix_username="${{ parameters.citrix_username }}"
+          export citrix_password="${{ parameters.citrix_password }}"
+          export environment="${{ lower(parameters.environment) }}"
+          export delivery="${{ parameters.delivery }}"
+          export vgpu="${{ parameters.vgpu }}"
+
+          packer build -var-file=azure.pkrvars.hcl .
+        workingDirectory: '$(Build.Repository.LocalPath)/packer/azure'

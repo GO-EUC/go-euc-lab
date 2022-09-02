@@ -1,0 +1,35 @@
+---
+- name: Built the environment dictonary and variables
+  set_fact:
+    citrix_username: "{{ lookup('env', 'citrix_username') }}"
+    citrix_password: "{{ lookup('env', 'citrix_password') }}"
+
+- name: Create directory structure
+  win_file:
+    path: C:\Download\Citrix
+    state: directory
+
+- name: Copy a single file
+  ansible.windows.win_copy:
+    src: files/Get-CTXOptimizer.ps1
+    dest: C:\Download\Citrix\Get-CTXOptimizer.ps1
+
+- name: Download Citrix Optimizer Tool
+  win_shell: C:\Download\Citrix\Get-CTXOptimizer.ps1 -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
+  register: citrix_download
+
+- name: Debug Citrix download
+  ansible.builtin.debug:
+    msg: "{{ citrix_download }}"
+
+- name: Unzip Citrix Optimizer
+  community.windows.win_unzip:
+    src: "{{ citrix_download.stdout | trim }}"
+    dest: C:\Download\Citrix\Optimizer
+    creates: C:\Download\Citrix\Optimizer
+
+- name: Execute Citrix Optimizer Tool
+  win_shell: C:\Download\Citrix\Optimizer\CtxOptimizerEngine.ps1 -Source C:\Download\Citrix\Optimizer\Templates\Citrix_Windows_10_2009.xml -Mode Execute -OutputXml C:\Download\Citrix\Optimizer\Rollback.xml
+
+- name: Reboot after applying the optimizations
+  win_reboot:

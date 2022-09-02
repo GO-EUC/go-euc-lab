@@ -7,12 +7,19 @@ parameters:
   - Patrick
   - Ryan
   - Tom
+  - Eltjo
 - name: azureWorkspace
   displayName: Workspace
   type: string
   values:
   - Cards
   - Flowers
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - West Europe
+  - East US
 trigger:
 - none
 
@@ -105,6 +112,8 @@ jobs:
 
       export branch="$(build.sourceBranchName)"
       export prefix="${{ parameters.azureEnvironment }}"
+
+      export azure_region="${{ parameters.azureRegion }}"
 
       ansible-playbook $(Build.Repository.LocalPath)/ansible/azure-playbook.yml -i $(Build.Repository.LocalPath)/ansible/inventory
     displayName: 'Execute ansible'

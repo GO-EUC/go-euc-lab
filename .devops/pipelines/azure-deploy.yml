@@ -1,0 +1,69 @@
+parameters:
+- name: azureEnvironment
+  displayName: Azure Environment
+  type: string
+  values:
+  - Anton
+  - Patrick
+  - Ryan
+  - Tom
+  - Eltjo
+- name: azureWorkspace
+  displayName: Workspace
+  type: string
+  values:
+  - Cards
+  - Flowers
+- name: azureDelivery
+  displayName: Desktop Delivery Model
+  type: string
+  default: Citrix Virtual Apps & Desktop Services
+  values:
+  - None
+  - Azure Virtual Desktop
+  - Citrix Virtual Apps & Desktop Services
+  - VMware Horizon Cloud
+- name: azureBuild
+  displayName: Azure environment action
+  type: string
+  values:
+  - Create
+  - Destroy
+- name: azureRegion
+  displayName: Azure region
+  type: string
+  values:
+  - westeurope
+  - eastus
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: ${{ parameters.azureEnvironment }}
+
+trigger: none
+pr: none
+
+
+stages:
+- stage: infra_build
+  displayName: Building infrastrcuture
+  
+  pool:
+    vmImage: 'ubuntu-latest'
+  
+  jobs:
+  - template: azure/infra.yml
+    parameters:
+      azure_build: ${{ parameters.azureBuild }}
+      azure_backend: $(azure_backend)
+      azure_client_id: $(azure_client_id)
+      azure_client_secret: $(azure_client_secret)
+      azure_subscription_id: $(azure_subscription_id)
+      azure_tenant_id: $(azure_tenant_id)
+      azure_region: ${{ parameters.azureRegion }}
+      azure_delivery: ${{ parameters.azureDelivery }}
+      azure_workspace: ${{ parameters.azureWorkspace }}
+      devops_token: $(devops_token)
+      devops_pool: ${{ parameters.azureEnvironment }}
