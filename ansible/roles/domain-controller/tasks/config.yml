@@ -95,5 +95,5 @@
     description: LoadGen simulation account
     groups:
     - LoadGen
-  when: "{{ item }}" != 0
+  when: "{{ item }} != 0"
   loop: "{{ range(250) | list }}"
