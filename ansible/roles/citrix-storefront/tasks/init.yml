@@ -32,15 +32,15 @@
     ansible_become_user: system
     ansible_become_method: runas
 
-- name: Wait for passcode file
-  win_wait_for:
-    path: C:\Logs\passcode.txt
-    delay: 10
-  when: sf_info.stat.exists == False
+# - name: Wait for passcode file
+#   win_wait_for:
+#     path: C:\Logs\passcode.txt
+#     delay: 10
+#   when: sf_info.stat.exists == False
 
-- name: Slurp passcode file
-  slurp:
-    src: C:\Logs\passcode.txt
-  register: passcode
-- name: Some debug
-  debug: msg="{{ passcode['content'] | b64decode | trim }}"
+# - name: Slurp passcode file
+#   slurp:
+#     src: C:\Logs\passcode.txt
+#   register: passcode
+# - name: Some debug
+#   debug: msg="{{ passcode['content'] | b64decode | trim }}"
