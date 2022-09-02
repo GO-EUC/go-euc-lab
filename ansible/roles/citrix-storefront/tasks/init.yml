@@ -1,46 +1,134 @@
 ---
-- name: Create SF Vars
-  script: createsfvars.ps1
-  args:
-    creates: C:\Logs\sf-vars.xml
-  environment:
-    HostbaseUrl: "{{ HostbaseUrl }}"
-    FarmServers: "{{ FarmServers }}"
-    StoreVirtualPath: "{{ StoreVirtualPath }}"
-    TransportType: "{{ TransportType }}"
-    GatewayUrl: "{{ GatewayUrl }}"
-    GatewaySTAUrls: "{{ GatewaySTAUrls }}"
-    GatewayName: "{{ GatewayName }}"
-  
-- name: Copy a Storefront script file
-  win_copy:
-    src: createsfsite.ps1
-    dest: C:\Windows\Temp\
-    
-- name: Storefront folder stat
-  win_stat:
-    path: C:\inetpub\wwwroot\Citrix
-  register: sf_info
 
-- name: Start storefront script
-  win_shell: C:\Windows\Temp\createsfsite.ps1
-  async: 300
-  poll: 0
-  when: sf_info.stat.exists == False
+- name: Main - Check for existing deployment # Get details of the StoreFront deployment on the current server.
+  win_shell: |
+    $WarningPreference = 'SilentlyContinue'
+    (Get-STFDeployment).Count
+  register: storefront_deployment
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Trim the storefront_deployment variable to get only the number
+  set_fact:
+    storefront_deployment_count: "{{ storefront_deployment.stdout | trim }}"
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Add deployment when no existing deployment was found # Creates a new StoreFront deployment with the required features installed and configured.
+  win_shell: Add-STFDeployment -HostBaseUrl "{{ host_base_url }}" -SiteId "{{ site_id }}" -Confirm:$false
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_deployment_count == "0"
+
+- name: Main - Check Authentication Service is configured # Check is based on the virtual path as configured at 'STF_Add deployment when no existing deployment was found'.
+  win_shell: (Get-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}").Count
+  register: storefront_authentication
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Trim the storefront_authentication variable to get only the number
+  set_fact:
+    storefront_authentication_count: "{{ storefront_authentication.stdout | trim }}"
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Add STF Authentication Service # Create a new Authentication service for Store and Receiver for Web authentication.
+  win_shell: Add-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}"
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_authentication_count == "0"
+
+- name: Main - Get-Storefront Service #  The command will return the Store Services.
+  win_shell: (Get-STFStoreService -VirtualPath "{{ store_virtual_path }}").Count
+  register: storefront_service
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Trim the storefront_service variable to get only the number
+  set_fact:
+    storefront_service_count: "{{ storefront_service.stdout | trim }}"
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Add STF Store Service # Creates a new StoreFront Store Service at the supplied IIS VirtualPath and optional SiteId.
+  win_shell: |
+    $authentication = Get-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}"
+    Add-STFStoreService -VirtualPath "{{ store_virtual_path }}" -AuthenticationService $authentication -FarmName "{{ farm_name }}" -FarmType "{{ farm_type }}" -Servers "{{ farm_servers }}" -LoadBalance $true -Port "{{ xml_port }}" -TransportType "{{ xml_transport_type }}"
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_service_count == "0"
+
+- name: Main - Get Storefront Web Receiver Service # Check if the StoreFront web service is configured
+  win_shell: (Get-STFWebReceiverService -VirtualPath "{{ store_virtual_path_web }}").Count
+  register: storefront_web
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Trim the storefront_web variable to get only the number
+  set_fact:
+    storefront_web_count: "{{ storefront_web.stdout | trim }}"
+  when: groups['ctx_sf'][0] == inventory_hostname
+
+- name: Main - Add STF StoreWeb Service # Creates a new StoreFront Store Service at the supplied IIS VirtualPath and optional SiteId.
+  win_shell: |
+    $store = Get-STFStoreService -VirtualPath "{{ store_virtual_path }}"
+    Add-STFWebReceiverService -VirtualPath "{{ store_virtual_path_web }}" -StoreService $store
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_web_count == "0"
+
+- name: Second - Count members in STF Server Group # When current server is the first from serie 'ctx_sf' in the Ansible inventory; get the server members that a part of the StoreFront server group.
+  win_shell: (Get-STFServerGroup).Clustermembers.Count
+  register: storefront_group
+
+- name: Second - Trim the storefront_group variable to get only the number
+  set_fact:
+    storefront_group_count: "{{ storefront_group.stdout | trim | int }}"
+
+- name: Main - Multi Server First Group Member Join Code # Generate a pass-code on the initial server and register it as returncode
+  win_shell: (Start-STFServerGroupJoin -IsAuthorizingServer -Confirm:$false).Passcode
+  register: storefront_passcode
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_group_count <= "1"
   vars:
     ansible_become: yes
-    ansible_become_user: system
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
     ansible_become_method: runas
 
-- name: Wait for passcode file
-  win_wait_for:
-    path: C:\Logs\passcode.txt
-    delay: 10
-  when: sf_info.stat.exists == False
+- name: Main - Set storefront_join_code # Set, on the inital server, the returned passcode] as an Ansible fact for further processing
+  set_fact:
+    storefront_join_code: "{{ storefront_passcode.stdout | trim }}" # trim removes "\r\n\" from the stfpasscode.stdout value
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_group_count <= "1"
 
-- name: Slurp passcode file
-  slurp:
-    src: C:\Logs\passcode.txt
-  register: passcode
-- name: Some debug
-  debug: msg="{{ passcode['content'] | b64decode | trim }}"
+- name: Main - Multi Server First Group Member wait for other to join # Advertise the pass-code on the initial server and run this task as a background job.
+  win_shell: Wait-STFServerGroupJoin -Confirm:$false
+  async: 300
+  poll: 0
+  register: server_group_join
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_group_count <= "1"
+  vars:
+    ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
+
+- name: Second - Multi Server Join Group  # Perform a join server group on the subsequential server.
+  win_shell: Start-STFServerGroupJoin -AuthorizerHostName "{{ groups['ctx_sf'][0] }}" -Passcode "{{ hostvars[groups['ctx_sf'][0]].get('storefront_join_code') }}" -Confirm:$false
+  when: groups['ctx_sf'][0] != inventory_hostname and storefront_group_count <= "1"
+  vars:
+    ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
+
+- name: Main - Wait for job to complete # Poll the running background job on the initial server to see it join has been completed
+  async_status:
+    jid: "{{ server_group_join.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 100
+  delay: 10
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_group_count <= "1"
+
+- name: Main - Stop the STF server group join # Stopping the server join process on the initial server
+  win_shell: Stop-STFServerGroupJoin
+  when: groups['ctx_sf'][0] == inventory_hostname and storefront_group_count <= "1"
+  vars:
+    ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
+
+- name: Main - Publish the STF config to other Storefront servers # Publishes the configuration of the server on which the command is executed to the other servers within the group.
+  win_shell: Publish-STFServerGroupConfiguration -Confirm:$false
+  when: groups['ctx_sf'][0] == inventory_hostname
+  vars:
+    ansible_become: yes
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
