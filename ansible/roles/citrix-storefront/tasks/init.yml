@@ -13,11 +13,11 @@
   when: groups['ctx_sf'][0] == inventory_hostname
 
 - name: Main - Add deployment when no existing deployment was found # Creates a new StoreFront deployment with the required features installed and configured.
-  win_shell: Add-STFDeployment -HostBaseUrl "{{ host_base_url }}" -SiteId "{{ site_id }}" -Confirm:$false
+  win_shell: Add-STFDeployment -HostBaseUrl "{{ HostbaseUrl }}" -SiteId "{{ SiteId }}" -Confirm:$false
   when: groups['ctx_sf'][0] == inventory_hostname and storefront_deployment_count == "0"
 
 - name: Main - Check Authentication Service is configured # Check is based on the virtual path as configured at 'STF_Add deployment when no existing deployment was found'.
-  win_shell: (Get-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}").Count
+  win_shell: (Get-STFAuthenticationService -VirtualPath "{{ StoreVirtualPathAuth }}").Count
   register: storefront_authentication
   when: groups['ctx_sf'][0] == inventory_hostname
 
@@ -27,11 +27,11 @@
   when: groups['ctx_sf'][0] == inventory_hostname
 
 - name: Main - Add STF Authentication Service # Create a new Authentication service for Store and Receiver for Web authentication.
-  win_shell: Add-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}"
+  win_shell: Add-STFAuthenticationService -VirtualPath "{{ StoreVirtualPathAuth }}"
   when: groups['ctx_sf'][0] == inventory_hostname and storefront_authentication_count == "0"
 
 - name: Main - Get-Storefront Service #  The command will return the Store Services.
-  win_shell: (Get-STFStoreService -VirtualPath "{{ store_virtual_path }}").Count
+  win_shell: (Get-STFStoreService -VirtualPath "{{ StoreVirtualPath }}").Count
   register: storefront_service
   when: groups['ctx_sf'][0] == inventory_hostname
 
@@ -42,12 +42,12 @@
 
 - name: Main - Add STF Store Service # Creates a new StoreFront Store Service at the supplied IIS VirtualPath and optional SiteId.
   win_shell: |
-    $authentication = Get-STFAuthenticationService -VirtualPath "{{ virtual_path_auth }}"
-    Add-STFStoreService -VirtualPath "{{ store_virtual_path }}" -AuthenticationService $authentication -FarmName "{{ farm_name }}" -FarmType "{{ farm_type }}" -Servers "{{ farm_servers }}" -LoadBalance $true -Port "{{ xml_port }}" -TransportType "{{ xml_transport_type }}"
+    $authentication = Get-STFAuthenticationService -VirtualPath "{{ StoreVirtualPathAuth }}"
+    Add-STFStoreService -VirtualPath "{{ StoreVirtualPath }}" -AuthenticationService $authentication"
   when: groups['ctx_sf'][0] == inventory_hostname and storefront_service_count == "0"
 
 - name: Main - Get Storefront Web Receiver Service # Check if the StoreFront web service is configured
-  win_shell: (Get-STFWebReceiverService -VirtualPath "{{ store_virtual_path_web }}").Count
+  win_shell: (Get-STFWebReceiverService -VirtualPath "{{ StoreVirtualPathWeb }}").Count
   register: storefront_web
   when: groups['ctx_sf'][0] == inventory_hostname
 
@@ -58,8 +58,8 @@
 
 - name: Main - Add STF StoreWeb Service # Creates a new StoreFront Store Service at the supplied IIS VirtualPath and optional SiteId.
   win_shell: |
-    $store = Get-STFStoreService -VirtualPath "{{ store_virtual_path }}"
-    Add-STFWebReceiverService -VirtualPath "{{ store_virtual_path_web }}" -StoreService $store
+    $store = Get-STFStoreService -VirtualPath "{{ StoreVirtualPath }}"
+    Add-STFWebReceiverService -VirtualPath "{{ StoreVirtualPathWeb }}" -StoreService $store
   when: groups['ctx_sf'][0] == inventory_hostname and storefront_web_count == "0"
 
 - name: Second - Count members in STF Server Group # When current server is the first from serie 'ctx_sf' in the Ansible inventory; get the server members that a part of the StoreFront server group.
