@@ -43,7 +43,7 @@
 - name: Main - Add STF Store Service # Creates a new StoreFront Store Service at the supplied IIS VirtualPath and optional SiteId.
   win_shell: |
     $authentication = Get-STFAuthenticationService -VirtualPath "{{ StoreVirtualPathAuth }}"
-    Add-STFStoreService -VirtualPath "{{ StoreVirtualPath }}" -AuthenticationService $authentication"
+    Add-STFStoreService -VirtualPath "{{ StoreVirtualPath }}" -AuthenticationService $authentication
   when: groups['ctx_sf'][0] == inventory_hostname and storefront_service_count == "0"
 
 - name: Main - Get Storefront Web Receiver Service # Check if the StoreFront web service is configured
