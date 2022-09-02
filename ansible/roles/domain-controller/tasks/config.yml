@@ -88,11 +88,12 @@
 
 - name: Create LoadGen accounts
   win_domain_user:
-    name: "LoadGen{{ item }}"
+    name: "{{ 'LoadGen%03d' | format(item | int) }}"
     password: '{{ ansible_password }}'
     state: present
     path: "OU=LoadGen,OU=GO,{{ domain_path }}"
     description: LoadGen simulation account
     groups:
     - LoadGen
+  when: "{{ item }}" != 0
   loop: "{{ range(250) | list }}"
