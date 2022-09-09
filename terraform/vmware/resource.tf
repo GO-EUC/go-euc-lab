@@ -199,26 +199,26 @@ module "CitrixStorefront" {
   vsphere_source_template = local.vsphere_source_template_windows
 }
 
-# module "Bots" {
-#   source    = "./modules/vmware.vsphere.vm.windows"
-#   vm_count  = 10
-#   vm_name   = "${local.environment_abbreviations[terraform.workspace]}-bot"
-#   vm_cpu    = 4
-#   vm_memory = 8192
-#   vm_disks = [{
-#     unit_number = 0
-#     label       = "disk0"
-#     size        = 128
-#   }]
-#   local_admin_password  = var.local_admin_password
-#   domain                = local.ad_domain_fqdn
-#   domain_admin          = var.domain_admin
-#   domain_admin_password = var.domain_admin_password
+module "Bots" {
+  source    = "./modules/vmware.vsphere.vm.windows"
+  vm_count  = 10
+  vm_name   = "${local.environment_abbreviations[terraform.workspace]}-bot"
+  vm_cpu    = 4
+  vm_memory = 8192
+  vm_disks = [{
+    unit_number = 0
+    label       = "disk0"
+    size        = 128
+  }]
+  local_admin_password  = var.local_admin_password
+  domain                = local.ad_domain_fqdn
+  domain_admin          = var.domain_admin
+  domain_admin_password = var.domain_admin_password
 
-#   virtual_network_portgroup_name = local.virtual_network_portgroup_name[terraform.workspace]
+  virtual_network_portgroup_name = local.virtual_network_portgroup_name[terraform.workspace]
 
-#   vsphere_datacenter      = local.vsphere_datacenter
-#   vsphere_datastore       = local.vsphere_datastore
-#   vsphere_cluster         = local.vsphere_cluster
-#   vsphere_source_template = local.vsphere_source_template_windows
-# }
+  vsphere_datacenter      = local.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = local.vsphere_cluster
+  vsphere_source_template = local.vsphere_source_template_windows
+}

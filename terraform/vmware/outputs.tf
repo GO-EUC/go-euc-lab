@@ -30,6 +30,10 @@ output "ctx_sf" {
  value = module.CitrixStorefront[*].vm_info
 }
 
+output "lg_bots" {
+ value = module.Bots[*].vm_info
+}
+
 # Output for DHCP configuration
 output "reverse_dns_zone" {
   value = local.virtual_network_cidr_address[terraform.workspace]
