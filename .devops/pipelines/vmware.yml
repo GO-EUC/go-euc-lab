@@ -94,6 +94,17 @@ stages:
       ansible_playbook: file.yml
       variable_group: VMware
 
+- stage: loadgen_bots
+  displayName: LoadGen Bots configuration
+
+  dependsOn: infra_deployment
+  
+  jobs:
+  - template: vmware/ansible.yml
+    parameters:
+      ansible_playbook: loadgen.yml
+      variable_group: VMware
+
 
 - stage: citrix_license_server
   displayName: Citrix License Server configuration

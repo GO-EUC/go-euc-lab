@@ -1,0 +1,8 @@
+---
+- name: Install Citrix Receiver
+  win_package:
+    path: "https://downloadplugins.citrix.com/ReceiverUpdates/Prod/Receiver/Win/CitrixWorkspaceApp22.7.0.24.exe"
+    arguments: /silent /noreboot /AutoUpdateCheck=disabled
+    state: present
+    expected_return_code: [0, 3, 3010]
+    creates_path: "C:\\Program Files (x86)\\Citrix\\Citrix WorkSpace 2207"
