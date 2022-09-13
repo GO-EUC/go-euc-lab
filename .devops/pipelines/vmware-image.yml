@@ -1,0 +1,53 @@
+- name: windows
+  displayName: Windows
+  type: string
+  values:
+  - Windows 10
+  - Windows 11
+  - Windows Server 2016
+  - Windows Server 2022
+
+trigger:
+- none
+
+pr: none
+
+pool: GO-EUC Linux
+
+
+stages:
+- stage: image_creation
+  displayName: Image creation
+
+  jobs:
+  - template: vmware/image.yml
+    parameters:
+      name: 
+      path: packer/vmware/windows/desktop/11
+      build: vsphere-iso.windows-desktop
+      variable_group: VMware
+    condition: eq('${{ parameters.windows }}', 'Windows 11')
+  
+  - template: vmware/image.yml
+    parameters:
+      name: 
+      path: packer/vmware/windows/desktop/10
+      build: vsphere-iso.windows-desktop
+      variable_group: VMware
+    condition: eq('${{ parameters.windows }}', 'Windows 10')
+
+  - template: vmware/image.yml
+    parameters:
+      name: 
+      path: packer/vmware/windows/server/2016
+      build: vsphere-iso.windows-server-standard-dexp
+      variable_group: VMware
+    condition: eq('${{ parameters.windows }}', 'Windows Server 2016')
+
+  - template: vmware/image.yml
+    parameters:
+      name: 
+      path: packer/vmware/windows/server/2022
+      build: vsphere-iso.windows-server-standard-dexp
+      variable_group: VMware
+    condition: eq('${{ parameters.windows }}', 'Windows Server 2022')
