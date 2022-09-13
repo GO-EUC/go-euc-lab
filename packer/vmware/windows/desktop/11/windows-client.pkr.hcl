@@ -32,6 +32,12 @@ packer {
 //  Defines the local variables.
 
 locals {
+  environment = {
+    default = "pois"
+    cards   = "card"
+    flowers = "flow"
+  }
+
   build_by           = "Built by: HashiCorp Packer ${packer.version}"
   build_date         = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
   build_version      = formatdate("YY.MM", timestamp())
@@ -42,7 +48,7 @@ locals {
   manifest_path      = "${path.cwd}/manifests/"
   manifest_output    = "${local.manifest_path}${local.manifest_date}.json"
   ovf_export_path    = "${path.cwd}/artifacts/${local.vm_name}"
-  vm_name            = "${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition}-v${local.build_version}"
+  vm_name            = "${local.environment[var.env]}-build-${var.build_number}"
   bucket_name        = replace("${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition}", ".", "")
   bucket_description = "${var.vm_guest_os_family} ${var.vm_guest_os_name} ${var.vm_guest_os_version} ${var.vm_guest_os_edition}"
 }

@@ -423,3 +423,14 @@ variable "BuildSourcesDirectory" {
   description = "Input form Azure DevOps pipeline $(Build.SourcesDirectory)"
   type        = string
 }
+
+variable "build_number" {
+  description = "The build number of the image"
+  default     = 1
+  type        = number
+}
+
+variable "env" {
+  type    = string
+  default = "flowers"
+}
