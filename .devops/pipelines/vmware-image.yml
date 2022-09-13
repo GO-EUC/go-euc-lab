@@ -32,7 +32,7 @@ stages:
     - template: vmware/image.yml
       parameters:
         iso: en-us_windows_11_business_editions_version_21h2_updated_aug_2022_x64_dvd_50c9cab3.iso
-        path: packer/vmware/windows/desktop/11/.
+        path: packer/vmware/windows/desktop/11/
         build: vsphere-iso.windows-desktop
         variable_group: "VMware - Target"
   
@@ -40,7 +40,7 @@ stages:
     - template: vmware/image.yml
       parameters:
         iso: 
-        path: packer/vmware/windows/desktop/10/.
+        path: packer/vmware/windows/desktop/10/
         build: vsphere-iso.windows-desktop
         variable_group: "VMware - Target"
 
@@ -48,7 +48,7 @@ stages:
     - template: vmware/image.yml
       parameters:
         iso: 
-        path: packer/vmware/windows/server/2019/.
+        path: packer/vmware/windows/server/2019/
         build: vsphere-iso.windows-server-standard-dexp
         variable_group: "VMware - Target"
 
@@ -56,6 +56,6 @@ stages:
     - template: vmware/image.yml
       parameters:
         iso: 
-        path: packer/vmware/windows/server/2022/.
+        path: packer/vmware/windows/server/2022/
         build: vsphere-iso.windows-server-standard-dexp
         variable_group: "VMware - Target"

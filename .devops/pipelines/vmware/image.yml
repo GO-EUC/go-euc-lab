@@ -50,11 +50,11 @@ jobs:
     - task: CmdLine@2
       displayName: 'Packer init'
       inputs:
-        script: 'packer init $(parameters.path)'
+        script: 'packer init ${{parameters.path}}.'
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: CmdLine@2
       displayName: 'Packer build'
       inputs:
-        script: 'packer build -force --only $(parameters.build) -var-file="packer/vmware/vsphere.pkrvars.hcl" $(parameters.path)'
+        script: 'packer build -force --only  ${{parameters.build}} -var-file="packer/vmware/vsphere.pkrvars.hcl" ${{parameters.path}}'
         workingDirectory: '$(Build.SourcesDirectory)'
