@@ -75,11 +75,13 @@ variable "vm_inst_os_keyboard" {
 variable "vm_inst_os_image" {
   type        = string
   description = "The installation operating system image input."
+  default     = "Enterprise"
 }
 
 variable "vm_inst_os_kms_key" {
   type        = string
   description = "The installation operating system KMS key input."
+  default     = "NPPR9-FWDCX-D2C8J-H872K-2YT43"
 }
 
 // Virtual Machine Settings
@@ -105,26 +107,31 @@ variable "vm_guest_os_timezone" {
 variable "vm_guest_os_family" {
   type        = string
   description = "The guest operating system family. Used for naming and VMware tools. (e.g.'windows')"
+  default     = "windows"
 }
 
 variable "vm_guest_os_name" {
   type        = string
   description = "The guest operating system name. Used for naming . (e.g. 'desktop')"
+  default     = "desktop"
 }
 
 variable "vm_guest_os_version" {
   type        = string
   description = "The guest operating system version. Used for naming. (e.g. '10')"
+  default     = "11"
 }
 
 variable "vm_guest_os_edition" {
   type        = string
   description = "The guest operating system edition. Used for naming. (e.g. 'pro')"
+  default     = "Enterprise"
 }
 
 variable "vm_guest_os_type" {
   type        = string
   description = "The guest operating system type, also know as guestid. (e.g. 'windows9_64Guest')"
+  default     = "windows9_64Guest"
 }
 
 variable "vm_firmware" {
@@ -142,11 +149,13 @@ variable "vm_cdrom_type" {
 variable "vm_cpu_count" {
   type        = number
   description = "The number of virtual CPUs. (e.g. '2')"
+  default     = 2
 }
 
 variable "vm_cpu_cores" {
   type        = number
   description = "The number of virtual CPUs cores per socket. (e.g. '1')"
+  default     = 1
 }
 
 variable "vm_cpu_hot_add" {
@@ -292,15 +301,15 @@ variable "iso_file" {
   description = "The file name of the ISO image used by the vendor. (e.g. '<langauge>_windows_<version>_business_editions_version_<YYhx<_updated_<month_year>_x64_dvd_<string>.iso')"
 }
 
-variable "iso_checksum_type" {
-  type        = string
-  description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
-}
+# variable "iso_checksum_type" {
+#   type        = string
+#   description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
+# }
 
-variable "iso_checksum_value" {
-  type        = string
-  description = "The checksum value provided by the vendor."
-}
+# variable "iso_checksum_value" {
+#   type        = string
+#   description = "The checksum value provided by the vendor."
+# }
 
 // Boot Settings
 
@@ -318,11 +327,13 @@ variable "common_http_ip" {
 variable "common_http_port_min" {
   type        = number
   description = "The start of the HTTP port range."
+  default     = 8000
 }
 
 variable "common_http_port_max" {
   type        = number
   description = "The end of the HTTP port range."
+  default     = 8099
 }
 
 variable "vm_boot_order" {
@@ -395,6 +406,7 @@ variable "communicator_port" {
 variable "communicator_timeout" {
   type        = string
   description = "The timeout for the communicator protocol."
+  default     = "12h"
 }
 
 // Provisioner Settings
@@ -417,11 +429,6 @@ variable "common_hcp_packer_registry_enabled" {
   type        = bool
   description = "Enable the HCP Packer registry."
   default     = false
-}
-
-variable "BuildSourcesDirectory" {
-  description = "Input form Azure DevOps pipeline $(Build.SourcesDirectory)"
-  type        = string
 }
 
 variable "build_number" {
