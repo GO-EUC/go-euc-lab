@@ -13,6 +13,9 @@ stages:
   jobs:
   - template: vmware/image.yml
     parameters:
+      name: 
+      path: packer/vmware/windows/server/2022
+      build: vsphere-iso.windows-server-standard-dexp
       variable_group: VMware
 
 - stage: infra_dc

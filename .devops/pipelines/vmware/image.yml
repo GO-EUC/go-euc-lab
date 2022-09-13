@@ -1,4 +1,10 @@
 parameters:
+- name: path
+  type: sting
+
+- name: build
+  type: string
+
 - name: variable_group
   type: string
 
@@ -41,11 +47,11 @@ jobs:
     - task: CmdLine@2
       displayName: 'Packer init'
       inputs:
-        script: 'packer init packer/vmware/windows/server/2022/.'
+        script: 'packer init $(parameters.path).'
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: CmdLine@2
       displayName: 'Packer build'
       inputs:
-        script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
+        script: 'packer build -force --only $(parameters.build) -var-file="packer/vmware/vsphere.pkrvars.hcl" $(parameters.path)'
         workingDirectory: '$(Build.SourcesDirectory)'
