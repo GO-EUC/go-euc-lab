@@ -28,34 +28,34 @@ stages:
   displayName: Image creation
 
   jobs:
-  - template: vmware/image.yml
-    parameters:
-      iso: en-us_windows_11_business_editions_version_21h2_updated_aug_2022_x64_dvd_50c9cab3.iso
-      path: packer/vmware/windows/desktop/11
-      build: vsphere-iso.windows-desktop
-      variable_group: "VMware - Target"
-    condition: eq('${{ parameters.windows }}', 'Windows 11')
+  - ${{ if eq(parameters.windows, 'Windows 11') }}:
+    - template: vmware/image.yml
+      parameters:
+        iso: en-us_windows_11_business_editions_version_21h2_updated_aug_2022_x64_dvd_50c9cab3.iso
+        path: packer/vmware/windows/desktop/11
+        build: vsphere-iso.windows-desktop
+        variable_group: "VMware - Target"
   
-  - template: vmware/image.yml
-    parameters:
-      iso: 
-      path: packer/vmware/windows/desktop/10
-      build: vsphere-iso.windows-desktop
-      variable_group: "VMware - Target"
-    condition: eq('${{ parameters.windows }}', 'Windows 10')
+  - ${{ if eq(parameters.windows, 'Windows 10') }}:
+    - template: vmware/image.yml
+      parameters:
+        iso: 
+        path: packer/vmware/windows/desktop/10
+        build: vsphere-iso.windows-desktop
+        variable_group: "VMware - Target"
 
-  - template: vmware/image.yml
-    parameters:
-      iso: 
-      path: packer/vmware/windows/server/2019
-      build: vsphere-iso.windows-server-standard-dexp
-      variable_group: "VMware - Target"
-    condition: eq('${{ parameters.windows }}', 'Windows Server 2019')
+  - ${{ if eq(parameters.windows, 'Windows Server 2019') }}:
+    - template: vmware/image.yml
+      parameters:
+        iso: 
+        path: packer/vmware/windows/server/2019
+        build: vsphere-iso.windows-server-standard-dexp
+        variable_group: "VMware - Target"
 
-  - template: vmware/image.yml
-    parameters:
-      iso: 
-      path: packer/vmware/windows/server/2022
-      build: vsphere-iso.windows-server-standard-dexp
-      variable_group: "VMware - Target"
-    condition: eq('${{ parameters.windows }}', 'Windows Server 2022')
+  - ${{ if eq(parameters.windows, 'Windows Server 2022') }}:
+    - template: vmware/image.yml
+      parameters:
+        iso: 
+        path: packer/vmware/windows/server/2022
+        build: vsphere-iso.windows-server-standard-dexp
+        variable_group: "VMware - Target"
