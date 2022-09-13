@@ -50,7 +50,7 @@ jobs:
     - task: CmdLine@2
       displayName: 'Packer init'
       inputs:
-        script: 'packer init $(parameters.path).'
+        script: 'packer init $(parameters.path)'
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: CmdLine@2
