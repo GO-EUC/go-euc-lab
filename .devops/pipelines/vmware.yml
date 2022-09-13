@@ -13,7 +13,7 @@ stages:
   jobs:
   - template: vmware/image.yml
     parameters:
-      name: 
+      iso: en-us_windows_server_2022_updated_april_2022_x64_dvd_d428acee.iso
       path: packer/vmware/windows/server/2022
       build: vsphere-iso.windows-server-standard-dexp
       variable_group: VMware

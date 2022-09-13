@@ -5,6 +5,9 @@ parameters:
 - name: build
   type: string
 
+- name: iso
+  type: string
+
 - name: variable_group
   type: string
 
