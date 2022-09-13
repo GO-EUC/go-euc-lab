@@ -167,6 +167,7 @@ variable "vm_cpu_hot_add" {
 variable "vm_mem_size" {
   type        = number
   description = "The size for the virtual memory in MB. (e.g. '4096')"
+  default     = 4096
 }
 
 variable "vm_mem_hot_add" {
@@ -184,6 +185,7 @@ variable "vm_vtpm" {
 variable "vm_disk_size" {
   type        = number
   description = "The size for the virtual disk in MB. (e.g. '40960')"
+  default     = 102400
 }
 
 variable "vm_disk_controller_type" {
@@ -219,6 +221,7 @@ variable "vm_video_displays" {
 variable "common_vm_version" {
   type        = number
   description = "The vSphere virtual hardware version. (e.g. '19')"
+  default     = 19
 }
 
 variable "common_tools_upgrade_policy" {
@@ -286,11 +289,6 @@ variable "common_iso_datastore" {
   description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
 }
 
-variable "iso_url" {
-  type        = string
-  description = "The URL source of the ISO image. (e.g. 'https://artifactory.rainpole.io/.../os.iso')"
-}
-
 variable "iso_path" {
   type        = string
   description = "The path on the source vSphere datastore for ISO image. (e.g. 'iso/windows')"
@@ -316,6 +314,7 @@ variable "iso_file" {
 variable "common_data_source" {
   type        = string
   description = "The provisioning data source. (e.g. 'http' or 'disk')"
+  default     = "http"
 }
 
 variable "common_http_ip" {
@@ -345,6 +344,7 @@ variable "vm_boot_order" {
 variable "vm_boot_wait" {
   type        = string
   description = "The time to wait before boot."
+  default     = "2s"
 }
 
 variable "vm_boot_command" {
@@ -356,16 +356,19 @@ variable "vm_boot_command" {
 variable "vm_shutdown_command" {
   type        = string
   description = "Command(s) for guest operating system shutdown."
+  default     = "shutdown /s /t 10 /f /d p:4:1 /c \"Shutdown by Packer\""
 }
 
 variable "common_ip_wait_timeout" {
   type        = string
   description = "Time to wait for guest operating system IP address response."
+  default     = "20m"
 }
 
 variable "common_shutdown_timeout" {
   type        = string
   description = "Time to wait for guest operating system shutdown."
+  default     = "15m"
 }
 
 // Communicator Settings and Credentials
@@ -401,6 +404,7 @@ variable "build_key" {
 variable "communicator_port" {
   type        = string
   description = "The port for the communicator protocol."
+  default     = 5985
 }
 
 variable "communicator_timeout" {
