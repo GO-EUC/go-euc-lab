@@ -1,6 +1,6 @@
 parameters:
 - name: path
-  type: sting
+  type: string
 
 - name: build
   type: string
