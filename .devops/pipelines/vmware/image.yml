@@ -20,7 +20,7 @@ jobs:
 
     steps:
     - task: PowerShell@2
-      displayName: Terraform variables
+      displayName: Packer variables
       inputs:
         targetType: 'inline'
         script: |
