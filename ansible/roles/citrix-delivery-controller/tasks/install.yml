@@ -1,10 +1,10 @@
 ---
-- name: Built the environment dictonary and variables
-  set_fact:
-    citrix_username: "{{ lookup('env', 'citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'citrix_password') }}"
+- name: Check for PendingReboot module
+  win_psmodule:
+    name: PendingReboot
+    state: present
 
-- name: Install DDC Pre-Reqs
+- name: Install Citrix Delivery Controller prerequisites
   win_feature:
     name:
     - NET-Framework-Core
@@ -56,7 +56,7 @@
     state: present
   register: win_feature
 
-- name: Reboot to complete domain join
+- name: Reboot machine for Windows Features
   ansible.windows.win_reboot:
   when: win_feature.reboot_required
 
@@ -77,67 +77,90 @@
 
 - name: Check if Citrix ISO is downloaded yet
   win_stat:
-    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  register: download_file
+    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+  register: citrix_iso
 
-- name: Copy a single file
-  ansible.windows.win_copy:
-    src: files/Get-CTXBinary.ps1
-    dest: C:\Download\Citrix\Get-CTXBinary.ps1
-
-- name: Download Citrix Virtual Apps and Desktops 2203
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
-  register: citrix_download
-  when: download_file.stat.exists == False
+- name: Copy file from UNC path
+  win_copy:
+    src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\Citrix_Virtual_Apps_and_Desktops_7_2203.iso"
+    dest: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+    remote_src: true
+  when: citrix_iso.stat.exists == false
 
 - name: Register iso path
   set_fact:
-    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  when: download_file.stat.exists == True
-
-- name: Register iso path
-  set_fact:
-    iso_path: "{{citrix_download.stdout | trim }}"
-  when: download_file.stat.exists == False
+    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+  when: citrix_iso.stat.exists == true
 
 - name: Debug Citrix download
   ansible.builtin.debug:
     msg: "{{ iso_path }}"
 
-- name: Ensure an ISO is mounted
+- name: Check for pending reboot
+  win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+  register: pending_reboot
+
+- name: Set fact for pending reboot
+  set_fact:
+    pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+- name: Reboot to remove the pending reboot
+  ansible.windows.win_reboot:
+  when: pending_reboot == true
+
+- name: Mount the Citrix installation ISO
   win_disk_image:
     image_path: "{{ iso_path }}"
     state: present
   register: disk_image_out
 
-- name: Install DDC Components
+- name: Install Citrix Delivery Controller role
   win_package:
     path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
-    arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /logpath C:\Logs
+    arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+    product_id: Citrix Desktop Delivery Controller
     state: present
     expected_return_code: [0, 3, 3010]
-    creates_path: C:\Program Files\Citrix\Desktop Studio
-    product_id: '{07EBAA9B-5D49-4C86-9571-834F4BE05FA8}'
-  vars:
-    ansible_become: yes
-    ansible_become_user: GO\Administrator
-    ansible_become_password: "{{ ansible_password }}"
-    ansible_become_method: runas
+  register: citrix_installation
 
-- name: Reboot to complete DDC Install
+- name: Reboot to complete Citrix Delivery Controller installation
   ansible.windows.win_reboot:
+  when: citrix_installation.reboot_required == true
 
-- name: Remove DDC RunOnce Key
+- name: Check for pending reboot
+  win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+  register: pending_reboot
+
+- name: Set fact for pending reboot
+  set_fact:
+    pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+- name: Reboot to remove the pending reboot
+  ansible.windows.win_reboot:
+  when: pending_reboot == true
+
+- name: Remove Citrix Delivery Controller RunOnce key from registry
   win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
     name: "!XenDesktopSetup"
     state: absent
-  register: ddc_resume
+  register: install_resume
 
-- name: Resume DDC Install
+- name: Resume the Citrix Delivery Controller installation
   win_package:
     path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
     state: present
     expected_return_code: [0, 3, 3010]
-    creates_path: C:\Program Files\Citrix\Desktop Studio
-  when: ddc_resume.changed
+  when: install_resume.changed
+
+- name: Check for pending reboot
+  win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+  register: pending_reboot
+
+- name: Set fact for pending reboot
+  set_fact:
+    pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+- name: Reboot to remove the pending reboot
+  ansible.windows.win_reboot:
+  when: pending_reboot == true
