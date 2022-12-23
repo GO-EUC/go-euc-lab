@@ -10,13 +10,13 @@
 #     include_tasks: azure-keyvault.yml
 
 - name: Management Server
-  hosts: mgnt
+  hosts: mngt
   roles:
   - domain-join
   - management
-  - loadgen
   - mssql-studio
   - visual-studio-code
+  - loadgen
   - citrix-studio
   vars:
     dns_domain_name: 'GO.EUC'
