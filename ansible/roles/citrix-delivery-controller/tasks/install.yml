@@ -92,10 +92,6 @@
     iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
   when: citrix_iso.stat.exists == true
 
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ iso_path }}"
-
 - name: Check for pending reboot
   win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
   register: pending_reboot
