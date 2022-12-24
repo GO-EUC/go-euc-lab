@@ -77,19 +77,19 @@
 
 - name: Check if Citrix ISO is downloaded yet
   win_stat:
-    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+    path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
   register: citrix_iso
 
 - name: Copy file from UNC path
   win_copy:
-    src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\Citrix_Virtual_Apps_and_Desktops_7_2203.iso"
-    dest: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+    src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\{{citrix_iso_source}}"
+    dest: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
     remote_src: true
   when: citrix_iso.stat.exists == false
 
 - name: Register iso path
   set_fact:
-    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+    iso_path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
   when: citrix_iso.stat.exists == true
 
 - name: Check for pending reboot
