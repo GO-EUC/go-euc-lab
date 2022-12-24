@@ -1,10 +1,10 @@
 ---
-- name: Built the environment dictonary and variables
-  set_fact:
-    citrix_username: "{{ lookup('env', 'citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'citrix_password') }}"
+- name: Check for PendingReboot module
+  win_psmodule:
+    name: PendingReboot
+    state: present
 
-- name: Install Storefront Pre-Reqs
+- name: Install Citrix Storefront prerequisites
   win_feature:
     name:
     - Web-Server
@@ -55,7 +55,7 @@
     state: present
   register: win_feature
 
-- name: Reboot to complete domain join
+- name: Reboot machine for Windows Features
   ansible.windows.win_reboot:
   when: win_feature.reboot_required
 
@@ -76,54 +76,53 @@
 
 - name: Check if Citrix ISO is downloaded yet
   win_stat:
-    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  register: download_file
+    path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
+  register: citrix_iso
 
-- name: Copy a single file
-  ansible.windows.win_copy:
-    src: files/Get-CTXBinary.ps1
-    dest: C:\Download\Citrix\Get-CTXBinary.ps1
-
-- name: Download Citrix Virtual Apps and Desktops 2203
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
-  register: citrix_download
-  when: download_file.stat.exists == False
+- name: Copy file from UNC path
+  win_copy:
+    src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\{{citrix_iso_source}}"
+    dest: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
+    remote_src: true
+  when: citrix_iso.stat.exists == false
 
 - name: Register iso path
   set_fact:
-    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  when: download_file.stat.exists == True
+    iso_path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
+  when: citrix_iso.stat.exists == true
 
-- name: Register iso path
+- name: Check for pending reboot
+  win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+  register: pending_reboot
+
+- name: Set fact for pending reboot
   set_fact:
-    iso_path: "{{citrix_download.stdout | trim }}"
-  when: download_file.stat.exists == False
+    pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
 
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ iso_path }}"
+- name: Reboot to remove the pending reboot
+  ansible.windows.win_reboot:
+  when: pending_reboot == true
 
-- name: Ensure an ISO is mounted
+- name: Mount the Citrix installation ISO
   win_disk_image:
     image_path: "{{ iso_path }}"
     state: present
   register: disk_image_out
 
-- name: Run installer from mounted Citrix ISO
+- name: Install Citrix Storefront role
   win_package:
     path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Storefront\\CitrixStoreFront-x64.exe"
     arguments: -silent
-    expected_return_code: [0, 3, 3010]
-    creates_path: C:\ProgramData\Citrix\Storefront Install
-    product_id: '{416AC532-57F6-4FD7-AA4B-4F1D882C510A}'
+    creates_path: C:\Program Files\Citrix\Receiver StoreFront
     state: present
-  register: sf_install   
+    expected_return_code: [0, 3, 3010]
+  register: citrix_installation   
 
-- name: Unmount Citrix ISO
+- name: Unmount Citrix installation ISO
   win_disk_image:
     image_path: "{{ iso_path }}"
     state: absent
 
-- name: Reboot to complete SF install
+- name: Reboot to complete Citrix Storefront installation
   ansible.windows.win_reboot:
-  when: sf_install.changed
+  when: citrix_installation.changed
