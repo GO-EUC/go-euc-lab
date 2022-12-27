@@ -184,7 +184,7 @@
     win_regedit:
       path: HKLM:\Software\GO-EUC\Citrix
       name: citrix_version
-      data: 2203_LTSR_CU2
+      data: "{{ citrix.version }}"
       type: string
       
   when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
