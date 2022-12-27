@@ -1,4 +1,4 @@
-resource "vsphere_virtual_machine" "vm_static" {
+resource "vsphere_virtual_machine" "vm" {
   count            = var.vm_count
   name             = "${var.vm_name}-${count.index + 1}"
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id

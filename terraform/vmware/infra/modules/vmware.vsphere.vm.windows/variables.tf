@@ -1,3 +1,21 @@
+variable "vsphere_user" {
+  description = "VMware vSphere username"
+  type        = string
+  sensitive   = false
+}
+
+variable "vsphere_password" {
+  description = "VMware vSphere password"
+  type        = string
+  sensitive   = true
+}
+
+variable "vsphere_server" {
+  description = "VMware vSphere server"
+  type        = string
+  sensitive   = false
+}
+
 variable "vm_name" {
   description = "Name of VM"
   type        = string

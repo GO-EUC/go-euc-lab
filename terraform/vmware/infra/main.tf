@@ -3,12 +3,11 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>2.9"
-
     }
   }
 
-  backend "azurerm" {
-  }
+  # backend "azurerm" {
+  # }
 }
 
 provider "vsphere" {
