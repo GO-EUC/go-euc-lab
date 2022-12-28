@@ -1,93 +1,117 @@
 ---
-- name: Built the environment dictonary and variables
-  set_fact:
-    citrix_username: "{{ lookup('env', 'citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'citrix_password') }}"
+- name: Obtain information from registry for site check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: lic_version
+  register: citrix_version
 
-- name: Install Citrix License Server Pre-Reqs
-  win_feature:
-    name:
-      - NET-Framework-Core
-      - NET-Framework-Features
-      - NET-Framework-45-Features
-      - NET-Framework-45-Core
-      - NET-Framework-45-ASPNET
-    state: present
-  register: win_feature
+- name: Block for Citrix installation
+  block:
+  - name: Check for PendingReboot module
+    win_psmodule:
+      name: PendingReboot
+      state: present
 
-- name: Reboot to complete feature installation
-  ansible.windows.win_reboot:
-  when: win_feature.reboot_required
+  - name:  Install Citrix License Server prerequisites
+    win_feature:
+      name:
+        - NET-Framework-Core
+        - NET-Framework-Features
+        - NET-Framework-45-Features
+        - NET-Framework-45-Core
+        - NET-Framework-45-ASPNET
+      state: present
+    register: win_feature
 
-- name: Create Download Folder
-  win_file:
-    path: C:\Download
-    state: directory
+  - name: Reboot machine for Windows Features
+    ansible.windows.win_reboot:
+    when: win_feature.reboot_required
 
-- name: Create Citrix Download Folder
-  win_file:
-    path: C:\Download\Citrix
-    state: directory
+  - name: Create Log Folder
+    win_file:
+      path: C:\Logs
+      state: directory
 
-- name: Check if Citrix ISO is downloaded yet
-  win_stat:
-    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  register: download_file
+  - name: Create Download Folder
+    win_file:
+      path: C:\Download
+      state: directory
 
-- name: Copy a single file
-  ansible.windows.win_copy:
-    src: files/Get-CTXBinary.ps1
-    dest: C:\Download\Citrix\Get-CTXBinary.ps1
+  - name: Create Citrix Download Folder
+    win_file:
+      path: C:\Download\Citrix
+      state: directory
 
-- name: Download Citrix Virtual Apps and Desktops 2203
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
-  register: citrix_download
-  when: download_file.stat.exists == False
+  - name: Check if Citrix ISO is downloaded yet
+    win_stat:
+      path: "C:\\Download\\Citrix\\{{citrix.source}}"
+    register: citrix_iso
 
-- name: Register iso path
-  set_fact:
-    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  when: download_file.stat.exists == True
+  - name: Copy file from UNC path
+    win_copy:
+      src: "{{citrix.path}}\\{{citrix.source}}"
+      dest: "C:\\Download\\Citrix\\{{citrix.source}}"
+      remote_src: true
+    vars:
+      ansible_become: yes
+      ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
+      ansible_become_password: "{{ ansible_password }}"
+      ansible_become_method: runas
+    when: citrix_iso.stat.exists == false
 
-- name: Register iso path
-  set_fact:
-    iso_path: "{{citrix_download.stdout | trim }}"
-  when: download_file.stat.exists == False
+  - name: Register iso path
+    set_fact:
+      iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ iso_path }}"
+  - name: Check for pending reboot
+    win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+    register: pending_reboot
 
-- name: Ensure an ISO is mounted
-  win_disk_image:
-    image_path: "{{ iso_path }}"
-    state: present
-  register: disk_image_out
+  - name: Set fact for pending reboot
+    set_fact:
+      pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
 
-- name: Install License Server
-  win_package:
-    path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\CTX_Licensing.msi"
-    product_id: '{17086151-418C-40D7-B25B-1E5AE2F76DD0}'
-    state: present
-  register: lic_install
+  - name: Reboot to remove the pending reboot
+    ansible.windows.win_reboot:
+    when: pending_reboot == true
 
-- name: Install License PowerShell Snapins
-  win_package:
-    path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\LicensingAdmin_PowerShellSnapin_x64.msi"
-    product_id: '{A2D37E62-E9C1-4D75-8660-E2ACC5CBE99E}'
-    state: present
+  - name: Mount the Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: present
+    register: disk_image_out
 
-- name: Open 2700 for lic
-  community.windows.win_firewall_rule:
-    name: Citrix License Server
-    localport: 2700
-    action: allow
-    direction: in
-    protocol: tcp
-    profiles: [domain, private]
-    state: present
-    enabled: yes
+  - name: Install Citrix License Server role
+    win_package:
+      path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\CTX_Licensing.msi"
+      state: present
+    register: lic_install
 
-- name: Reboot to complete installation
-  ansible.windows.win_reboot:
-  when: lic_install.changed
+  - name: Install Citrix License PowerShell snap-ins
+    win_package:
+      path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\LicensingAdmin_PowerShellSnapin_x64.msi"
+      state: present
+
+  - name: Open firewall port 2700 for Citrix License Server
+    community.windows.win_firewall_rule:
+      name: Citrix License Server
+      localport: "{{citrix.licensing.port}}"
+      action: allow
+      direction: in
+      protocol: tcp
+      profiles: [domain, private]
+      state: present
+      enabled: yes
+
+  - name: Reboot to complete installation
+    ansible.windows.win_reboot:
+    when: lic_install.changed
+
+  - name: Add registry for future installation check
+    win_regedit:
+      path: HKLM:\Software\GO-EUC\Citrix
+      name: lic_version
+      data: "{{ citrix.version }}"
+      type: string
+
+  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)

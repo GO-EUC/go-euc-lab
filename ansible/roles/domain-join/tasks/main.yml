@@ -1,5 +1,6 @@
 - name: Domain join machine
   block:
+  
   - name: Check for PowerShellGet & PackageManagement modules
     win_psmodule:
       name: PowerShellGet
@@ -37,5 +38,5 @@
   - name: Reboot to complete domain join
     win_reboot:
     when: domain_state.reboot_required
-  
+
   when: ansible_facts['windows_domain_member'] == false

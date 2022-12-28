@@ -4,13 +4,10 @@
   roles:
   - domain-join
   - citrix-storefront
+  vars_files:
+    - domain.yml
+    - citrix.yml
   vars:
-    citrix_iso_source: Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
-    dns_domain_name: 'GO.EUC'
-    domain_name: GO
-    environment_abbreviations: flow
-    domain_controller: "{{ groups['dc'][0] }}"
-    domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore

@@ -2,16 +2,8 @@
 - name: Obtain information from registry for site check
   win_reg_stat:
     path: HKLM:\Software\GO-EUC\Citrix
-    name: citrix_version
+    name: ddc_version
   register: citrix_version
-
-- name: debug
-  ansible.builtin.debug:
-    msg: "{{citrix_version}}"
-
-- name: debug var
-  ansible.builtin.debug:
-    msg: "{{citrix}}"
 
 - name: Block for Citrix installation
   block:
@@ -98,7 +90,7 @@
 
   - name: Copy file from UNC path
     win_copy:
-      src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\{{citrix.source}}"
+      src: "{{citrix.path}}\\{{citrix.source}}"
       dest: "C:\\Download\\Citrix\\{{citrix.source}}"
       remote_src: true
     vars:
@@ -138,6 +130,12 @@
       expected_return_code: [0, 3, 3010]
     register: citrix_installation
 
+  - name: Unmount the Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: absent
+    register: disk_image_out
+
   - name: Reboot to complete Citrix Delivery Controller installation
     ansible.windows.win_reboot:
     when: citrix_installation.reboot_required == true
@@ -161,12 +159,24 @@
       state: absent
     register: install_resume
 
+  - name: Mount the Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: present
+    register: disk_image_out
+
   - name: Resume the Citrix Delivery Controller installation
     win_package:
       path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
       state: present
       expected_return_code: [0, 3, 3010]
     when: install_resume.changed
+
+  - name: Unmount the Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: present
+    register: disk_image_out
 
   - name: Check for pending reboot
     win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
@@ -180,10 +190,10 @@
     ansible.windows.win_reboot:
     when: pending_reboot == true
 
-  - name: Add registry for future site creation check
+  - name: Add registry for future installation check
     win_regedit:
       path: HKLM:\Software\GO-EUC\Citrix
-      name: citrix_version
+      name: ddc_version
       data: "{{ citrix.version }}"
       type: string
       

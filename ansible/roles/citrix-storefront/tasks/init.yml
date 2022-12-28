@@ -1,44 +1,62 @@
 ---
-- name: Create Citrix Storefront variables
-  script: createsfvars.ps1
-  args:
-    creates: C:\Logs\sf-vars.xml
-  environment:
-    HostbaseUrl: "{{ HostbaseUrl }}"
-    FarmServers: "{{ groups['ctx_sf'] | join(', ') }}"
-    StoreVirtualPath: "{{ StoreVirtualPath }}"
-    TransportType: "{{ TransportType }}"
-    GatewayUrl: "{{ GatewayUrl }}"
-    GatewaySTAUrls: "{{ GatewaySTAUrls }}"
-    GatewayName: "{{ GatewayName }}"
-  
-- name: Copy the Citrix Storefront script file
-  win_copy:
-    src: createsfsite.ps1
-    dest: C:\Windows\Temp\
+- name: Obtain information from registry for store check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: store_created
+  register: store_created
+
+- name: Site creation block
+  block:
+
+  - name: Create Citrix Storefront variables
+    script: createsfvars.ps1
+    args:
+      creates: C:\Logs\sf-vars.xml
+    environment:
+      HostbaseUrl: "{{ citrix.storefront.url }}"
+      FarmServers: "{{ groups['ctx_sf'] | join(', ') }}"
+      StoreVirtualPath: "{{ citrix.storefront.path }}"
+      TransportType: "{{ citrix.storefront.transport }}"
+      GatewayUrl: "{{ citrix.storefront.gateway.url }}"
+      GatewaySTAUrls: "{{ citrix.storefront.gateway.sta_url }}"
+      GatewayName: "{{ citrix.storefront.gateway.name }}"
     
-- name: Collect Citrix Storefront folder stat
-  win_stat:
-    path: C:\inetpub\wwwroot\Citrix
-  register: sf_info
+  - name: Copy the Citrix Storefront script file
+    win_copy:
+      src: createsfsite.ps1
+      dest: C:\Windows\Temp\
+      
+  - name: Collect Citrix Storefront folder stat
+    win_stat:
+      path: C:\inetpub\wwwroot\Citrix
+    register: sf_info
 
-- name: Start Citrix Storefront script
-  win_shell: C:\Windows\Temp\createsfsite.ps1
-  when: sf_info.stat.exists == False
-  vars:
-    ansible_become: yes
-    ansible_become_user: system
-    ansible_become_method: runas
+  - name: Start Citrix Storefront script
+    win_shell: C:\Windows\Temp\createsfsite.ps1
+    when: sf_info.stat.exists == False
+    vars:
+      ansible_become: yes
+      ansible_become_user: system
+      ansible_become_method: runas
 
-# - name: Wait for passcode file
-#   win_wait_for:
-#     path: C:\Logs\passcode.txt
-#     delay: 10
-#   when: sf_info.stat.exists == False
+  # - name: Wait for passcode file
+  #   win_wait_for:
+  #     path: C:\Logs\passcode.txt
+  #     delay: 10
+  #   when: sf_info.stat.exists == False
 
-# - name: Slurp passcode file
-#   slurp:
-#     src: C:\Logs\passcode.txt
-#   register: passcode
-# - name: Some debug
-#   debug: msg="{{ passcode['content'] | b64decode | trim }}"
+  # - name: Slurp passcode file
+  #   slurp:
+  #     src: C:\Logs\passcode.txt
+  #   register: passcode
+  # - name: Some debug
+  #   debug: msg="{{ passcode['content'] | b64decode | trim }}"
+
+  - name: Add registry for future site creation check
+    win_regedit:
+      path: HKLM:\Software\GO-EUC\Citrix
+      name: store_created
+      data: 1
+      type: dword
+  
+  when: store_created.exists == false 

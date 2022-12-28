@@ -3,12 +3,13 @@
 
 - name: Obtain information from registry for site check
   win_reg_stat:
-    path: HKLM:\Software\GO-EUC\
-    name: citrix_site_created
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: site_created
   register: site_created
 
 - name: Site creation block
   block:
+  
   - name: Install Site Script
     win_copy:
       src: "{{ item }}"
@@ -18,33 +19,33 @@
 
   - name: Create or Join Site
     win_shell: |
-      $env:SiteName = '{{ SiteName }}'
+      $env:SiteName = '{{ citrix.site }}'
       $env:DatabaseServer = '{{ groups['sql'][0] }}'
-      $env:DatabaseServerPort = '{{ DatabaseServerPort }}'
-      $env:DatabaseName_Site = '{{ DatabaseName_Site }}'
-      $env:DatabaseName_Logging = '{{ DatabaseName_Logging }}'
-      $env:DatabaseName_Monitoring = '{{ DatabaseName_Monitoring }}'
+      $env:DatabaseServerPort = '{{ citrix.database_port }}'
+      $env:DatabaseName_Site = '{{ citrix.database_site }}'
+      $env:DatabaseName_Logging = '{{ citrix.database_logging }}'
+      $env:DatabaseName_Monitoring = '{{ citrix.database_monitoring }}'
       $env:LicenseServer = '{{ groups['ctx_lic'][0] }}'
-      $env:LicenseServerPort = '{{ LicenseServerPort }}'
-      $env:LicensingModel = '{{ LicensingModel }}'                  
-      $env:ProductCode = '{{ ProductCode }}'                                   
-      $env:ProductEdition = '{{ ProductEdition }}'
-      $env:AdminGroup = '{{ domain_name }}\{{ AdminGroup }}'
-      $env:Role =   '{{ Role }}'
-      $env:Scope = '{{ Scope }}'                                 
-      $env:GroomingDays = '{{ GroomingDays }}'
-      C:\Logs\createsite.ps1 -creates C:\Logs\sitedone.txt
+      $env:LicenseServerPort = '{{ citrix.licensing.port }}'
+      $env:LicensingModel = '{{ citrix.licensing.model }}'                  
+      $env:ProductCode = '{{ citrix.licensing.code }}'                                   
+      $env:ProductEdition = '{{ citrix.licensing.edition }}'
+      $env:AdminGroup = '{{ domain_name }}\{{ citrix.admin }}'
+      $env:Role =   '{{ citrix.role }}'
+      $env:Scope = '{{ citrix.role }}'                                 
+      $env:GroomingDays = '{{ citrix.grooming }}'
+      C:\Logs\CreateSite.ps1 -creates C:\Logs\SiteDone.txt
     register: result
-    become: True
-    become_method: runas
-    become_user: GO\Administrator
     vars:
+      ansible_become: yes
+      ansible_become_method: runas
+      ansible_become_user: "{{domain_name}}\\Administrator"
       ansible_become_password: "{{ ansible_password }}"
 
   - name: Add registry for future site creation check
     win_regedit:
-      path: HKLM:\Software\GO-EUC
-      name: citrix_site_created
+      path: HKLM:\Software\GO-EUC\Citrix
+      name: site_created
       data: 1
       type: dword
   

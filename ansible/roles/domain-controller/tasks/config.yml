@@ -1,6 +1,8 @@
-- name: Set fac
+
+
+- name: Set fact
   set_fact:
-    domain_path: "dc=GO,dc=EUC"
+    domain_path: "dc={{ dns_domain_name.split('.')[0] }},dc={{ dns_domain_name.split('.')[1] }}"
 
 - name: Check for ActiveDirectory DSC Powershell module
   win_psmodule:
@@ -39,7 +41,7 @@
     - RDS
     - VDI
 
-- name: Ensure the group Loadgen exists using sAMAccountName
+- name: Ensure the group LoadGen exists using sAMAccountName
   win_domain_group:
     name: LoadGen
     scope: global
@@ -89,11 +91,15 @@
 - name: Create LoadGen accounts
   win_domain_user:
     name: "{{ 'LoadGen%03d' | format(item | int) }}"
+    upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
+    company: LoadGen
     password: '{{ ansible_password }}'
+    password_expired: no
+    user_cannot_change_password: yes
     state: present
     path: "OU=LoadGen,OU=GO,{{ domain_path }}"
     description: LoadGen simulation account
     groups:
     - LoadGen
   when: "{{ item }} != 0"
-  loop: "{{ range(250) | list }}"
+  loop: "{{ range(51) | list }}"

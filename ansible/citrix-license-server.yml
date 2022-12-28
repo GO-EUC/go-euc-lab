@@ -4,11 +4,10 @@
   roles:
   - domain-join
   - citrix-license-server
+  vars_files:
+    - domain.yml
+    - citrix.yml
   vars:
-    dns_domain_name: 'GO.EUC'
-    domain_name: GO
-    domain_controller: "{{ groups['dc'][0] }}"
-    domain_admin_user: "GO\\{{ ansible_user }}"
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore

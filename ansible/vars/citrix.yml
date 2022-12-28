@@ -1,9 +1,27 @@
 ---
 citrix:
-  source: Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  version: 2203_LTSR
-
-licensing:
-  source: .msi
-  version: 11.17.2.0_41000
-
+  source: Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
+  path: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix"
+  version: 2203_LTSR_CU2
+  site: Default
+  database_port: 1433
+  database_site: CVAD_Site_DB
+  database_logging: CVAD_Logging_DB
+  database_monitoring: CVAD_Monitoring_DB
+  admin: Domain Admins
+  role: Full Administrator
+  scope: All
+  grooming: 365
+  licensing:
+    port: 2700
+    model: Concurrent
+    code: XDT
+    edition: PLT
+  storefront:
+    url: http://citrix.go.euc
+    path: /Citrix/Store
+    transport: http
+    gateway:
+      name: ADCGW1
+      url: https://adc.go.euc
+      sta_url: http://ctxddc-1/scripts/ctxa.dll

@@ -1,128 +1,149 @@
 ---
-- name: Check for PendingReboot module
-  win_psmodule:
-    name: PendingReboot
-    state: present
+- name: Obtain information from registry for site check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: sf_version
+  register: citrix_version
 
-- name: Install Citrix Storefront prerequisites
-  win_feature:
-    name:
-    - Web-Server
-    - Web-WebServer
-    - Web-Common-Http
-    - Web-Default-Doc
-    - Web-Dir-Browsing
-    - Web-Http-Errors
-    - Web-Static-Content
-    - Web-Http-Redirect
-    - Web-Health
-    - Web-Http-Logging
-    - Web-Log-Libraries
-    - Web-Http-Tracing
-    - Web-Performance
-    - Web-Stat-Compression
-    - Web-Dyn-Compression
-    - Web-Security
-    - Web-Filtering
-    - Web-Basic-Auth
-    - Web-Windows-Auth
-    - Web-App-Dev
-    - Web-Net-Ext45
-    - Web-AppInit
-    - Web-ASP
-    - Web-Asp-Net45
-    - Web-CGI
-    - Web-ISAPI-Ext
-    - Web-ISAPI-Filter
-    - Web-Includes
-    - Web-Mgmt-Tools
-    - Web-Mgmt-Console
-    - Web-Mgmt-Compat
-    - Web-Metabase
-    - Web-Lgcy-Mgmt-Console
-    - Web-Lgcy-Scripting
-    - Web-WMI
-    - Web-Scripting-Tools
-    - NET-Framework-Features
-    - NET-Framework-45-Features
-    - NET-Framework-45-Core
-    - NET-Framework-45-ASPNET
-    - NET-WCF-Services45
-    - NET-WCF-HTTP-Activation45
-    - NET-WCF-TCP-PortSharing45
-    - WAS
-    - Telnet-Client
-    state: present
-  register: win_feature
+- name: Block for Citrix installation
+  block:
 
-- name: Reboot machine for Windows Features
-  ansible.windows.win_reboot:
-  when: win_feature.reboot_required
+  - name: Check for PendingReboot module
+    win_psmodule:
+      name: PendingReboot
+      state: present
 
-- name: Create Log Folder
-  win_file:
-    path: C:\Logs
-    state: directory
+  - name: Install Citrix Storefront prerequisites
+    win_feature:
+      name:
+      - Web-Server
+      - Web-WebServer
+      - Web-Common-Http
+      - Web-Default-Doc
+      - Web-Dir-Browsing
+      - Web-Http-Errors
+      - Web-Static-Content
+      - Web-Http-Redirect
+      - Web-Health
+      - Web-Http-Logging
+      - Web-Log-Libraries
+      - Web-Http-Tracing
+      - Web-Performance
+      - Web-Stat-Compression
+      - Web-Dyn-Compression
+      - Web-Security
+      - Web-Filtering
+      - Web-Basic-Auth
+      - Web-Windows-Auth
+      - Web-App-Dev
+      - Web-Net-Ext45
+      - Web-AppInit
+      - Web-ASP
+      - Web-Asp-Net45
+      - Web-CGI
+      - Web-ISAPI-Ext
+      - Web-ISAPI-Filter
+      - Web-Includes
+      - Web-Mgmt-Tools
+      - Web-Mgmt-Console
+      - Web-Mgmt-Compat
+      - Web-Metabase
+      - Web-Lgcy-Mgmt-Console
+      - Web-Lgcy-Scripting
+      - Web-WMI
+      - Web-Scripting-Tools
+      - NET-Framework-Features
+      - NET-Framework-45-Features
+      - NET-Framework-45-Core
+      - NET-Framework-45-ASPNET
+      - NET-WCF-Services45
+      - NET-WCF-HTTP-Activation45
+      - NET-WCF-TCP-PortSharing45
+      - WAS
+      - Telnet-Client
+      state: present
+    register: win_feature
 
-- name: Create Download Folder
-  win_file:
-    path: C:\Download
-    state: directory
+  - name: Reboot machine for Windows Features
+    ansible.windows.win_reboot:
+    when: win_feature.reboot_required
 
-- name: Create Citrix Download Folder
-  win_file:
-    path: C:\Download\Citrix
-    state: directory
+  - name: Create Log Folder
+    win_file:
+      path: C:\Logs
+      state: directory
 
-- name: Check if Citrix ISO is downloaded yet
-  win_stat:
-    path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
-  register: citrix_iso
+  - name: Create Download Folder
+    win_file:
+      path: C:\Download
+      state: directory
 
-- name: Copy file from UNC path
-  win_copy:
-    src: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix\\{{citrix_iso_source}}"
-    dest: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
-    remote_src: true
-  when: citrix_iso.stat.exists == false
+  - name: Create Citrix Download Folder
+    win_file:
+      path: C:\Download\Citrix
+      state: directory
 
-- name: Register iso path
-  set_fact:
-    iso_path: "C:\\Download\\Citrix\\{{citrix_iso_source}}"
-  when: citrix_iso.stat.exists == true
+  - name: Check if Citrix ISO is downloaded yet
+    win_stat:
+      path: "C:\\Download\\Citrix\\{{citrix.source}}"
+    register: citrix_iso
 
-- name: Check for pending reboot
-  win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-  register: pending_reboot
+  - name: Copy file from UNC path
+    win_copy:
+      src: "{{citrix.path}}\\{{citrix.source}}"
+      dest: "C:\\Download\\Citrix\\{{citrix.source}}"
+      remote_src: true
+    vars:
+      ansible_become: yes
+      ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
+      ansible_become_password: "{{ ansible_password }}"
+      ansible_become_method: runas
+    when: citrix_iso.stat.exists == false
 
-- name: Set fact for pending reboot
-  set_fact:
-    pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+  - name: Register iso path
+    set_fact:
+      iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-- name: Reboot to remove the pending reboot
-  ansible.windows.win_reboot:
-  when: pending_reboot == true
+  - name: Check for pending reboot
+    win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+    register: pending_reboot
 
-- name: Mount the Citrix installation ISO
-  win_disk_image:
-    image_path: "{{ iso_path }}"
-    state: present
-  register: disk_image_out
+  - name: Set fact for pending reboot
+    set_fact:
+      pending_reboot: "{{ pending_reboot.stdout | trim | lower }}"
 
-- name: Install Citrix Storefront role
-  win_package:
-    path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Storefront\\CitrixStoreFront-x64.exe"
-    arguments: -silent
-    creates_path: C:\Program Files\Citrix\Receiver StoreFront
-    state: present
-    expected_return_code: [0, 3, 3010]
-  register: citrix_installation   
+  - name: Reboot to remove the pending reboot
+    ansible.windows.win_reboot:
+    when: pending_reboot == true
 
-- name: Unmount Citrix installation ISO
-  win_disk_image:
-    image_path: "{{ iso_path }}"
-    state: absent
+  - name: Mount the Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: present
+    register: disk_image_out
 
-- name: Reboot to complete Citrix Storefront installation
-  ansible.windows.win_reboot:
-  when: citrix_installation.changed
+  - name: Install Citrix Storefront role
+    win_package:
+      path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Storefront\\CitrixStoreFront-x64.exe"
+      arguments: -silent
+      state: present
+      expected_return_code: [0, 3, 3010]
+    register: citrix_installation   
+
+  - name: Unmount Citrix installation ISO
+    win_disk_image:
+      image_path: "{{ iso_path }}"
+      state: absent
+
+  - name: Reboot to complete Citrix Storefront installation
+    ansible.windows.win_reboot:
+    when: citrix_installation.changed
+  
+  - name: Add registry for future installation check
+    win_regedit:
+      path: HKLM:\Software\GO-EUC\Citrix
+      name: sf_version
+      data: "{{ citrix.version }}"
+      type: string
+      
+  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
