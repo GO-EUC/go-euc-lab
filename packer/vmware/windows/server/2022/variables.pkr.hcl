@@ -164,12 +164,6 @@ variable "vm_guest_os_experience_core" {
   default     = "core"
 }
 
-variable "vm_guest_os_experience_desktop" {
-  type        = string
-  description = "The guest operating system desktop experience. Used for naming. (e.g. 'dexp')"
-  default     = "dexp"
-}
-
 variable "vm_guest_os_type" {
   type        = string
   description = "The guest operating system type, also know as guestid. (e.g. 'windows2019srv_64Guest')"
@@ -294,7 +288,7 @@ variable "common_content_library_skip_export" {
 
 // Removable Media Settings
 
-variable "common_iso_datastore" {
+variable "iso_datastore" {
   type        = string
   description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
 }
@@ -307,6 +301,16 @@ variable "iso_path" {
 variable "iso_file" {
   type        = string
   description = "The file name of the ISO image used by the vendor. (e.g. '<language>_windows_server_version_<version>_updated_<month_year>_x64_dvd_<string>.iso')"
+}
+
+variable "iso_checksum_type" {
+  type        = string
+  description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
+}
+
+variable "iso_checksum_value" {
+  type        = string
+  description = "The checksum value provided by the vendor."
 }
 
 // Boot Settings
@@ -379,6 +383,12 @@ variable "build_username" {
   sensitive   = true
 }
 
+variable "build_organization" {
+  type        = string
+  description = "The build organization. (e.g. 'GO-EUC')"
+  sensitive   = true
+}
+
 variable "build_password" {
   type        = string
   description = "The password to login to the guest operating system."
@@ -416,4 +426,26 @@ variable "inline" {
   default     = [
     "Get-EventLog -LogName * | ForEach { Clear-EventLog -LogName $_.Log }"
   ]
+}
+
+// Static Network Address
+
+variable "network_address" {
+  type        = string
+  description = "Network address of the template machine, example: 10.2.0.30/24"
+}
+
+variable "network_gateway" {
+  type        = string
+  description = "Default network gateway address, example: 10.2.0.1"
+}
+
+variable "network_dns" {
+  type        = string
+  description = "Default network DNS address, example: 10.2.0.1"
+}
+
+variable "network_domain" {
+  type        = string
+  description = "Default network domain name, example: go.euc"
 }

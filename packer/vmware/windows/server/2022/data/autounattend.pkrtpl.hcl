@@ -98,7 +98,7 @@
          <UserData>
             <AcceptEula>true</AcceptEula>
             <FullName>${build_username}</FullName>
-            <Organization>${build_username}</Organization>
+            <Organization>${build_organization}</Organization>
             <ProductKey>
                <Key>${vm_inst_os_kms_key}</Key>
                <WillShowUI>OnError</WillShowUI>
@@ -133,6 +133,42 @@
       </component>
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
          <SkipAutoActivation>true</SkipAutoActivation>
+      </component>
+      <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <Interfaces>
+            <Interface wcm:action="add">
+               <Identifier>Ethernet0</Identifier>
+               <Ipv4Settings>
+                  <DhcpEnabled>false</DhcpEnabled>
+                  <Metric>10</Metric>
+                  <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
+               </Ipv4Settings>
+               <UnicastIpAddresses>
+                  <IpAddress wcm:action="add" wcm:keyValue="1">${network_address}</IpAddress>
+               </UnicastIpAddresses>
+               <Routes>
+                  <Route wcm:action="add">
+                     <Identifier>1</Identifier>
+                     <Metric>10</Metric>
+                     <NextHopAddress>${network_gateway}</NextHopAddress>
+                     <Prefix>0.0.0.0/0</Prefix>
+                  </Route>
+               </Routes>
+            </Interface>
+         </Interfaces>
+      </component>
+      <component name="Microsoft-Windows-DNS-Client" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <Interfaces>
+            <Interface wcm:action="add">
+               <DNSServerSearchOrder>
+                  <IpAddress wcm:action="add" wcm:keyValue="1">${network_dns}</IpAddress>
+               </DNSServerSearchOrder>
+               <DisableDynamicUpdate>false</DisableDynamicUpdate>
+               <DNSDomain>${network_domain}</DNSDomain>
+               <Identifier>Ethernet0</Identifier>
+               <EnableAdapterDomainNameRegistration>true</EnableAdapterDomainNameRegistration>
+            </Interface>
+         </Interfaces>
       </component>
    </settings>
    <settings pass="oobeSystem">
