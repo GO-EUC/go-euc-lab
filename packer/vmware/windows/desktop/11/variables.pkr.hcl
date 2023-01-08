@@ -1,6 +1,6 @@
 /*
     DESCRIPTION:
-    Microsoft Windows 11 Professional variables using the Packer Builder for VMware vSphere (vsphere-iso).
+    Microsoft Windows 11 variables using the Packer Builder for VMware vSphere (vsphere-iso).
 */
 
 //  BLOCK: variable
@@ -166,7 +166,7 @@ variable "vm_cpu_hot_add" {
 
 variable "vm_mem_size" {
   type        = number
-  description = "The size for the virtual memory in MB. (e.g. '4096')"
+  description = "The size for the virtual memory in MB. (e.g. '2048')"
   default     = 4096
 }
 
@@ -179,7 +179,7 @@ variable "vm_mem_hot_add" {
 variable "vm_vtpm" {
   type        = bool
   description = "Enable virtual trusted platform module (vTPM)."
-  default     = true
+  default     = false
 }
 
 variable "vm_disk_size" {
@@ -284,7 +284,7 @@ variable "common_ovf_export_overwrite" {
 
 // Removable Media Settings
 
-variable "common_iso_datastore" {
+variable "iso_datastore" {
   type        = string
   description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
 }
@@ -299,15 +299,15 @@ variable "iso_file" {
   description = "The file name of the ISO image used by the vendor. (e.g. '<langauge>_windows_<version>_business_editions_version_<YYhx<_updated_<month_year>_x64_dvd_<string>.iso')"
 }
 
-# variable "iso_checksum_type" {
-#   type        = string
-#   description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
-# }
+variable "iso_checksum_type" {
+  type        = string
+  description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
+}
 
-# variable "iso_checksum_value" {
-#   type        = string
-#   description = "The checksum value provided by the vendor."
-# }
+variable "iso_checksum_value" {
+  type        = string
+  description = "The checksum value provided by the vendor."
+}
 
 // Boot Settings
 
@@ -350,13 +350,13 @@ variable "vm_boot_wait" {
 variable "vm_boot_command" {
   type        = list(string)
   description = "The virtual machine boot command."
-  default     = []
+  default     = ["<spacebar>"]
 }
 
 variable "vm_shutdown_command" {
   type        = string
   description = "Command(s) for guest operating system shutdown."
-  default     = "shutdown /s /t 10 /f /d p:4:1 /c \"Shutdown by Packer\""
+    default     = "shutdown /s /t 10 /f /d p:4:1 /c \"Shutdown by Packer\""
 }
 
 variable "common_ip_wait_timeout" {
@@ -376,6 +376,12 @@ variable "common_shutdown_timeout" {
 variable "build_username" {
   type        = string
   description = "The username to login to the guest operating system. (e.g. 'rainpole')"
+  sensitive   = true
+}
+
+variable "build_organization" {
+  type        = string
+  description = "The build organization. (e.g. 'GO-EUC')"
   sensitive   = true
 }
 
@@ -418,30 +424,38 @@ variable "communicator_timeout" {
 variable "scripts" {
   type        = list(string)
   description = "A list of scripts and their relative paths to transfer and run."
-  default     = []
+  default     = [
+    "packer/vmware/scripts/windows/windows-ansible.ps1",
+    "packer/vmware/scripts/windows/windows-prepare.ps1"
+    ]
 }
 
 variable "inline" {
   type        = list(string)
   description = "A list of commands to run."
-  default     = []
+  default     = [
+    "Get-EventLog -LogName * | ForEach { Clear-EventLog -LogName $_.Log }"
+  ]
 }
 
-// HCP Packer Settings
+// Static Network Address
 
-variable "common_hcp_packer_registry_enabled" {
-  type        = bool
-  description = "Enable the HCP Packer registry."
-  default     = false
+variable "network_address" {
+  type        = string
+  description = "Network address of the template machine, example: 10.2.0.30/24"
 }
 
-variable "build_number" {
-  description = "The build number of the image"
-  default     = 1
-  type        = number
+variable "network_gateway" {
+  type        = string
+  description = "Default network gateway address, example: 10.2.0.1"
 }
 
-variable "env" {
-  type    = string
-  default = "flowers"
+variable "network_dns" {
+  type        = string
+  description = "Default network DNS address, example: 10.2.0.1"
+}
+
+variable "network_domain" {
+  type        = string
+  description = "Default network domain name, example: go.euc"
 }
