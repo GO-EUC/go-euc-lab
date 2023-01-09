@@ -36,7 +36,7 @@ locals {
   iso_checksum      = "${var.iso_checksum_type}:${var.iso_checksum_value}"
   manifest_path     = "${path.cwd}/manifests/"
   manifest_output   = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}.json"
-  ovf_export_path   = "${path.cwd}/artifacts/${local.vm_name}"
+  ovf_export_path   = "${path.cwd}/artifacts/${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
   data_source_content = {
     "/meta-data" = file("${abspath(path.root)}/data/meta-data")
     "/user-data" = templatefile("${abspath(path.root)}/data/user-data.pkrtpl.hcl", {
@@ -149,7 +149,7 @@ source "vsphere-iso" "linux-ubuntu" {
   dynamic "export" {
     for_each = var.common_ovf_export_enabled == true ? [1] : []
     content {
-      name  = local.vm_name
+      name  = "${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
       force = var.common_ovf_export_overwrite
       options = [
         "extraconfig"
