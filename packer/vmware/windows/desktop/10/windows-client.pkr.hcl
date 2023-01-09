@@ -62,7 +62,7 @@ source "vsphere-iso" "windows-desktop" {
 
   // Virtual Machine Settings
   guest_os_type        = var.vm_guest_os_type
-  vm_name              = "${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
+  vm_name              = "${var.vm_guest_os_family}-${var.vm_guest_os_version}-v${local.build_version}"
   firmware             = var.vm_firmware
   CPUs                 = var.vm_cpu_count
   cpu_cores            = var.vm_cpu_cores
@@ -99,15 +99,15 @@ source "vsphere-iso" "windows-desktop" {
       build_organization   = var.build_organization
       vm_inst_os_language  = var.vm_inst_os_language
       vm_inst_os_keyboard  = var.vm_inst_os_keyboard
-      vm_inst_os_image     = "Windows 10 ${var.vm_inst_os_image}"
+      vm_inst_os_image     = "${var.vm_guest_os_family} ${var.vm_guest_os_version} ${var.vm_inst_os_image}"
       vm_inst_os_kms_key   = var.vm_inst_os_kms_key
       vm_guest_os_language = var.vm_guest_os_language
       vm_guest_os_keyboard = var.vm_guest_os_keyboard
       vm_guest_os_timezone = var.vm_guest_os_timezone
-      network_address      = var.network_address
-      network_gateway      = var.network_gateway
-      network_dns          = var.network_dns
-      network_domain       = var.network_domain
+      network_address      = cidrhost(var.network_cidr, var.network_address)
+      network_subnet       = cidrnetmask(var.network_cidr)
+      network_gateway      = cidrhost(var.network_cidr, var.network_gateway)
+      network_dns          = cidrhost(var.network_cidr, var.network_dns)
     })
   }
 
