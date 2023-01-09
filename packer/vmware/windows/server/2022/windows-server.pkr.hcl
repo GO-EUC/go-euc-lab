@@ -104,10 +104,10 @@ source "vsphere-iso" "windows-server" {
       vm_guest_os_language = var.vm_guest_os_language
       vm_guest_os_keyboard = var.vm_guest_os_keyboard
       vm_guest_os_timezone = var.vm_guest_os_timezone
-      network_address      = var.network_address
-      network_gateway      = var.network_gateway
-      network_dns          = var.network_dns
-      network_domain       = var.network_domain
+      network_address      = cidrhost(var.network_cidr, var.network_address)
+      network_subnet       = cidrnetmask(var.network_cidr)
+      network_gateway      = cidrhost(var.network_cidr, var.network_gateway)
+      network_dns          = cidrhost(var.network_cidr, var.network_dns)
     })
   }
 

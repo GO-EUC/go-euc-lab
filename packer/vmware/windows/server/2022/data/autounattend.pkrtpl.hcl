@@ -134,42 +134,6 @@
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Security-SPP-UX" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
          <SkipAutoActivation>true</SkipAutoActivation>
       </component>
-      <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-         <Interfaces>
-            <Interface wcm:action="add">
-               <Identifier>Ethernet0</Identifier>
-               <Ipv4Settings>
-                  <DhcpEnabled>false</DhcpEnabled>
-                  <Metric>10</Metric>
-                  <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
-               </Ipv4Settings>
-               <UnicastIpAddresses>
-                  <IpAddress wcm:action="add" wcm:keyValue="1">${network_address}</IpAddress>
-               </UnicastIpAddresses>
-               <Routes>
-                  <Route wcm:action="add">
-                     <Identifier>1</Identifier>
-                     <Metric>10</Metric>
-                     <NextHopAddress>${network_gateway}</NextHopAddress>
-                     <Prefix>0.0.0.0/0</Prefix>
-                  </Route>
-               </Routes>
-            </Interface>
-         </Interfaces>
-      </component>
-      <component name="Microsoft-Windows-DNS-Client" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-         <Interfaces>
-            <Interface wcm:action="add">
-               <DNSServerSearchOrder>
-                  <IpAddress wcm:action="add" wcm:keyValue="1">${network_dns}</IpAddress>
-               </DNSServerSearchOrder>
-               <DisableDynamicUpdate>false</DisableDynamicUpdate>
-               <DNSDomain>${network_domain}</DNSDomain>
-               <Identifier>Ethernet0</Identifier>
-               <EnableAdapterDomainNameRegistration>true</EnableAdapterDomainNameRegistration>
-            </Interface>
-         </Interfaces>
-      </component>
    </settings>
    <settings pass="oobeSystem">
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
@@ -210,25 +174,35 @@
          </UserAccounts>
          <FirstLogonCommands>
             <SynchronousCommand wcm:action="add">
+               <CommandLine>cmd.exe /c netsh interface ip set address "Ethernet0" static ${network_address} ${network_subnet} ${network_gateway}</CommandLine>
+               <Description>Assign IP</Description>
+               <Order>1</Order>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
+               <CommandLine>cmd.exe /c netsh interface ip add dns "Ethernet0" ${network_dns} </CommandLine>
+               <Description>Assign DNS</Description>
+               <Order>2</Order>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force"</CommandLine>
                <Description>Set Execution Policy 64-Bit</Description>
-               <Order>1</Order>
+               <Order>3</Order>
                <RequiresUserInput>true</RequiresUserInput>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force"</CommandLine>
                <Description>Set Execution Policy 32-Bit</Description>
-               <Order>2</Order>
+               <Order>4</Order>
                <RequiresUserInput>true</RequiresUserInput>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -File F:\windows-vmtools.ps1</CommandLine>
-               <Order>3</Order>
+               <Order>5</Order>
                <Description>Install VMware Tools</Description>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -File F:\windows-init.ps1</CommandLine>
-               <Order>4</Order>
+               <Order>6</Order>
                <Description>Initial Configuration</Description>
             </SynchronousCommand>
          </FirstLogonCommands>

@@ -125,7 +125,7 @@ variable "vm_guest_os_keyboard" {
 variable "vm_guest_os_timezone" {
   type        = string
   description = "The guest operating system timezone."
-  default     = "UTC"
+  default     = "CET"
 }
 
 variable "vm_guest_os_family" {
@@ -430,22 +430,22 @@ variable "inline" {
 
 // Static Network Address
 
-variable "network_address" {
+variable "network_cidr" {
   type        = string
-  description = "Network address of the template machine, example: 10.2.0.30/24"
+  description = "Default network cidr, example: 10.2.0.0/24"
+}
+
+variable "network_address" {
+  type        = number
+  description = "Network address of the template machine, example: 31, will be 10.2.0.31/24"
 }
 
 variable "network_gateway" {
-  type        = string
-  description = "Default network gateway address, example: 10.2.0.1"
+  type        = number
+  description = "Default network gateway address, example: 1, will be 10.2.0.1"
 }
 
 variable "network_dns" {
-  type        = string
-  description = "Default network DNS address, example: 10.2.0.1"
-}
-
-variable "network_domain" {
-  type        = string
-  description = "Default network domain name, example: go.euc"
+  type        = number
+  description = "Default network DNS address, example: 1, will be 10.2.0.1"
 }
