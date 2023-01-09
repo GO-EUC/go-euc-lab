@@ -18,3 +18,4 @@ terraform.rc
 
 # Packer ignore
 *.pkrvars.hcl
+/manifests/*.json
