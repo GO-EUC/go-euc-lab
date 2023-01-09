@@ -18,7 +18,7 @@ Welcome to the GO-EUC lab configuration repository. This repository showcases ho
 | GCP | None | Todo |
 | GCP | Citrix Virtual Apps & Desktops Service | Todo |
 | GCP | VMware Horizon Cloud | Todo |
-| vSphere | None | Todo |
+| vSphere | None | In progress |
 | vSphere | Citrix Virtual Apps & Desktops Service | Todo |
 | vSphere | VMware Horizon Cloud | Todo |
 
