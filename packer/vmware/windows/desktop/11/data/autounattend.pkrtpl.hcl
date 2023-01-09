@@ -107,8 +107,8 @@
          <EnableFirewall>false</EnableFirewall>
          <RunSynchronous>
             <RunSynchronousCommand wcm:action="add">
-               <Description>TPM bypass</Description>
                <Order>1</Order>
+               <Description>Remove requirement for TPM 2.0</Description>
                <Path>reg add HKLM\SYSTEM\Setup\LabConfig /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
             </RunSynchronousCommand>
          </RunSynchronous>
@@ -125,6 +125,15 @@
       </component>
    </settings>
    <settings pass="specialize">
+      <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+         <RunSynchronous>
+            <RunSynchronousCommand wcm:action="add">
+               <Order>1</Order>
+               <Description>Remove requirement for an online Microsoft account</Description>
+               <Path>reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE /v BypassNRO /t REG_DWORD /d 1 /f</Path>
+            </RunSynchronousCommand>
+         </RunSynchronous>
+      </component>
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
          <OEMInformation>
             <HelpCustomized>false</HelpCustomized>
