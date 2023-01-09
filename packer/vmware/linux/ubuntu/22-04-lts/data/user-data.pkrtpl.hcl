@@ -22,6 +22,16 @@ autoinstall:
   locale: ${vm_guest_os_language}
   keyboard:
     layout: ${vm_guest_os_keyboard}
+  network:
+    network:
+      version: 2
+      ethernets:
+        ens192:
+          addresses: 
+          - ${network_address}
+          gateway4: ${network_gateway}
+          nameservers:
+            addresses: ["${network_dns}"]
   storage:
     config:
       - ptable: gpt

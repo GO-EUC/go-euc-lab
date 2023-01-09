@@ -329,11 +329,11 @@ variable "build_password_encrypted" {
   sensitive   = true
 }
 
-# variable "build_key" {
-#   type        = string
-#   description = "The public key to login to the guest operating system."
-#   sensitive   = true
-# }
+variable "build_key" {
+  type        = string
+  description = "The public key to login to the guest operating system."
+  sensitive   = true
+}
 
 variable "communicator_proxy_host" {
   type        = string
@@ -374,23 +374,37 @@ variable "communicator_timeout" {
 
 // Ansible Credentials
 
-# variable "ansible_username" {
-#   type        = string
-#   description = "The username for Ansible to login to the guest operating system. (e.g. 'ansible')"
-#   default     = "ansible"
-#   sensitive   = true
-# }
+variable "ansible_username" {
+  type        = string
+  description = "The username for Ansible to login to the guest operating system. (e.g. 'ansible')"
+  default     = "ansible"
+  sensitive   = true
+}
 
-# variable "ansible_key" {
-#   type        = string
-#   description = "The public key for Ansible to login to the guest operating system."
-#   sensitive   = true
-# }
+variable "ansible_key" {
+  type        = string
+  description = "The public key for Ansible to login to the guest operating system."
+  sensitive   = true
+}
 
-// HCP Packer Settings
+// Static Network Address
 
-variable "common_hcp_packer_registry_enabled" {
-  type        = bool
-  description = "Enable the HCP Packer registry."
-  default     = false
+variable "network_cidr" {
+  type        = string
+  description = "Default network cidr, example: 10.2.0.0/24"
+}
+
+variable "network_address" {
+  type        = number
+  description = "Network address of the template machine, example: 31, will be 10.2.0.31/24"
+}
+
+variable "network_gateway" {
+  type        = number
+  description = "Default network gateway address, example: 1, will be 10.2.0.1"
+}
+
+variable "network_dns" {
+  type        = number
+  description = "Default network DNS address, example: 1, will be 10.2.0.1"
 }

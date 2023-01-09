@@ -1,0 +1,12 @@
+---
+- name: Include base
+  include_tasks: base.yml
+
+- name: Include users
+  include_tasks: users.yml
+
+- name: Include configure
+  include_tasks: configure.yml
+
+- name: Include clean
+  include_tasks: clean.yml

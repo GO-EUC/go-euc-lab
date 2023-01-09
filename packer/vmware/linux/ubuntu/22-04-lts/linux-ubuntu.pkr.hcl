@@ -46,12 +46,13 @@ locals {
       vm_guest_os_language     = var.vm_guest_os_language
       vm_guest_os_keyboard     = var.vm_guest_os_keyboard
       vm_guest_os_timezone     = var.vm_guest_os_timezone
+      network_address          = "${cidrhost(var.network_cidr, var.network_address)}/${split("/", var.network_cidr)[1]}"
+      network_subnet           = cidrnetmask(var.network_cidr)
+      network_gateway          = cidrhost(var.network_cidr, var.network_gateway)
+      network_dns              = cidrhost(var.network_cidr, var.network_dns)
     })
   }
   data_source_command = var.common_data_source == "http" ? "ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"" : "ds=\"nocloud\""
-  vm_name             = "${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
-  bucket_name         = replace("${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}", ".", "")
-  bucket_description  = "${var.vm_guest_os_family} ${var.vm_guest_os_name} ${var.vm_guest_os_version}"
 }
 
 //  BLOCK: source
@@ -72,7 +73,7 @@ source "vsphere-iso" "linux-ubuntu" {
   folder     = var.vsphere_folder
 
   // Virtual Machine Settings
-  vm_name              = local.vm_name
+  vm_name              = "${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
   guest_os_type        = var.vm_guest_os_type
   firmware             = var.vm_firmware
   CPUs                 = var.vm_cpu_count
@@ -164,21 +165,20 @@ source "vsphere-iso" "linux-ubuntu" {
 build {
   sources = ["source.vsphere-iso.linux-ubuntu"]
 
-#   provisioner "ansible" {
-#     user          = var.build_username
-#     playbook_file = "${path.cwd}/ansible/main.yml"
-#     roles_path    = "${path.cwd}/ansible/roles"
-#     ansible_env_vars = [
-#       "ANSIBLE_CONFIG=${path.cwd}/ansible/ansible.cfg"
-#     ]
-#     extra_arguments = [
-#       "--extra-vars", "display_skipped_hosts=false",
-#       "--extra-vars", "BUILD_USERNAME=${var.build_username}",
-#       "--extra-vars", "BUILD_SECRET='${var.build_key}'",
-#       "--extra-vars", "ANSIBLE_USERNAME=${var.ansible_username}",
-#       "--extra-vars", "ANSIBLE_SECRET='${var.ansible_key}'",
-#     ]
-#   }
+  provisioner "ansible" {
+    user          = var.build_username
+    playbook_file = "${path.cwd}/ansible/ubuntu.yml"
+    ansible_env_vars = [
+      "ANSIBLE_CONFIG=${path.cwd}/ansible/config/ansible.cfg"
+    ]
+    extra_arguments = [
+      "--extra-vars", "display_skipped_hosts=false",
+      "--extra-vars", "BUILD_USERNAME=${var.build_username}",
+      "--extra-vars", "BUILD_SECRET='${var.build_key}'",
+      "--extra-vars", "ANSIBLE_USERNAME=${var.ansible_username}",
+      "--extra-vars", "ANSIBLE_SECRET='${var.ansible_key}'",
+    ]
+  }
 
   post-processor "manifest" {
     output     = local.manifest_output
