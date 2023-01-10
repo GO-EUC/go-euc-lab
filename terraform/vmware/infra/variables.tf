@@ -11,6 +11,11 @@ variable "delivery" {
   type        = string
 }
 
+variable "root_path" {
+  description = "The root path of the repository, this is required to collect the packer manifests."
+  type        = string
+}
+
 variable "vsphere_deploy" {
   description = "Switch to deploy the default configuraiton to vSphere, is required when the VCSA deployment is used/"
   type        = bool
@@ -97,9 +102,4 @@ variable "local_admin_password" {
   description = "Password for the local admin"
   type        = string
   sensitive   = true
-}
-
-variable "vsphere_source_template_windows" {
-  description = "Windows template name"
-  type        = string
 }
