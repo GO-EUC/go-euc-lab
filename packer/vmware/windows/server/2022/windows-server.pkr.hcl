@@ -41,7 +41,7 @@ locals {
   iso_checksum    = "${var.iso_checksum_type}:${var.iso_checksum_value}"
   manifest_date   = formatdate("YYYY-MM-DD hh:mm:ss", timestamp())
   manifest_path   = "${path.cwd}/manifests/"
-  manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition_standard}-v${local.build_version}.json"
+  manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition_standard}.json"
 }
 
 //  BLOCK: source

@@ -35,7 +35,7 @@ locals {
   iso_paths         = ["[${var.iso_datastore}] ${var.iso_path}/${var.iso_file}"]
   iso_checksum      = "${var.iso_checksum_type}:${var.iso_checksum_value}"
   manifest_path     = "${path.cwd}/manifests/"
-  manifest_output   = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}.json"
+  manifest_output   = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}.json"
   ovf_export_path   = "${path.cwd}/artifacts/${var.vm_guest_os_name}-${var.vm_guest_os_version}-v${local.build_version}"
   data_source_content = {
     "/meta-data" = file("${abspath(path.root)}/data/meta-data")
