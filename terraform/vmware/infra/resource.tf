@@ -1,3 +1,10 @@
+locals {
+  template_ubuntu_2204  = jsondecode(file("${var.root_path}\\manifests\\linux-ubuntu-22.04-lts.json"))
+  template_windows_2022 = jsondecode(file("${var.root_path}\\manifests\\windows-server-2022-standard.json"))
+  template_windows_10   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-10.json"))
+  template_windows_11   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-11.json"))
+}
+
 module "vcsa" {
   count  = var.vsphere_deploy == true ? 1 : 0
   source = "./modules/vmware.vcsa"
@@ -36,7 +43,34 @@ module "domain_controller" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = var.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+
+  depends_on = [
+    module.vcsa
+  ]
+}
+
+module "docker_host" {
+  source = "./modules/vmware.vsphere.vm.linux"
+
+  vsphere_server   = var.vsphere_server
+  vsphere_user     = var.vsphere_user
+  vsphere_password = var.vsphere_password
+
+  vm_name               = "docker"
+  vm_cpu                = 4
+  vm_memory             = 2048
+  domain                = var.domain_fqdn
+
+  network_address                = cidrhost(var.vsphere_nic_cidr, 6)   #matches to the 2st IP address of the address space I.E. "172.16.0.2"
+  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)   #matches to the 1th IP address of the address space I.E. "172.16.0.1"
+  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
+  virtual_network_portgroup_name = var.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = var.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_ubuntu_2204.builds[0].artifact_id
 
   depends_on = [
     module.vcsa
@@ -76,7 +110,7 @@ module "management_server" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = var.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 
   depends_on = [
     module.vcsa
@@ -117,7 +151,7 @@ module "sql_server" {
   vsphere_datastore  = var.vsphere_datastore
   vsphere_cluster    = var.vsphere_cluster
 
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 
   depends_on = [
     module.vcsa
@@ -154,7 +188,7 @@ module "citrix_delivery_controller" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = var.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "citrix_storefront" {
@@ -187,7 +221,7 @@ module "citrix_storefront" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = var.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "citrix_license_server" {
@@ -220,7 +254,7 @@ module "citrix_license_server" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = var.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "vmware_connection_server" {
@@ -250,7 +284,7 @@ module "vmware_connection_server" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = "datastore2"
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "Bots" {
@@ -280,5 +314,36 @@ module "Bots" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = "datastore2"
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = var.vsphere_source_template_windows
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+}
+
+module "builds" {
+  source    = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = var.vsphere_server
+  vsphere_user     = var.vsphere_user
+  vsphere_password = var.vsphere_password
+  
+  vm_guest_id = local.template_windows_11.builds[0].custom_data.vm_guest_os_type
+  vm_count    = 2
+  vm_name     = "build"
+  vm_cpu      = 4
+  vm_memory   = 2048
+  vm_disks = [{
+    unit_number = 0
+    label       = "disk0"
+    size        = 128
+  }]
+
+  local_admin_password  = var.local_admin_password
+  domain                = var.domain_fqdn
+  domain_admin          = var.domain_admin
+  domain_admin_password = var.domain_admin_password
+
+  virtual_network_portgroup_name = var.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = "datastore2"
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_11.builds[0].artifact_id
 }
