@@ -67,4 +67,8 @@ resource "vsphere_virtual_machine" "vm" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [ clone ]
+  }
 }
