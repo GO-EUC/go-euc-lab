@@ -16,6 +16,6 @@ jobs:
 
       - name: YAML lint on Ansible
         run: |
-          ls ./
+          ls ./ansible/lint
           yamllint -c ./ansible/lint/mylint.yml /ansible
           
