@@ -20,6 +20,7 @@ Welcome to the GO-EUC lab configuration repository. This repository showcases ho
 | GCP | VMware Horizon Cloud | Todo |
 | vSphere | None | In progress |
 | vSphere | Citrix Virtual Apps & Desktops Service | Todo |
+| vSphere | Citrix ADC | In Progress |
 | vSphere | VMware Horizon Cloud | Todo |
 
 ## Technology Stack
@@ -71,6 +72,7 @@ This project is maintained by the following GO-EUC members:
   * [Patrick van den Born](https://www.go-euc.com/members/patrick-van-den-born/)
   * [Tom de Jong](https://www.go-euc.com/members/tom-de-jong/)
   * [Ryan Ververs-Bijkerk](https://www.go-euc.com/members/ryan-ververs-bijkerk/)
+  * [Sven Jansen](https://twitter.com/jansvensen)
 
 ## Contributions
 This project is initiated by GO-EUC and is maintained by multiple GO-EUC members. This project is shared publicly to allow others in the community to use the same infrastructure and configuration as the platform which allows you to reproduce our researches. Additionally, this project shows how an end-user computing environment can be built using modern technologies.
