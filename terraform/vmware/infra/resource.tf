@@ -1,7 +1,7 @@
 locals {
   template_ubuntu_2204  = jsondecode(file("${var.root_path}\\manifests\\linux-ubuntu-22.04-lts.json"))
   template_windows_2022 = jsondecode(file("${var.root_path}\\manifests\\windows-server-2022-standard.json"))
-  template_windows_10   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-10.json"))
+  # template_windows_10   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-10.json"))
   template_windows_11   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-11.json"))
 }
 

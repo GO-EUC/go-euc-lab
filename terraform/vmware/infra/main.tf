@@ -1,8 +1,16 @@
 terraform {
+
+  required_version = ">= 1.2" 
+  
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>2.9"
+    }
+
+    vsphere = {
+      source = "hashicorp/vsphere"
+      version = "~>2.2"
     }
   }
 

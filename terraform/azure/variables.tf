@@ -15,7 +15,7 @@ locals {
 
   #deployementname
   deploymentname = "golab"
-  ad_domain_fqdn = "go.euc" #Active Directory Domain Name
+  # ad_domain_fqdn = "go.euc" #Active Directory Domain Name
 
   #network locals
   infra_cidr = {
