@@ -5,22 +5,22 @@ param (
 
     [Parameter()]
     [string]
-    $InventoryFile  
+    $InventoryFile
 )
 
 $state = Get-Content -Path $StateFile -Raw | ConvertFrom-Json
 
-Write-Host $state
+Write-Output $state
 
-$machines = $state.outputs.PSObject.Properties | Where-Object { 
-    $_.Name -ne "admin" -and 
-    $_.Name -ne "vault" -and 
-    $_.Name -ne "vault_resource_group" -and 
-    $_.Name -ne "reverse_dns_zone" -and 
-    $_.Name -ne "dhcp_start_range" -and 
-    $_.Name -ne "dhcp_end_range" -and 
-    $_.Name -ne "dhcp_subnetmask" -and 
-    $_.Name -ne "dhcp_router" -and 
+$machines = $state.outputs.PSObject.Properties | Where-Object {
+    $_.Name -ne "admin" -and
+    $_.Name -ne "vault" -and
+    $_.Name -ne "vault_resource_group" -and
+    $_.Name -ne "reverse_dns_zone" -and
+    $_.Name -ne "dhcp_start_range" -and
+    $_.Name -ne "dhcp_end_range" -and
+    $_.Name -ne "dhcp_subnetmask" -and
+    $_.Name -ne "dhcp_router" -and
     $_.Name -ne "sql_admin" -and
     $_.Name -ne "sql_server" -and
     $_.Name -ne "sql_database" } | Select-Object Name
@@ -56,7 +56,6 @@ $content += "sql_database=$($state.outputs.sql_database.value)"
 
 $inventoryDir = $InventoryFile.Substring(0,$InventoryFile.LastIndexOf("/"))
 if ($inventoryDir -ne ".") {
-    
     if ((Test-Path -Path $inventoryDir) -eq $false) {
         try {
             New-Item -Path $inventoryDir -ItemType Directory -Force | Out-Null
@@ -66,6 +65,6 @@ if ($inventoryDir -ne ".") {
     }
 }
 
-Write-Host $content
+Write-Output $content
 
 Set-Content -Path $InventoryFile -Value $content
