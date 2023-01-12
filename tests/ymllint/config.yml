@@ -3,6 +3,6 @@ extends: default
 
 rules:
   line-length:
-    max: 256
+    max: 512
     level: warning
   new-lines: disable
