@@ -1,4 +1,4 @@
-
+---
 - name: Get WinRM memory configuration
   win_shell: (Get-Item -Path WSMan:\localhost\Shell\MaxMemoryPerShellMB).Value
   register: winrm_mem
@@ -7,7 +7,7 @@
   ansible.builtin.set_fact:
     winrm_memory: winrm_mem.stdout | trim
 
-- name: Set the WinRM memory to 4GB # This is required to download LoadGen data
+- name: Set the WinRM memory to 4GB  # This is required to download LoadGen data
   win_shell: Set-Item -Path WSMan:\localhost\Shell\MaxMemoryPerShellMB -Value 4096
   when: winrm_memory != "4096"
 
@@ -46,7 +46,7 @@
 - name: Install LoadGen
   win_package:
     path: C:\Download\LoadGen\LoadGenSuite.exe
-    product_id: '{ED23CB99-3CCE-493E-8724-531632A2ACDD}' # LoadGen 5.0
+    product_id: '{ED23CB99-3CCE-493E-8724-531632A2ACDD}'  # LoadGen 5.0
     arguments: /S /v/qn
     expected_return_code: [0]
     state: present
@@ -81,4 +81,3 @@
   win_file:
     path: C:\ProgramData\LoadGen\Director
     state: directory
-

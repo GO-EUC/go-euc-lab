@@ -1,4 +1,8 @@
+---
 extends: default
 
 rules:
+  line-length:
+    max: 256
+    level: warning
   new-lines: disable

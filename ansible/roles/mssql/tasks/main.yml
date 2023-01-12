@@ -64,26 +64,26 @@
   win_feature:
     name: NET-Framework-45-Features
     state: present
-    include_sub_features: True
+    include_sub_features: true
 
 - name: Windows | Install Windows Process Activation Service
   win_feature:
     name: WAS
     state: present
-    include_sub_features: True
+    include_sub_features: true
 
 # Setup service accounts
 #
 # We delegate this process to our domain controller since the required AD services are there for
-# win_domain_user to interact with. 
+# win_domain_user to interact with.
 # - name: Active Directory | Ensure SQL Service account is present
 #   win_domain_user:
 #     name: "{{ mssql_sqlsvc_account | regex_search('[^\\\\]*$') }}"
 #     firstname: "{{ mssql_instance_name }}"
 #     surname: SQLSvc
 #     password: "{{ mssql_sqlsvc_account_pass }}"
-#     password_never_expires: yes
-#     user_cannot_change_password: yes
+#     password_never_expires: true
+#     user_cannot_change_password: true
 #     description: "SQL Service account for {{ inventory_hostname }}\\{{ mssql_instance_name }}"
 #     state: present
 #     path: "{{ mssql_base_ldap_path }}"
@@ -98,8 +98,8 @@
 #     firstname: "{{ mssql_instance_name }}"
 #     surname: AgentSvc
 #     password: "{{ mssql_agentsvc_account_pass }}"
-#     password_never_expires: yes
-#     user_cannot_change_password: yes
+#     password_never_expires: true
+#     user_cannot_change_password: true
 #     description: "SQL Agent service account for {{ inventory_hostname }}\\{{ mssql_instance_name }}"
 #     state: present
 #     path: "{{ mssql_base_ldap_path }}"
@@ -150,23 +150,23 @@
   win_shell: "{{ mssql_installation_path }}\\SQLServer2019-DEV-x64-ENU.exe /X:{{ mssql_installation_path }}\\Media /Q"
 # If this step fails, logs are in C:\Program Files\Microsoft SQL Server\...\Setup Bootstrap\Log
 # it will often contain the actual error.  If it shows everything passing, the issue is within the DSC logs.
-# 
+
 # This module also typically throws this error fpr all failure conditions:
-# PowerShell DSC resource MSFT_SqlSetup  failed to execute Set-TargetResource functionality with error message: 
+# PowerShell DSC resource MSFT_SqlSetup  failed to execute Set-TargetResource functionality with error message:
 # System.Exception: Test-TargetResource returned false after calling Set-TargetResource.
-#
-#
+
 # This document can also be useful to troubleshoot issues with DSC modules
-# https://docs.microsoft.com/en-us/powershell/dsc/troubleshooting 
-#
+# https://docs.microsoft.com/en-us/powershell/dsc/troubleshooting
+
 # In particular completing these steps:
 # https://docs.microsoft.com/en-us/powershell/dsc/troubleshooting#gathering-events-from-a-single-dsc-operation
 # then re-running a failing PowershellDSC job can help you find the source of your error
+
 - name: Install SQL Server
   win_dsc:
     resource_name: SQLSetup
     Action: Install
-    UpdateEnabled: True
+    UpdateEnabled: true
     SourcePath: "{{ mssql_installation_path }}\\Media"
     InstanceName: "{{ mssql_instance_name }}"
     InstallSharedDir: "{{ mssql_installshared_path }}"
@@ -181,11 +181,12 @@
     SQLCollation: "{{ mssql_collation }}"
     BrowserSvcStartupType: "{{ mssql_browsersvc_mode }}"
     SuppressReboot: "{{ mssql_suppress_reboot }}"
+
     # Service Accounts
-    #
-    # If the type of the DSC resource option is a PSCredential then 
-    # there needs to be 2 options set in the Ansible task definition 
-    # suffixed with _username and _password. So we will be providing 
+
+    # If the type of the DSC resource option is a PSCredential then
+    # there needs to be 2 options set in the Ansible task definition
+    # suffixed with _username and _password. So we will be providing
     # two options for these normally single option items.
 
     # SQL Service Account
@@ -198,11 +199,11 @@
     ASSvcAccount_username: "{{ mssql_assvc_account }}"
     ASSvcAccount_password: "{{ mssql_assvc_account_pass }}"
 
-    # Used when installing on a network path, comment out 
+    # Used when installing on a network path, comment out
     # SourceCredential_username: "{{ ansible_user }}"
     # SourceCredential_password: "{{ ansible_password }}"
 
-    # System Admins 
+    # System Admins
     SQLSysAdminAccounts: "{{ mssql_sysadmin_accounts }}"
     # Analysis Services Admins (if installed)
     ASSysAdminAccounts: "{{ mssql_asadmin_accounts }}"
@@ -215,13 +216,13 @@
   win_dsc:
     resource_name: xFirewall
     Name: "SQL Server Database Engine instance {{ mssql_instance_name }}"
-    Program: sqlservr.exe 
+    Program: sqlservr.exe
     Ensure: present
-    Enabled: True
+    Enabled: true
     Profile: "Domain"
     Direction: "Inbound"
     Action: Allow
-    Description: "Allows the Database Engine to access the network"  
+    Description: "Allows the Database Engine to access the network"
   tags: configure_firewall
 
 - name: Firewall | Allow SQLBrowser for instance
@@ -230,11 +231,11 @@
     Name: "SQL Server Browser instance {{ mssql_instance_name }}"
     Service: SQLBrowser
     Ensure: present
-    Enabled: True
+    Enabled: true
     Profile: "Domain"
     Direction: "Inbound"
     Action: Allow
-    Description: "Allows the SQL Server Browser to access the network"  
+    Description: "Allows the SQL Server Browser to access the network"
   tags: configure_firewall
 
 # Begin SQL Server configuration
@@ -244,8 +245,8 @@
     InstanceName: "{{ mssql_instance_name }}"
     ProtocolName: tcp
     TcpPort: "{{ mssql_port }}"
-    IsEnabled: True
-    RestartService: True
+    IsEnabled: true
+    RestartService: true
   tags: configure_sql
 
 - name: Firewall rule to allow SQL on 1433
@@ -257,25 +258,25 @@
     protocol: tcp
     profiles: [domain, private]
     state: present
-    enabled: yes
+    enabled: true
 
 - name: Adjust SQL Server Memory Min {{ mssql_min_server_memory }} and Max {{ mssql_max_server_memory }}
   when: mssql_max_server_memory is defined
   win_dsc:
-    resource_name: SqlMemory 
+    resource_name: SqlMemory
     InstanceName: "{{ mssql_instance_name }}"
     ServerName: "{{ ansible_hostname }}"
     MinMemory: "{{ mssql_min_server_memory }}"
     MaxMemory: "{{ mssql_max_server_memory }}"
     # OptionName: max server memory (MB)
     # OptionValue: "{{ mssql_max_server_memory }}"
-    #RestartService: False
+    # RestartService: False
   tags: configure_sql
 
 # - name: Adjust Min Server Memory to {{ mssql_min_server_memory }}
 #   when: mssql_min_server_memory is defined
 #   win_dsc:
-#     resource_name: SqlMemory 
+#     resource_name: SqlMemory
 #     ServerName: "{{ ansible_hostname }}"
 #     InstanceName: "{{ mssql_instance_name }}"
 #     OptionName: min server memory (MB)
@@ -285,11 +286,11 @@
 - name: Adjust Max Degree of Parallelism
   when: mssql_max_degree_of_parallelism is defined
   win_dsc:
-    resource_name: SqlMaxDop 
+    resource_name: SqlMaxDop
     ServerName: "{{ ansible_hostname }}"
     InstanceName: "{{ mssql_instance_name }}"
     MaxDop: "{{ mssql_max_degree_of_parallelism }}"
-    DynamicAlloc: False
+    DynamicAlloc: false
     # OptionName: max degree of parallelism
     # OptionValue: "{{ mssql_max_degree_of_parallelism }}"
   tags: configure_sql

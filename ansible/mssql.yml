@@ -14,14 +14,13 @@
   roles:
   - domain-join
   - mssql
-  
   tasks:
     - name: Create databases
       win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
       loop:
-      - LoadGen
+        - LoadGen
       vars:
-        ansible_become: yes
+        ansible_become: true
         ansible_become_user: "GO\\Administrator"
         ansible_become_password: "{{ ansible_password }}"
         ansible_become_method: runas
@@ -34,5 +33,3 @@
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
     ansible_port: 5985
-
-

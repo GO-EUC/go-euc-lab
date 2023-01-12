@@ -1,6 +1,7 @@
+---
 - name: Domain join machine
   block:
-  
+
   - name: Check for PowerShellGet & PackageManagement modules
     win_psmodule:
       name: PowerShellGet

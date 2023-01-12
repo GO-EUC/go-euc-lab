@@ -7,7 +7,7 @@
 - name: Install Citrix Studio prerequisites
   win_feature:
     name:
-    - NET-Framework-45-Core
+      - NET-Framework-45-Core
     state: present
   register: win_feature
 
@@ -77,10 +77,3 @@
 - name: Reboot after Citrix Studio installation
   win_reboot:
   when: citrix_install.changed
-
-
-
-
-
-
-

@@ -8,7 +8,7 @@
 #   tasks:
 #   - name: Start the Azure Key Vault actions
 #     include_tasks: azure-keyvault.yml
-#   when: lookup('env', 'azure') == 'true' 
+#   when: lookup('env', 'azure') == 'true'
 
 - name: Domain Controller
   hosts: dc

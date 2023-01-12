@@ -1,11 +1,12 @@
+---
 - name: Built the environment dictonary and variables
   set_fact:
     branch: "{{ lookup('env', 'branch') | lower }}"
     prefix: "{{ lookup('env', 'prefix') }}"
     branches:
-        default: "pois" 
-        cards:   "card"
-        flowers: "flow"
+      default: "pois"
+      cards: "card"
+      flowers: "flow"
 
 - name: Set the environment short
   set_fact:
@@ -33,16 +34,16 @@
     method: POST
     content_type: application/x-www-form-urlencoded
     body: "grant_type=client_credentials&client_id={{ citrix_client_id }}&client_secret={{ citrix_client_secret }}"
-    return_content: yes
+    return_content: true
   register: citrix_token
-  
+
 - name: Get Citrix resource locations
   win_uri:
     url: https://registry.citrixworkspacesapi.net/{{ citrix_org_id }}/resourcelocations
     method: GET
     content_type: application/json
     headers: "{'Authorization': 'CWSAuth bearer={{citrix_token.json.access_token}}'}"
-    return_content: yes
+    return_content: true
   register: citrix_resource
 
 - name: Collect the Citrix resource locations from output
@@ -59,10 +60,10 @@
     headers: "{'Authorization': 'CWSAuth bearer={{citrix_token.json.access_token}}'}"
     content_type: application/json
     body: "{'name': '{{ prefix | lower }}-{{ environment_short }}-{{ deploymentname | lower }}-azure', 'internalOnly': false, 'timeZone': 'GMT Standard Time', 'readOnly': false}"
-    return_content: yes
+    return_content: true
   register: citrix_new_resource
   when: citrix_resource_id != None
-  
+
 - name: Define new resource location id
   set_fact:
     citrix_resource_id: "{{ citrix_new_resource['json'].id }}"
@@ -71,12 +72,12 @@
 - name: Install Citrix Cloud Connector
   win_package:
     path: C:\Download\Citrix\cwcconnector.exe
-    #product_id: '{E6CF2E41-E333-45D6-8EB6-CC429030F5A8}' # Citrix Cloud Services Agent System {096D19F4-D07A-4024-8003-E22B99118A15}
-    creates_path : 'C:\Program Files\Citrix\CloudServices\Agent\Citrix.CloudServices.Agent.exe'
+    # product_id: '{E6CF2E41-E333-45D6-8EB6-CC429030F5A8}' # Citrix Cloud Services Agent System {096D19F4-D07A-4024-8003-E22B99118A15}
+    creates_path: 'C:\Program Files\Citrix\CloudServices\Agent\Citrix.CloudServices.Agent.exe'
     arguments: /q /CustomerName:"{{ citrix_org_id }}" /ClientId:"{{ citrix_client_id }}" /ClientSecret:"{{ citrix_client_secret }}" /Location:"{{ citrix_resource_id }}" /AcceptTermsOfService:true
     expected_return_code: [0]
     state: present
   vars:
-    ansible_become: yes
+    ansible_become: true
     ansible_become_user: system
     ansible_become_method: runas

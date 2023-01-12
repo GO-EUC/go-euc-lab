@@ -1,3 +1,4 @@
+---
 dns_domain_name: 'GO.EUC'
 domain_name: GO
 domain_controller: "{{ groups['dc'][0] }}"

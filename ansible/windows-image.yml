@@ -12,8 +12,8 @@
   hosts: all
   roles:
   - role: citrix-vda
-    when: lookup('env', 'delivery') == 'citrix' 
-   
+    when: lookup('env', 'delivery') == 'citrix'
+
   - role: microsoft365apps
 
   # - role: citrix-optimizer

@@ -1,3 +1,4 @@
+---
 - name: Create ProgramData for Options Config
   win_copy:
     src: LoadGenOptions.xml

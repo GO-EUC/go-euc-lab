@@ -1,9 +1,10 @@
+---
 - name: Built the environment dictonary
   set_fact:
     branches:
-        default: "pois" 
-        cards:   "card"
-        flowers: "flow"
+      default: "pois"
+      cards: "card"
+      flowers: "flow"
 
 - name: Set the environment short
   set_fact:
@@ -18,10 +19,10 @@
     url: https://api.cloud.com/cvad/manage/me
     method: GET
     body_format: json
-    headers: 
+    headers:
       Citrix-CustomerId: "{{ citrix_org_id }}"
       Authorization: "CWSAuth bearer={{citrix_token.json.access_token}}"
-    return_content: yes
+    return_content: true
   register: citrix_sites
 
 # This section requires some refactoring
@@ -30,11 +31,11 @@
     citrix_site: "{{ data | json_query(querystr) }}"
   vars:
     data: "{{ citrix_sites.content }}"
-    querystr: "Customers[?contains(Id,'{{ citrix_org_id | lower }}')].Sites | [0]" #First result
+    querystr: "Customers[?contains(Id,'{{ citrix_org_id | lower }}')].Sites | [0]"  # First result
 
 - name: Set Citrix Cloud site id
   set_fact:
-    citrix_site_id: "{{ citrix_site[0].Id }}" # Harcoded to the first element for now
+    citrix_site_id: "{{ citrix_site[0].Id }}"  # Harcoded to the first element for now
 
 - name: Collect API access token from Citrix Cloud
   uri:
@@ -42,7 +43,7 @@
     method: POST
     body_format: form-urlencoded
     body: "grant_type=client_credentials&client_id={{ citrix_client_id }}&client_secret={{ citrix_client_secret }}"
-    return_content: yes
+    return_content: true
   register: citrix_token
 
 - name: Get Citrix Machine Catalogs
@@ -51,18 +52,18 @@
     method: GET
     body_format: json
     headers:
-      Citrix-CustomerId: "{{ citrix_org_id }}" 
+      Citrix-CustomerId: "{{ citrix_org_id }}"
       Citrix-InstanceId: "{{ citrix_site_id }}"
       Authorization: "CWSAuth bearer={{citrix_token.json.access_token}}"
       User-Agent: GET
-    return_content: yes
+    return_content: true
   register: citrix_catalogs
 
 - name: Validate Citrix Machine Catalogs
   set_fact:
     citrix_catalog_id: "{{ citrix_catalogs.json | json_query(query) }}"
   vars:
-    query: "Items[?Name == '{{ catalog_name }}'].Id | [0]" # Select the first object 
+    query: "Items[?Name == '{{ catalog_name }}'].Id | [0]"  # Select the first object
 
 - name: show output
   ansible.builtin.debug:
@@ -97,7 +98,6 @@
       Citrix-InstanceId: "{{ citrix_site_id }}"
       Authorization: "CWSAuth bearer={{citrix_token.json.access_token}}"
       User-Agent: POST
-    return_content: yes
+    return_content: true
   register: citrix_new_catalog
   when: citrix_catalog_id == ""
-

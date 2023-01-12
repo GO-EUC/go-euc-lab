@@ -1,4 +1,5 @@
-# installation files source 
+---
+# installation files source
 mssql_installation_source: https://go.microsoft.com/fwlink/?linkid=866662
 
 # Path to download installation media to
@@ -23,14 +24,14 @@ mssql_max_server_memory: 4096
 # Memory to reserve to the OS
 mssql_os_memory_reservation: 1024
 
-# Total system memory 
+# Total system memory
 mssql_total_system_memory: "{{ mssql_max_server_memory + mssql_os_memory_reservation }}"
 
 # Suppress reboots that may occur during SQL Setup tasks
 # you will want to set this to True if working on a sensitive system:
-mssql_suppress_reboot: False
+mssql_suppress_reboot: false
 
-### Service Accounts ###
+# Service Accounts ###
 mssql_base_ldap_path: "OU=ServiceAccounts,OU=GO,DC=GO,DC=EUC"
 domain_controller: groups['ddc'][0]
 
@@ -79,12 +80,12 @@ mssql_sa_password: "{{ mssql_sqlsvc_account_pass }}"
 
 # features - Comma seperated list of features to be installed
 #
-# example:   
+# example:
 # mssql_features: SQLENGINE,AS
-# 
+#
 # The list of features below is untested, some may not work with DSC
 #
-# Features list: 
+# Features list:
 #
 # Database engine = SQLENGINE
 # Replication = REPLICATION
@@ -120,7 +121,7 @@ mssql_browsersvc_mode: Automatic
 
 # Default Account Access
 # Ansible_Admin must be included so that the playbook can make configuration changes post install
-mssql_sysadmin_accounts: 
+mssql_sysadmin_accounts:
   - GO\Domain Admins
   - GO\Administrator
 
@@ -129,15 +130,15 @@ mssql_asadmin_accounts: "{{ mssql_sysadmin_accounts }}"
 
 # Tuning options
 
-# When an instance of SQL Server runs on a computer that has more than one microprocessor or CPU, 
-# it detects the best degree of parallelism, that is, the number of processors employed to run a single statement, 
-# for each parallel plan execution. You can use the max degree of parallelism option to limit the number of processors 
-# to use in parallel plan execution. 
+# When an instance of SQL Server runs on a computer that has more than one microprocessor or CPU,
+# it detects the best degree of parallelism, that is, the number of processors employed to run a single statement,
+# for each parallel plan execution. You can use the max degree of parallelism option to limit the number of processors
+# to use in parallel plan execution.
 #
-# If the affinity mask option is not set to the default, it may restrict the number of processors available to 
-# SQL Server on symmetric multiprocessing (SMP) systems. 
+# If the affinity mask option is not set to the default, it may restrict the number of processors available to
+# SQL Server on symmetric multiprocessing (SMP) systems.
 #
-# To enable the server to determine the maximum degree of parallelism, set this option to 0, the default value. 
+# To enable the server to determine the maximum degree of parallelism, set this option to 0, the default value.
 #
 # See: https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/configure-the-max-degree-of-parallelism-server-configuration-option
 mssql_max_degree_of_parallelism: 4
@@ -149,10 +150,10 @@ mssql_max_degree_of_parallelism: 4
 # see: Optimizing Server Performance Using Memory Configuration Options
 # https://technet.microsoft.com/en-us/library/ms177455(v=sql.105).aspx
 #
-# The min server memory server configuration option can be used to ensure that 
-# SQL Server does not release memory below the configured minimum server memory 
-# once that threshold is reached. This configuration option can be set to a specific value 
-# based on the size and activity of your SQL Server. If you choose to set this value, 
-# set it to some reasonable value to ensure that the operating system does not request too 
+# The min server memory server configuration option can be used to ensure that
+# SQL Server does not release memory below the configured minimum server memory
+# once that threshold is reached. This configuration option can be set to a specific value
+# based on the size and activity of your SQL Server. If you choose to set this value,
+# set it to some reasonable value to ensure that the operating system does not request too
 # much memory from SQL Server, which can affect SQL Server performance.
 mssql_min_server_memory: 0

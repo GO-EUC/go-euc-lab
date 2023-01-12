@@ -10,7 +10,7 @@
     if [ -f /var/log/lastlog ]; then
     cat /dev/null > /var/log/lastlog
     fi
-    
+
 - name: "Cleaning persistent udev rules."
   shell: |
     if [ -f /etc/udev/rules.d/70-persistent-net.rules ]; then

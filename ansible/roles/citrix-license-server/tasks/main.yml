@@ -7,111 +7,111 @@
 
 - name: Block for Citrix installation
   block:
-  - name: Check for PendingReboot module
-    win_psmodule:
-      name: PendingReboot
-      state: present
+    - name: Check for PendingReboot module
+      win_psmodule:
+        name: PendingReboot
+        state: present
 
-  - name:  Install Citrix License Server prerequisites
-    win_feature:
-      name:
-        - NET-Framework-Core
-        - NET-Framework-Features
-        - NET-Framework-45-Features
-        - NET-Framework-45-Core
-        - NET-Framework-45-ASPNET
-      state: present
-    register: win_feature
+    - name: Install Citrix License Server prerequisites
+      win_feature:
+        name:
+          - NET-Framework-Core
+          - NET-Framework-Features
+          - NET-Framework-45-Features
+          - NET-Framework-45-Core
+          - NET-Framework-45-ASPNET
+        state: present
+      register: win_feature
 
-  - name: Reboot machine for Windows Features
-    ansible.windows.win_reboot:
-    when: win_feature.reboot_required
+    - name: Reboot machine for Windows Features
+      ansible.windows.win_reboot:
+      when: win_feature.reboot_required
 
-  - name: Create Log Folder
-    win_file:
-      path: C:\Logs
-      state: directory
+    - name: Create Log Folder
+      win_file:
+        path: C:\Logs
+        state: directory
 
-  - name: Create Download Folder
-    win_file:
-      path: C:\Download
-      state: directory
+    - name: Create Download Folder
+      win_file:
+        path: C:\Download
+        state: directory
 
-  - name: Create Citrix Download Folder
-    win_file:
-      path: C:\Download\Citrix
-      state: directory
+    - name: Create Citrix Download Folder
+      win_file:
+        path: C:\Download\Citrix
+        state: directory
 
-  - name: Check if Citrix ISO is downloaded yet
-    win_stat:
-      path: "C:\\Download\\Citrix\\{{citrix.source}}"
-    register: citrix_iso
+    - name: Check if Citrix ISO is downloaded yet
+      win_stat:
+        path: "C:\\Download\\Citrix\\{{citrix.source}}"
+      register: citrix_iso
 
-  - name: Copy file from UNC path
-    win_copy:
-      src: "{{citrix.path}}\\{{citrix.source}}"
-      dest: "C:\\Download\\Citrix\\{{citrix.source}}"
-      remote_src: true
-    vars:
-      ansible_become: yes
-      ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
-      ansible_become_password: "{{ ansible_password }}"
-      ansible_become_method: runas
-    when: citrix_iso.stat.exists == false
+    - name: Copy file from UNC path
+      win_copy:
+        src: "{{citrix.path}}\\{{citrix.source}}"
+        dest: "C:\\Download\\Citrix\\{{citrix.source}}"
+        remote_src: true
+      vars:
+        ansible_become: true
+        ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
+      when: citrix_iso.stat.exists == false
 
-  - name: Register iso path
-    set_fact:
-      iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
+    - name: Register iso path
+      set_fact:
+        iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-  - name: Check for pending reboot
-    win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-    register: pending_reboot
+    - name: Check for pending reboot
+      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+      register: pending_reboot
 
-  - name: Set fact for pending reboot
-    set_fact:
-      pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+    - name: Set fact for pending reboot
+      set_fact:
+        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
 
-  - name: Reboot to remove the pending reboot
-    ansible.windows.win_reboot:
-    when: pending_reboot == true
+    - name: Reboot to remove the pending reboot
+      ansible.windows.win_reboot:
+      when: pending_reboot == true
 
-  - name: Mount the Citrix installation ISO
-    win_disk_image:
-      image_path: "{{ iso_path }}"
-      state: present
-    register: disk_image_out
+    - name: Mount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
 
-  - name: Install Citrix License Server role
-    win_package:
-      path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\CTX_Licensing.msi"
-      state: present
-    register: lic_install
+    - name: Install Citrix License Server role
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\CTX_Licensing.msi"
+        state: present
+      register: lic_install
 
-  - name: Install Citrix License PowerShell snap-ins
-    win_package:
-      path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\LicensingAdmin_PowerShellSnapin_x64.msi"
-      state: present
+    - name: Install Citrix License PowerShell snap-ins
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\LicensingAdmin_PowerShellSnapin_x64.msi"
+        state: present
 
-  - name: Open firewall port 2700 for Citrix License Server
-    community.windows.win_firewall_rule:
-      name: Citrix License Server
-      localport: "{{citrix.licensing.port}}"
-      action: allow
-      direction: in
-      protocol: tcp
-      profiles: [domain, private]
-      state: present
-      enabled: yes
+    - name: Open firewall port 2700 for Citrix License Server
+      community.windows.win_firewall_rule:
+        name: Citrix License Server
+        localport: "{{citrix.licensing.port}}"
+        action: allow
+        direction: in
+        protocol: tcp
+        profiles: [domain, private]
+        state: present
+        enabled: true
 
-  - name: Reboot to complete installation
-    ansible.windows.win_reboot:
-    when: lic_install.changed
+    - name: Reboot to complete installation
+      ansible.windows.win_reboot:
+      when: lic_install.changed
 
-  - name: Add registry for future installation check
-    win_regedit:
-      path: HKLM:\Software\GO-EUC\Citrix
-      name: lic_version
-      data: "{{ citrix.version }}"
-      type: string
+    - name: Add registry for future installation check
+      win_regedit:
+        path: HKLM:\Software\GO-EUC\Citrix
+        name: lic_version
+        data: "{{ citrix.version }}"
+        type: string
 
   when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
