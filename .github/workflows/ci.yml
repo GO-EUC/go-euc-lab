@@ -15,5 +15,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: YAML lint on Ansible
-        run: yamllint -c ./ansible/lint/mylint.yml ./ansible
-          
+        run: yamllint -c ./tests/ymllint/config.yml ./ansible
+        
+      - name: PSScriptAnalyzer on Ansible
+        run: pwsh -Command Invoke-ScriptAnalyzer -Path "./ansible/*" -Setting "./tests/psscript/config.psd1" -EnableExit
