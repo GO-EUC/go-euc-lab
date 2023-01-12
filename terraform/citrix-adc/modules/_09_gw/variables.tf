@@ -38,7 +38,7 @@ variable "adc-gw-vserver" {
       "YourGWvServerIP"
     ]
     port = [
-      YourGWvServerPort
+      "YourGWvServerPort"
     ]
     dtls = [
       "YourGWvServerDTLSSetting"
