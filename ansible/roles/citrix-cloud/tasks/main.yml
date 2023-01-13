@@ -1,4 +1,7 @@
 ---
+- name: Install the Cloud Connectors
+  include: install.yml
+
 - name: Configure the hosting connection
   include: hosting_connection.yml
 
