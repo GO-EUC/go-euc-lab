@@ -54,7 +54,7 @@ $content += "sql_server=$($state.outputs.sql_server.value)"
 $content += "sql_database=$($state.outputs.sql_database.value)"
 
 
-$inventoryDir = $InventoryFile.Substring(0,$InventoryFile.LastIndexOf("/"))
+$inventoryDir = $InventoryFile.Substring(0,$InventoryFile.LastIndexOf("\"))
 if ($inventoryDir -ne ".") {
     if ((Test-Path -Path $inventoryDir) -eq $false) {
         try {
