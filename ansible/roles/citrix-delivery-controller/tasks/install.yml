@@ -7,10 +7,15 @@
 
 - name: Block for Citrix installation
   block:
+
     - name: Check for PendingReboot module
       win_psmodule:
         name: PendingReboot
         state: present
+      retries: 3
+      delay: 10
+      register: result
+      until: result is not failed
 
     - name: Install Citrix Delivery Controller prerequisites
       win_feature:
@@ -90,12 +95,12 @@
 
     - name: Copy file from UNC path
       win_copy:
-        src: "{{citrix.path}}\\{{citrix.source}}"
+        src: "{{citrix.path}}\\v{{citrix.version}}\\{{citrix.source}}"
         dest: "C:\\Download\\Citrix\\{{citrix.source}}"
         remote_src: true
       vars:
         ansible_become: true
-        ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
+        ansible_become_user: "{{ ansible_user }}"
         ansible_become_password: "{{ ansible_password }}"
         ansible_become_method: runas
       when: citrix_iso.stat.exists == false
