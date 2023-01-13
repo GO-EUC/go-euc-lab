@@ -1,8 +1,8 @@
 ---
 citrix:
-  source: Citrix_Virtual_Apps_and_Desktops_7_2203_2000.iso
-  path: "\\\\{{ groups['mngt'][0] }}\\\\Share\\Software\\Citrix"
-  version: 2203_LTSR_CU2
+  version: '2212'
+  source: Citrix_Virtual_Apps_and_Desktops_7_2212.iso
+  path: "\\\\{{ groups['mngt'][0] }}\\Software\\Citrix\\CVAD"
   site: Default
   database_port: 1433
   database_site: CVAD_Site_DB
@@ -13,7 +13,7 @@ citrix:
   scope: All
   grooming: 365
   licensing:
-    port: 2700
+    port: 27000
     model: Concurrent
     code: XDT
     edition: PLT

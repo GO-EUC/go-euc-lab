@@ -1,14 +1,21 @@
 ---
-- name: Citrix Delivery Controller
+- name: Domain join the Citrix Delivery Controller
   hosts: ctx_ddc
   roles:
   - domain-join
+  vars_files:
+  - ansible.yml
+  - domain.yml
+  vars:
+    ansible_user: "{{ local_admin_user }}"
+
+- name: Install and configure Citrix Delivery Controller
+  hosts: ctx_ddc
+  roles:
   - citrix-delivery-controller
   vars_files:
-    - domain.yml
-    - citrix.yml
+  - ansible.yml
+  - citrix.yml
+  - domain.yml
   vars:
-    ansible_connection: winrm
-    ansible_winrm_transport: ntlm
-    ansible_winrm_server_cert_validation: ignore
-    ansible_port: 5985
+    ansible_user: "{{ domain_admin_user }}"

@@ -36,7 +36,7 @@
       vars:
         ansible_become: true
         ansible_become_method: runas
-        ansible_become_user: "{{domain_name}}\\Administrator"
+        ansible_become_user: "{{ ansible_user }}"
         ansible_become_password: "{{ ansible_password }}"
 
     - name: Add registry for future site creation check
