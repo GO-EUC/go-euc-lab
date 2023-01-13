@@ -24,6 +24,14 @@
     new_label: MSSQLData
 
 # Load required powershell modules
+- name: Check for SQLServerDsc DSC Powershell module
+  win_psmodule:
+    accept_license: true
+    name: SQLServerDsc
+    state: present
+  retries: 5
+  delay: 30
+
 - name: Powershell | Check for SQLServer DSC Powershell module
   win_psmodule:
     name: SQLServerDsc
@@ -53,6 +61,24 @@
   win_feature:
     name: NET-Framework-Core
     state: present
+
+# - name: Check for DnsServerDsc DSC Powershell module
+#   win_psmodule:
+#     name: PowerShellGet
+#     state: present
+#   retries: 5
+#   delay: 30
+#   loop:
+#     - PowerShellGet
+#     - PackageManagement
+
+# - name: Check for SqlServerNetwork DSC Powershell module
+#   win_psmodule:
+#     accept_license: true
+#     name: SqlServerNetwork
+#     state: present
+#   retries: 5
+#   delay: 30
 
 # Setup SQL Server Pre-Reqs
 - name: Windows | Install .NET Framework 3.5
@@ -238,27 +264,35 @@
     Description: "Allows the SQL Server Browser to access the network"
   tags: configure_firewall
 
-# Begin SQL Server configuration
-- name: Enable TCP Connectivity
-  win_dsc:
-    resource_name: SqlServerNetwork
-    InstanceName: "{{ mssql_instance_name }}"
-    ProtocolName: tcp
-    TcpPort: "{{ mssql_port }}"
-    IsEnabled: true
-    RestartService: true
-  tags: configure_sql
-
-- name: Firewall rule to allow SQL on 1433
+- name: Firewall | Allow SQL on 1433
   community.windows.win_firewall_rule:
-    name: Remote Desktop
+    name: SQL Server
     localport: 1433
     action: allow
     direction: in
     protocol: tcp
-    profiles: [domain, private]
+    profiles: [domain, private, public]
     state: present
     enabled: true
+
+# Begin SQL Server configuration
+- name: Enable TCP Connectivity on Protocol
+  win_dsc:
+    resource_name: SqlProtocol
+    InstanceName: "{{ mssql_instance_name }}"
+    ProtocolName: TcpIp
+    Enabled: True
+    ListenOnAllIpAddresses: True
+    KeepAlive: 3000
+  tags: configure_sql
+
+- name: Enable TCP Connectivity on TCP Port
+  win_dsc:
+    resource_name: SqlProtocolTcpIp
+    InstanceName: "{{ mssql_instance_name }}"
+    IpAddressGroup: IPAll
+    TcpPort: 1433
+  tags: configure_sql
 
 - name: Adjust SQL Server Memory Min {{ mssql_min_server_memory }} and Max {{ mssql_max_server_memory }}
   when: mssql_max_server_memory is defined
