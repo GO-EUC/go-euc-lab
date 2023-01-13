@@ -15,7 +15,7 @@
   win_xml:
     path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
     xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='profileName']"
-    fragment: "{{ profile_name }}"
+    fragment: "{{ loadgen.profile.name }}"
     type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property Domain
@@ -57,5 +57,5 @@
   win_xml:
     path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
     xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Workgroup']"
-    fragment: "{{ profile_workgroup | lower }}"
+    fragment: "{{ loadgen.profile.workgroup | lower }}"
     type: text

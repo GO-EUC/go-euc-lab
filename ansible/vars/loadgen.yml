@@ -1,0 +1,20 @@
+---
+loadgen:
+  version: 8229
+  profile:
+    name: GO-Admin
+    workgroup: false
+  datasource:
+    name: GO-Datastore
+    active: true
+    interval: 5
+    update_count: false
+    tables:
+      create_on_load_test: true
+      smd_create_on_load_test: true
+      duaf:
+        name: DUAF
+        prefix: DUAF
+      perf:
+        name: PM
+        prefix: PM
