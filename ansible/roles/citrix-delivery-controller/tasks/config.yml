@@ -11,3 +11,17 @@
     ansible_become_method: runas
     ansible_become_user: "{{ ansible_user }}"
     ansible_become_password: "{{ ansible_password }}"
+
+- name: Set the Citrix License Server
+  citrix_license:
+    lic_server: "{{ groups['ctx_lic'][0] }}"
+    lic_port: 27000
+    lic_model: UserDevice
+    lic_product_code: XDT
+    lic_product_edition: PLT
+    state: present
+  vars:
+    ansible_become: true
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
