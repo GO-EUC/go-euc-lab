@@ -281,8 +281,8 @@
     resource_name: SqlProtocol
     InstanceName: "{{ mssql_instance_name }}"
     ProtocolName: TcpIp
-    Enabled: True
-    ListenOnAllIpAddresses: True
+    Enabled: true
+    ListenOnAllIpAddresses: true
     KeepAlive: 3000
   tags: configure_sql
 

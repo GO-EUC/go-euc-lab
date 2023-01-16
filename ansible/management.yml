@@ -1,15 +1,15 @@
 ---
-- name: Domain join the Management Server 
+- name: Domain join the Management Server
   hosts: mngt
   roles:
     - domain-join
   vars_files:
-  - ansible.yml
-  - domain.yml
+    - ansible.yml
+    - domain.yml
   vars:
     ansible_user: "{{ local_admin_user }}"
 
-- name: Install and configure the Management Server 
+- name: Install and configure the Management Server
   hosts: mngt
   roles:
     - file-share
