@@ -5,10 +5,10 @@ Set-StrictMode -Version 2
 
 $params = Parse-Args $args -supports_check_mode $false
 
-$check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
+# $check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -type "bool" -default $false
 
-$debug_level = Get-AnsibleParam -obj $params -name "_ansible_verbosity" -type "int"
-$debug = $debug_level -gt 2
+# $debug_level = Get-AnsibleParam -obj $params -name "_ansible_verbosity" -type "int"
+# $debug = $debug_level -gt 2
 
 $licenseServer = Get-AnsibleParam $params "lic_server" -type "str" -Default "localhost"
 $licenseServerPort = Get-AnsibleParam $params "lic_port" -type "int" -Default 27000
