@@ -27,7 +27,7 @@ try {
     Fail-Json $result "Failed to import the required PowerShell module. Error: $($_)"
 }
 
-if ($state -eq "absent") { 
+if ($state -eq "absent") {
 
 } else {
     $siteConfig = Get-ConfigSite -AdminAddress $env:ComputerName
