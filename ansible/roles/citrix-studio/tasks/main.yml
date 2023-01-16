@@ -1,9 +1,4 @@
 ---
-- name: Built the environment dictonary and variables
-  set_fact:
-    citrix_username: "{{ lookup('env', 'citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'citrix_password') }}"
-
 - name: Install Citrix Studio prerequisites
   win_feature:
     name:
@@ -11,47 +6,19 @@
     state: present
   register: win_feature
 
-- name: Force reboot machine
+- name: Reboot machine
   win_reboot:
-
-- name: Create Download Folder
-  win_file:
-    path: C:\Download
-    state: directory
-
-- name: Create Citrix Download Folder
-  win_file:
-    path: C:\Download\Citrix
-    state: directory
-
-- name: Check if Citrix ISO is downloaded yet
+  when: win_feature.changed
+    
+- name: Check if Citrix ISO is there
   win_stat:
-    path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  register: download_file
-
-- name: Copy a single file
-  ansible.windows.win_copy:
-    src: files/Get-CTXBinary.ps1
-    dest: C:\Download\Citrix\Get-CTXBinary.ps1
-
-- name: Download Citrix Virtual Apps and Desktops 2203
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadNumber 20428 -DownloadFileName "Citrix_Virtual_Apps_and_Desktops_7_2203.iso" -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}"
-  register: citrix_download
-  when: download_file.stat.exists == False
+    path: D:\Share\Software\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2209.iso
+  register: source_file
 
 - name: Register iso path
   set_fact:
-    iso_path: C:\Download\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2203.iso
-  when: download_file.stat.exists == True
-
-- name: Register iso path
-  set_fact:
-    iso_path: "{{citrix_download.stdout | trim }}"
-  when: download_file.stat.exists == False
-
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ iso_path }}"
+    iso_path: D:\Share\Software\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2209.iso
+  when: source_file.stat.exists == True
 
 - name: Ensure an ISO is mounted
   win_disk_image:
