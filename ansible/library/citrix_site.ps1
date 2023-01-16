@@ -4,22 +4,20 @@
 Set-StrictMode -Version 2
 
 function Start-DatabaseQuery() {
-    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$connection, 
+        [string]$connection,
 
         [Parameter(Mandatory=$true)]
         [string]$query
     )
 
     $sql = New-Object System.Data.SqlClient.SqlConnection
-    $sql.ConnectionString = $connectionString
+    $sql.ConnectionString = $connection
     $sqlCommand = $sql.CreateCommand()
     $sqlCommand.CommandText = $query
 
     $sqlResult = New-Object "System.Data.DataTable"
-
     $sql.Open()
     $sqlResult.Load($sqlCommand.ExecuteReader())
 
@@ -28,7 +26,6 @@ function Start-DatabaseQuery() {
 }
 
 function Get-Database {
-    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory=$true)]
         [string]$dbServer,
@@ -46,13 +43,12 @@ function Get-Database {
 }
 
 function Get-DatabaseVersion {
-    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory=$true)]
         [string]$dbServer,
 
         [Parameter(Mandatory=$true)]
-        [int]$dbPort, 
+        [int]$dbPort,
 
         [Parameter(Mandatory=$true)]
         [string]$dbName
@@ -70,13 +66,12 @@ function Get-DatabaseVersion {
 }
 
 function Get-DatabaseMachine {
-    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory=$true)]
         [string]$dbServer,
 
         [Parameter(Mandatory=$true)]
-        [int]$dbPort, 
+        [int]$dbPort,
 
         [Parameter(Mandatory=$true)]
         [string]$dbName
@@ -91,13 +86,12 @@ function Get-DatabaseMachine {
 }
 
 function Start-DropDatabase {
-    [CmdletBinding(SupportsShouldProcess = $false)]
     param (
         [Parameter(Mandatory=$true)]
         [string]$dbServer,
 
         [Parameter(Mandatory=$true)]
-        [int]$dbPort, 
+        [int]$dbPort,
 
         [Parameter(Mandatory=$true)]
         [string]$dbName
