@@ -3,7 +3,16 @@
 
 Set-StrictMode -Version 2
 
-function Start-DatabaseQuery($connection, $query) {
+function Start-DatabaseQuery() {
+    [CmdletBinding(SupportsShouldProcess = $false)]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$connection, 
+
+        [Parameter(Mandatory=$true)]
+        [string]$query
+    )
+
     $sql = New-Object System.Data.SqlClient.SqlConnection
     $sql.ConnectionString = $connectionString
     $sqlCommand = $sql.CreateCommand()
@@ -18,7 +27,16 @@ function Start-DatabaseQuery($connection, $query) {
     return $sqlResult
 }
 
-function Get-Databases($dbServer, $dbPort) {
+function Get-Database {
+    [CmdletBinding(SupportsShouldProcess = $false)]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$dbServer,
+
+        [Parameter(Mandatory=$true)]
+        [int]$dbPort
+    )
+
     $query = "SELECT name FROM master.dbo.sysdatabases"
     $connectionString = "Server=$dbServer,$dbPort;Integrated Security=True;"
 
@@ -27,7 +45,19 @@ function Get-Databases($dbServer, $dbPort) {
     return $databases
 }
 
-function Get-DatabaseVersion($dbServer, $dbPort, $dbName) {
+function Get-DatabaseVersion {
+    [CmdletBinding(SupportsShouldProcess = $false)]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$dbServer,
+
+        [Parameter(Mandatory=$true)]
+        [int]$dbPort, 
+
+        [Parameter(Mandatory=$true)]
+        [string]$dbName
+    )
+
     $query = "SELECT [ProductVersion] FROM [ConfigurationSchema].[Site]"
     $connectionString = "Server=$dbServer,$dbPort;Database=$dbName;Integrated Security=True;"
 
@@ -39,7 +69,19 @@ function Get-DatabaseVersion($dbServer, $dbPort, $dbName) {
     return $version
 }
 
-function Get-DatabaseMachines($dbServer, $dbPort, $dbName) {
+function Get-DatabaseMachine {
+    [CmdletBinding(SupportsShouldProcess = $false)]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$dbServer,
+
+        [Parameter(Mandatory=$true)]
+        [int]$dbPort, 
+
+        [Parameter(Mandatory=$true)]
+        [string]$dbName
+    )
+
     $query ="SELECT [MachineName] FROM [ConfigurationSchema].[Services]"
     $connectionString = "Server=$dbServer,$dbPort;Database=$dbName;Integrated Security=True;"
 
@@ -48,7 +90,19 @@ function Get-DatabaseMachines($dbServer, $dbPort, $dbName) {
     return $machines
 }
 
-function Start-DropDatabase($dbServer, $dbPort, $dbName){
+function Start-DropDatabase {
+    [CmdletBinding(SupportsShouldProcess = $false)]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$dbServer,
+
+        [Parameter(Mandatory=$true)]
+        [int]$dbPort, 
+
+        [Parameter(Mandatory=$true)]
+        [string]$dbName
+    )
+
     $query = "IF EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name =`'$dbName`') `
     BEGIN `
         ALTER DATABASE [$dbName] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; `
@@ -108,12 +162,12 @@ try {
 }
 
 
-if ($state -eq "absent") { 
-    
+if ($state -eq "absent") {
+
     $dropDb = $true
-    
+
     # Collect all the current databases of the SQL server
-    $currentDatabases = Get-Databases -dbServer $databaseServer -dbPort $databaseServerPort
+    $currentDatabases = Get-Database -dbServer $databaseServer -dbPort $databaseServerPort
 
     # Check if the required databases are allready there
     foreach ($db in $currentDatabases) {
@@ -125,7 +179,7 @@ if ($state -eq "absent") {
     }
 
     if ($databases.Created -eq $true) {
-        $machines = Get-DatabaseMachines -dbServer $databaseServer -dbPort $databaseServerPort -dbName $databaseNameSite
+        $machines = Get-DatabaseMachine -dbServer $databaseServer -dbPort $databaseServerPort -dbName $databaseNameSite
 
         if ($machines.MachineName -ne $env:ComputerName -and [string]::IsNullOrEmpty($machines.MachineName) -eq $false) {
             $dropDb = $false
@@ -186,7 +240,7 @@ if ($state -eq "absent") {
 
     $dbCreated = $false
     # Collect all the current databases of the SQL server
-    $currentDatabases = Get-Databases -dbServer $databaseServer -dbPort $databaseServerPort
+    $currentDatabases = Get-Database -dbServer $databaseServer -dbPort $databaseServerPort
 
     # Check if the required databases are allready there
     foreach ($db in $currentDatabases) {
@@ -229,18 +283,18 @@ if ($state -eq "absent") {
     # If version match, and collect all machines from the site database
     if (!$dbCreated) {
         if ($softwareVersion.Contains($version)) {
-            $machines = Get-DatabaseMachines -dbServer $databaseServer -dbPort $databaseServerPort -dbName $databaseNameSite
+            $machines = Get-DatabaseMachine -dbServer $databaseServer -dbPort $databaseServerPort -dbName $databaseNameSite
             $joined = $false
             if ($machines.MachineName -match $env:ComputerName) {
                 $joined = $true
             }
-    
+
             # If the server is not joined, it will join based on the exsisting controller form the database
             if ($joined -eq $false) {
                 if ($machines.ItemArray.Count -eq 1) {
                     $controller = $machines.MachineName
                 }
-    
+
                 try {
                     Add-XDController -SiteControllerAddress $controller  | Out-Null
                     $result.changed = $true
@@ -272,7 +326,7 @@ if ($state -eq "absent") {
             Fail-Json $result "An error occurred trying to change the grooming settings to $GroomingDays days. Error $($_)"
         }
     }
-    
+
     $brokerSite = Get-BrokerSite -AdminAddress $env:ComputerName
 
     if (!$brokerSite.TrustRequestsSentToTheXmlServicePort) {
@@ -284,12 +338,12 @@ if ($state -eq "absent") {
         Set-BrokerSite -AdminAddress $env:ComputerName -ConnectionLeasingEnabled $false | Out-Null
         $result.changed = $true
     }
-    
+
     if (!$brokerSite.LocalHostCacheEnabled) {
         Set-BrokerSite -AdminAddress $env:ComputerName -LocalHostCacheEnabled $true | Out-Null
         $result.changed = $true
     }
-    
+
     $analyticSite = Get-AnalyticsSite -AdminAddress $env:ComputerName
     if ($analyticSite.Enabled) {
         Set-AnalyticsSite -AdminAddress $env:ComputerName -Enabled $false | Out-Null
