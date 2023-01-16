@@ -49,12 +49,12 @@
 
     - name: Copy file from UNC path
       win_copy:
-        src: "{{citrix.path}}\\{{citrix.source}}"
+        src: "{{citrix.path}}\\v{{citrix.version}}\\{{citrix.source}}"
         dest: "C:\\Download\\Citrix\\{{citrix.source}}"
         remote_src: true
       vars:
         ansible_become: true
-        ansible_become_user: "{{ domain_name }}\\{{ ansible_user }}"
+        ansible_become_user: "{{ ansible_user }}"
         ansible_become_password: "{{ ansible_password }}"
         ansible_become_method: runas
       when: citrix_iso.stat.exists == false
@@ -90,9 +90,11 @@
     - name: Install Citrix License PowerShell snap-ins
       win_package:
         path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\LicensingAdmin_PowerShellSnapin_x64.msi"
+        arguments: "REINSTALL=ALL REINSTALLMODE=A"
         state: present
+      ignore_errors: true
 
-    - name: Open firewall port 2700 for Citrix License Server
+    - name: Open firewall port for Citrix License Server
       community.windows.win_firewall_rule:
         name: Citrix License Server
         localport: "{{citrix.licensing.port}}"
