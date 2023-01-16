@@ -2,17 +2,8 @@
 - name: Installation playbook for base image
   hosts: builds
   roles:
-<<<<<<< Updated upstream
-  - role: citrix-vda
-    when: lookup('env', 'delivery') == 'citrix'
-
-  - role: microsoft365apps
-
-  # - role: citrix-optimizer
-=======
-  - windows-image
+    - windows-image
   vars_files:
-  - ansible.yml
-  - domain.yml
-  - citrix.yml
->>>>>>> Stashed changes
+    - ansible.yml
+    - domain.yml
+    - citrix.yml
