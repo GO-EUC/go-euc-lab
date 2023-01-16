@@ -1,49 +1,13 @@
 ---
-- name: Obtain information from registry for site check
-  win_reg_stat:
-    path: HKLM:\Software\GO-EUC\Citrix
-    name: site_created
-  register: site_created
-
-- name: Site creation block
-  block:
-    - name: Install Site Script
-      win_copy:
-        src: "{{ item }}"
-        dest: C:\Logs\
-      with_fileglob:
-        - "*.ps1"
-
-    - name: Create or Join Site
-      win_shell: |
-        $env:SiteName = '{{ citrix.site }}'
-        $env:DatabaseServer = '{{ groups['sql'][0] }}'
-        $env:DatabaseServerPort = '{{ citrix.database_port }}'
-        $env:DatabaseName_Site = '{{ citrix.database_site }}'
-        $env:DatabaseName_Logging = '{{ citrix.database_logging }}'
-        $env:DatabaseName_Monitoring = '{{ citrix.database_monitoring }}'
-        $env:LicenseServer = '{{ groups['ctx_lic'][0] }}'
-        $env:LicenseServerPort = '{{ citrix.licensing.port }}'
-        $env:LicensingModel = '{{ citrix.licensing.model }}'
-        $env:ProductCode = '{{ citrix.licensing.code }}'
-        $env:ProductEdition = '{{ citrix.licensing.edition }}'
-        $env:AdminGroup = '{{ domain_name }}\{{ citrix.admin }}'
-        $env:Role =   '{{ citrix.role }}'
-        $env:Scope = '{{ citrix.role }}'
-        $env:GroomingDays = '{{ citrix.grooming }}'
-        C:\Logs\CreateSite.ps1 -creates C:\Logs\SiteDone.txt
-      register: result
-      vars:
-        ansible_become: true
-        ansible_become_method: runas
-        ansible_become_user: "{{ ansible_user }}"
-        ansible_become_password: "{{ ansible_password }}"
-
-    - name: Add registry for future site creation check
-      win_regedit:
-        path: HKLM:\Software\GO-EUC\Citrix
-        name: site_created
-        data: 1
-        type: dword
-
-  when: site_created.exists == false
+- name: Create Citrix Site
+  citrix_site:
+    name: "{{ citrix.site }}"
+    db_server: "{{ groups['sql'][0] }}"
+    db_port: "{{ citrix.database_port }}"
+    admin_group: "{{ domain_name }}\\{{ citrix.admin }}"
+    state: present
+  vars:
+    ansible_become: true
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
