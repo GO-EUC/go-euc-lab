@@ -5,10 +5,6 @@
   - domain-join
   - citrix-storefront
   vars_files:
-    - domain.yml
-    - citrix.yml
-  vars:
-    ansible_connection: winrm
-    ansible_winrm_transport: ntlm
-    ansible_winrm_server_cert_validation: ignore
-    ansible_port: 5985
+  - ansible.yml
+  - domain.yml
+  - citrix.yml
