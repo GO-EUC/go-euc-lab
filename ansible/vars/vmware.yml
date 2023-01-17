@@ -1,0 +1,8 @@
+---
+vmware:
+  version: '2106'
+  source: VMware-Horizon-Connection-Server-x86_64-8.3.0-18294467.exe
+  path: "\\\\{{ groups['mngt'][0] }}\\Software\\VMware\\Horizon"
+  vsphere:
+    host: "{{ groups['vsphere'][0] }}"
+    username: administrator@vsphere.local

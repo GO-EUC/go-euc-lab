@@ -1,0 +1,21 @@
+---
+- name: Domain join the VMware Horizon Connection Server
+  hosts: vmw_vcs
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - domain.yml
+  vars:
+    ansible_user: "{{ local_admin_user }}"
+
+- name: Install and configure VMware Horizon Connection Server
+  hosts: vmw_vcs
+  roles:
+    - vmware-horizon-connection-server
+  vars_files:
+    - ansible.yml
+    - vmware.yml
+    - domain.yml
+  vars:
+    ansible_user: "{{ domain_admin_user }}"

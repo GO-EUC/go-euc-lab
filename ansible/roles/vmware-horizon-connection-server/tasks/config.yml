@@ -1,0 +1,90 @@
+---
+- name: Get authentication token from Horizon
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/login
+    method: POST
+    content_type: application/json
+    body:
+      domain: "{{ dns_domain_name }}"
+      passwd: "{{ ansible_password }}"
+      name: "{{ domain_admin_user | split(slash) | last }}"
+    validate_certs: false
+    return_content: true
+  register: token
+  vars:
+    slash: '\'
+
+- name: Get vCenter Server list
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/VirtualCenter/List
+    method: GET
+    content_type: application/json
+    headers:
+      Cookie: "{{ token.set_cookie | split(';') | first }}"
+      CSRFToken: "{{ token.csrf_token }}"
+    validate_certs: false
+    return_content: true
+  register: virtual_center
+
+- name: Set configured vcenter servers
+  set_fact:
+    virtual_center_servers: "{{ virtual_center | json_query('json[*].serverSpec.serverName') | list }}"
+  when: virtual_center.json is defined
+
+- name: Block for adding vCenter Server
+  block:
+
+    - name: Get the public certificate from the vCenter server
+      win_cert_export:
+        host: "{{ vmware.vsphere.host }}"
+        port: 443
+      register: public_cert
+
+    - name: Convert password to byte array
+      win_shell: |
+        $enc = [System.Text.Encoding]::UTF8
+        $password = "{{ vsphere_password }}"
+        $encKey = $enc.GetBytes($password)
+        $encKey
+      register: enc_password
+
+    - name: Set fact for vCenter server post body 
+      set_fact:
+        post_body: 
+          certificateOverride:
+            sslCertThumbprint: "{{ public_cert.cert }}"
+            sslCertThumbprintAlgorithm: DER_BASE64_PEM
+          enabled: true
+          limits:
+            instantCloneEngineProvisioningLimit: 20
+            vcPowerOperationsLimit: 50
+            vcProvisioningLimit: 20
+            viewComposerMaintenanceLimit: 12
+          seSparseReclamationEnabled: true
+          serverSpec:
+            port: 443
+            serverName: "{{ vmware.vsphere.host }}"
+            serverType: VIRTUAL_CENTER
+            useSSL: true
+            userName: "{{ vmware.vsphere.username }}"
+            password:
+              utf8String: "{{ enc_password.stdout_lines | map('int') | list }}"
+          storageAcceleratorData:
+            enabled: true
+            defaultCacheSizeMB: 1024
+          deploymentType: GENERAL
+
+    - name: Post vCenter Server connection to Horizon
+      win_uri:
+        url: https://localhost/view-vlsi/rest/v1/VirtualCenter/Create
+        method: POST
+        content_type: application/json
+        body: "{{ post_body | to_json }}"
+        headers:
+          Cookie: "{{ token.set_cookie | split(';') | first }}"
+          CSRFToken: "{{ token.csrf_token }}"
+        validate_certs: false
+        return_content: true
+      register: vcenter
+
+  when: (virtual_center.json is not defined) or (vmware.vsphere.host not in virtual_center | json_query('json[*].serverSpec.serverName') | list )
