@@ -1,6 +1,0 @@
----
-# - name: Install VMware Horizon Connection Server
-#   import_tasks: install.yml
-
-- name: Configure VMware Horizon
-  import_tasks: config.yml

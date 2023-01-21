@@ -12,7 +12,7 @@
 - name: Install and configure VMware Horizon Connection Server
   hosts: vmw_vcs
   roles:
-    - vmware-horizon-connection-server
+    - horizon-connection-server
   vars_files:
     - ansible.yml
     - vmware.yml
