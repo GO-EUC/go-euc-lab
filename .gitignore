@@ -4,6 +4,9 @@
 *.tfstate.*
 *.tfplan
 
+# Ignore the ansible inventory file
+**/ansible/*inventory*
+
 .terraformrc
 terraform.rc
 
