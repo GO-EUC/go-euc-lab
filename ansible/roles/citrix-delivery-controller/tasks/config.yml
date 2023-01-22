@@ -25,3 +25,16 @@
     ansible_become_method: runas
     ansible_become_user: "{{ ansible_user }}"
     ansible_become_password: "{{ ansible_password }}"
+
+- name: Set Hypervisor connection
+  citrix_hosting_connection:
+    name: Default
+    type: vSphere
+    host_address: 10.2.0.5
+    host_username: administrator@vsphere.local
+    host_password: "{{vsphere_password}}"
+    host_datacenter: GO
+    host_cluster: Infra
+    host_storage: datastore2
+    host_network: VM Network
+    state: present
