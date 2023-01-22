@@ -1,4 +1,14 @@
 ---
+- name: Domain join
+  hosts: builds
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - domain.yml
+  vars:
+    ansible_user: "{{ local_admin_user }}"
+
 - name: Installation playbook for base image
   hosts: builds
   roles:
@@ -7,3 +17,6 @@
     - ansible.yml
     - domain.yml
     - citrix.yml
+    - vmware.yml
+  vars:
+    ansible_user: "{{ domain_admin_user }}"

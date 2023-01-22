@@ -1,0 +1,22 @@
+---
+- name: Deployment Information
+  debug:
+    msg: "Running deployment for {{delivery}} on {{ansible_facts.os_name}}"
+
+- name: Install Citrix VDA
+  import_tasks: citrix-vda.yml
+  when: delivery == 'citrix'
+
+- name: Install VMware Horizon
+  import_tasks: vmware-horizon.yml
+  when: delivery == 'vmware'
+
+- name: Apply Windows updates
+  import_tasks: updates.yml
+
+- name: Deployment Information
+  debug:
+    msg: "Complete deployment for {{delivery}} on {{ansible_facts.os_name}}"
+
+- name: Shutdown deployment machine
+  win_shell: shutdown -s -f -t 30
