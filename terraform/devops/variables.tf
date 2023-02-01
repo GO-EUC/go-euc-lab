@@ -15,7 +15,7 @@ variable "ado_variables" {
         value     = string
         is_secret =  bool
     }))
-
+    sensitive   = true
     default = []
     description = "Any variable that needs to be added to the Azure Devops variable group"
 }
