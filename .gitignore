@@ -20,5 +20,6 @@ terraform.rc
 *.lock*
 
 # Packer ignore
+*/packer_cache/*
 *.pkrvars.hcl
 /manifests/*.json
