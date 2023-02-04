@@ -63,7 +63,7 @@ foreach ($bin in $binaries) {
 
 Write-Output "$(Get-Date): Setting ESX host requirements for Packer"
 # Creating ESX credentials
-$esxCredentials = New-Object System.Management.Automation.PSCredential ($($settings.esx_username), (ConvertTo-SecureString $ESXPassword -AsPlainText -Force))
+$esxCredentials = New-Object System.Management.Automation.PSCredential ($($settings.esx_username), $ESXPassword)
 
 # Connect to the ESX host
 try {
@@ -380,5 +380,4 @@ $dockerSession.Disconnect()
 $dockerSftpSession.Disconnect()
 
 Write-Output "$(Get-Date): Done!"
-
 Write-Output "$(Get-Date): Docker password: $randomPassword"
