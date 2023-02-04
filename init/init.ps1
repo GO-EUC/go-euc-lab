@@ -14,20 +14,34 @@ param (
     [string]
     $AdoPat,
 
-    # ESXi host password in secure string format
+    # ESXi host password in string format
     [Parameter(Mandatory = $true)]
-    [SecureString]
+    [securestring]
     $ESXPassword
 )
+
+Write-Output "$(Get-Date): Collecting settings"
+# Collecting settings JSON
+$settingsCheck = Test-Path -Path $SettingsFile
+if ($settingsCheck -eq $false) {
+    Write-Error "Cannot find the required settings JSON file, please consult the documentation."
+} else {
+    $settings = Get-Content -Path $SettingsFile -Raw | ConvertFrom-Json
+}
+
+Write-Output "$(Get-Date): Clear the SSH trusted hosts"
+Get-SSHTrustedHost | Remove-SSHTrustedHost | Out-Null
 
 # Trim the RepoRoot
 $RepoRoot = $RepoRoot.Trim("\")
 
+Write-Output "$(Get-Date): Checking for the Posh SSH Module"
 # Check if the Posh-SSH module is installed
 if (!(Get-Module -ListAvailable -Name "Posh-SSH")) {
     Install-Module -Name "Posh-SSH" -Scope CurrentUser -Confirm:$false
 } 
 
+Write-Output "$(Get-Date): Downloading and extracting required Hasicorp binaries"
 # Download Hashicorp binaries using the Evergreen API from stealthpuppy (Aaron Parker)
 $binaries = @()
 $binaries += Invoke-RestMethod -Method GET -Uri "https://evergreen-api.stealthpuppy.com/app/HashicorpTerraform"
@@ -44,20 +58,12 @@ foreach ($bin in $binaries) {
 
     New-Item -Path "$env:TEMP\Hashicorp" -ItemType Directory -Force -Confirm:$false | Out-Null
 
-    Expand-Archive -Path "$($ENV:Temp)\$fileName" -DestinationPath "$env:TEMP\Hashicorp"
+    Expand-Archive -Path "$($ENV:Temp)\$fileName" -DestinationPath "$env:TEMP\Hashicorp" -Force
 }
 
-
-# Collecting settings JSON
-$settingsCheck = Test-Path -Path $SettingsFile
-if ($settingsCheck -eq $false) {
-    Write-Error "Cannot find the required settings JSON file, please consult the documentation."
-} else {
-    $settings = Get-Content -Path $SettingsFile -Raw | ConvertFrom-Json
-}
-
+Write-Output "$(Get-Date): Setting ESX host requirements for Packer"
 # Creating ESX credentials
-$esxCredentials = New-Object System.Management.Automation.PSCredential ($($settings.esx_username), $ESXPassword)
+$esxCredentials = New-Object System.Management.Automation.PSCredential ($($settings.esx_username), (ConvertTo-SecureString $ESXPassword -AsPlainText -Force))
 
 # Connect to the ESX host
 try {
@@ -69,15 +75,16 @@ try {
 }
 
 # Set required Packer setting
-Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" 
+Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" | Out-Null
 
 # Copy over firewall template for VNC and apply
-Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/"
-Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli network firewall refresh"
+Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/" -Force 
+Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli network firewall refresh" | Out-Null
 
 # Close SFTP session
 $esxSftpSession.Disconnect()
 
+Write-Output "$(Get-Date): Download and extracting OpenSSL for password encryption"
 # Download OpenSSL to generate an SHA512 enqrypted password for the Ubuntu installation
 $urlOpenSSL = "http://wiki.overbyte.eu/arch/openssl-3.0.7-win64.zip"
 Invoke-WebRequest -Uri $urlOpenSSL -OutFile "$($env:TEMP)\openssl-3.0.7-win64.zip"
@@ -96,6 +103,7 @@ $encryptPassword = & $exeOpenSSL passwd -6 $randomPassword
 Remove-Item -Path "$($env:TEMP)\openssl-3.0.7-win64.zip" -Confirm:$false
 Remove-Item -Path "$($env:TEMP)\OpenSSL\" -Recurse -Confirm:$false
 
+Write-Output "$(Get-Date): Building Packer files"
 # Create Packer variables
 $packer = @{}
 
@@ -126,25 +134,39 @@ foreach ($var in $packer.GetEnumerator()) {
 
 # Argument list for init
 $packerInit = @{
+    FilePath =  "$env:TEMP\Hashicorp\packer.exe"
     ArgumentList = "init $($RepoRoot)\packer\vmware\init"
+    WorkingDirectory = "$($RepoRoot)\packer\vmware\init"
 }
 
+Write-Output "$(Get-Date): Packer init"
 # Start Packer init
-Start-Process -FilePath packer @packerInit -NoNewWindow -Wait
+Start-Process @packerInit -NoNewWindow -Wait
+
+# Convert back to plain text password for Packer
+$unsecureEsxPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($esxPassword))
 
 # Build string for packer build
 $buildString = "build "
 $buildString += "-var-file=`"$($RepoRoot)\packer\vmware\init\packer.pkrvars.hcl`" "
-$buildString += "-var `"esx_password=$esxPassword`" "
+$buildString += "-var `"esx_password=$unsecureEsxPassword`" "
 $buildString += "-var `"build_password=$randomPassword`" "
-$buildString += "-var `"build_password_encrypted=$encryptPassword`" "
+$buildString += "-var `"build_password_encrypted=$encryptPassword`" . "
 
+Write-Output "$(Get-Date): Packer build"
 # Start Packer build
-Start-Process -FilePath "$env:TEMP\Hashicorp\packer.exe" -ArgumentList $buildString -NoNewWindow -Wait
+$packerBuild = @{
+    FilePath =  "$env:TEMP\Hashicorp\packer.exe"
+    ArgumentList = $buildString
+    WorkingDirectory = "$($RepoRoot)\packer\vmware\init"
+}
 
+Start-Process @packerBuild -NoNewWindow -Wait
+
+Write-Output "$(Get-Date): Starting docker host on ESX host"
 # Make sure the VM is started again, as Packer will shutdown the machine
 $id = Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/getallvms | sed '1d' | awk '{if (`$1 > 0) print `$1`":`"`$2}' | grep $($settings.docker_name) | cut -d `':`' -f1"
-Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/power.on $($id.Output)"
+Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/power.on $($id.Output)" | Out-Null
 
 # Disconnect from the ESX host, as we don't need it anymore
 $esxSession.Disconnect()
@@ -155,10 +177,7 @@ $dockerPort = 22 # default SSH port
 $timeout = 120 # based 1 sec sleep this timeout is two minutes
 $timeoutCounter = 0
 
-# Override the ProgressPreference to hide the output of the Test-NetConnection
-$currentProgressPreference = $ProgressPreference
-$ProgressPreference = "SilentlyContinue"
-
+Write-Output "$(Get-Date): Waiting for host to boot"
 while ((Test-NetConnection -ComputerName $dockerIp -Port $dockerPort -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).TcpTestSucceeded -eq $false) {
     if ($timeout -eq $timeoutCounter) {
         Write-Error "Timeout reached while waiting for the docker host"
@@ -168,6 +187,7 @@ while ((Test-NetConnection -ComputerName $dockerIp -Port $dockerPort -ErrorActio
     $timeoutCounter++
 }
 
+Write-Output "$(Get-Date): Connecting to Docker host"
 # Restore the ProgressPreference
 $ProgressPreference = $currentProgressPreference
 
@@ -179,7 +199,7 @@ $dockerSession = New-SSHSession -ComputerName $dockerIp -Credential $dockerCrede
 $dockerSftpSession = New-SFTPSession -ComputerName $dockerIp -Credential $dockerCredentials -AcceptKey
 
 # Create required dir on the docker host to ensure database is persitent
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/postgresql"
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/postgresql" | Out-Null
 
 # Generate a random password for the Postgress database
 $postgressPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 6)
@@ -193,15 +213,18 @@ $postgressCommand += "-e POSTGRES_DB=state "
 $postgressCommand += "-p $($dockerIp):5432:5432 "
 $postgressCommand += "--name postgres postgres:latest"
 
+
+Write-Output "$(Get-Date): Starting Docker postgress container"
 # Start Postgress container
-Invoke-SSHCommand -SSHSession $dockerSession -Command $postgressCommand
+Invoke-SSHCommand -SSHSession $dockerSession -Command $postgressCommand | Out-Null
 
 # Create required dir on the docker host to ensure vault is persitent
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/logs"
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/config"
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/file"
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/logs" | Out-Null
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/config" | Out-Null
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/vault/file" | Out-Null
 
 # Copy over the vault configuration
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /etc/vault/config/" | Out-Null
 Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($RepoRoot)\init\data\vault\config.hcl" -Destination "/etc/vault/config/" -Force
 
 # Create the docker command line
@@ -211,9 +234,11 @@ $vaultCommand += "--cap-add=IPC_LOCK "
 $vaultCommand += "-p $($dockerIp):8200:8200 "
 $vaultCommand += "--name vault vault:latest server"
 
+Write-Output "$(Get-Date): Starting Docker vault container"
 # Start Hashicorp Vault container
-Invoke-SSHCommand -SSHSession $dockerSession -Command $vaultCommand
+Invoke-SSHCommand -SSHSession $dockerSession -Command $vaultCommand | Out-Null
 
+Write-Output "$(Get-Date): Init the Hashicorp Vault"
 # Set the formatting of vault to json
 $env:VAULT_FORMAT = "json"
 
@@ -239,6 +264,7 @@ if ($vaultStatus.sealed -eq $true) {
     }
 }
 
+Write-Output "$(Get-Date): Building Terraform variables"
 # Create variable file for the Azure DevOps variables
 $tfAdoVars = @()
 $tfAdoVars += [PSCustomObject]@{
@@ -288,7 +314,7 @@ $tfAdoVars = $tfAdoVars.Replace("`"value`"", "value")
 $tfAdoVars = $tfAdoVars.Replace("`"is_secret`"", "is_secret")
 
 $tfAdoVarsFile = @()
-$tfAdoVarsFile += "ado_variable = " + $tfAdoVars
+$tfAdoVarsFile += "ado_variables = " + $tfAdoVars
 
 Set-Content -Path "$($RepoRoot)\terraform\devops\terraform.tfvars" -Value $tfAdoVarsFile -Force
 
@@ -307,24 +333,28 @@ $env:TF_VAR_ado_url=$($settings.ado_url)
 
 # Create plan command
 $tfPlan = "plan "
-$tfPlan += "-out=`"plan.tfplan`""
+$tfPlan += "-out=plan.tfplan"
 
 # Create apply command
 $tfApply  = "apply `"plan.tfplan`""
 
+Write-Output "$(Get-Date): Terraform init"
 Start-Process @tfParams -ArgumentList $tfInit -NoNewWindow -Wait
-Start-Process @tfParams -ArgumentList $tfPlan -NoNewWindow -Wait -RedirectStandardOutput $true
+Write-Output "$(Get-Date): Terraform plan"
+Start-Process @tfParams -ArgumentList $tfPlan -NoNewWindow -Wait
+Write-Output "$(Get-Date): Terraform apply"
 Start-Process @tfParams -ArgumentList $tfApply -NoNewWindow -Wait
 
 # Remove the terraform.tfvar file
-Remove-Item -"$($RepoRoot)\terraform\devops\terraform.tfvars" -Force -Confirm:$false | Out-Null
+# Remove-Item -Path "$($RepoRoot)\terraform\devops\terraform.tfvars" -Force -Confirm:$false | Out-Null
 
 # Agent command static
 $agentCommandStatic = "docker run -d --restart unless-stopped "
-$agentCommandStatic += "-e AZP_URL=$($ado_url) "
-$agentCommandStatic += "-e AZP_TOKEN=$($ado_pat) "
+$agentCommandStatic += "-e AZP_URL=$($settings.ado_url) "
+$agentCommandStatic += "-e AZP_TOKEN=$($AdoPat) "
 
-# Start DevOps agents containers
+Write-Output "$(Get-Date): Starting Azure DevOps Agent containers"
+# Start DevOps agents containers with timeout as the download requires some time
 for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
     
     # Create the docker command line
@@ -334,12 +364,13 @@ for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
     $agentCommand += "--name agent$($i + 1) "
     $agentCommand += "goeuc/ado-agent:latest"
 
-    Invoke-SSHCommand -SSHSession $dockerSession -Command $agentCommand
+    Invoke-SSHCommand -SSHSession $dockerSession -Command $agentCommand -TimeOut 300 | Out-Null
 }
 
+Write-Output "$(Get-Date): Copy the software library"
 # Copy over the software sources
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go"
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go"
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go" | Out-Null
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | Out-Null
 
 # Copy over the software repo
 Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($settings.software_store)\*" -Destination "/go/" -Force
@@ -347,3 +378,7 @@ Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($settings.software_store)\
 # Disconnect the sessions
 $dockerSession.Disconnect()
 $dockerSftpSession.Disconnect()
+
+Write-Output "$(Get-Date): Done!"
+
+Write-Output "$(Get-Date): Docker password: $randomPassword"
