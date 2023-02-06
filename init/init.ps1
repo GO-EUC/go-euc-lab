@@ -287,7 +287,7 @@ $tfAdoVars += [PSCustomObject]@{
 
 $tfAdoVars += [PSCustomObject]@{
     name = "postgress_ssl"
-    value = "disabled"
+    value = "disable"
     is_secret = $false
 }
 
