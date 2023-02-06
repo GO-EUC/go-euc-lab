@@ -8,7 +8,9 @@ terraform {
         }
     }
 
-    backend "pg" { }
+    backend "pg" {
+        schema_name = "devops"
+    }
 }
 
 provider "azuredevops" {
