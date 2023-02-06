@@ -1,20 +1,26 @@
-module "vcenter_server_appliance" {
-  count  = var.vsphere_deploy == true ? 1 : 0
-  source = "./modules/vmware.vcsa"
+resource "local_file" "vcsa_json" {
+  content = templatefile (
+    var.vcsa_template, 
+    { 
+        esx_host = var.esx_host,
+        esx_username = var.esx_username,
+        esx_password = var.esx_password,
+        network = var.esx_network,
+        datastore = var.esx_datastore,
+        vcsa_name = var.vcsa_name,
+        vcsa_ip = var.vcsa_ip,
+        vcsa_prefix = var.vcsa_prefix,
+        vcsa_gateway = var.vcsa_gateway,
+        vcsa_dns = var.vcsa_dns,
+        vcsa_password = random_password.password.result,
+        vcsa_ntp = var.vcsa_ntp,
+        vcsa_system_name = var.vcsa_system_name
+    })
+  filename = var.config_file_path
+}
 
-  esx_host      = cidrhost(var.vsphere_nic_cidr, var.esx_hosts[0])
-  esx_username  = var.esx_user
-  esx_password  = var.esx_password
-  esx_network   = var.esx_nic
-  esx_datastore = var.esx_datastore
-
-  vcsa_installation = var.vsphere_source
-  vcsa_template     = "modules/vmware.vcsa/templates/vcsa_v${split(".", var.vsphere_version)[0]}.json"
-  vcsa_name         = var.vsphere_name
-  vcsa_password     = var.vsphere_password
-  vcsa_ip           = cidrhost(var.vsphere_nic_cidr, var.vsphere_ip)
-  vcsa_gateway      = cidrhost(var.vsphere_nic_cidr, var.vsphere_gateway)
-  vcsa_dns          = cidrhost(var.vsphere_nic_cidr, var.vsphere_dns)
-  vcsa_prefix       = split("/", var.vsphere_nic_cidr)[1]
-  vcsa_ntp          = var.vsphere_ntp
+resource "null_resource" "vcsa_deploy" {
+  provisioner "local-exec" {
+    command = "${var.vcsa_installation} install --accept-eula --acknowledge-ceip --no-esx-ssl-verify ${var.config_file_path}"
+  }
 }
