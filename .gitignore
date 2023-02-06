@@ -13,7 +13,7 @@ terraform.rc
 *.tfvars
 *backend.conf
 
-**/deployment/deploy.json
+terraform**/deploy.json
 
 # ignore any log and lock file
 *.log
