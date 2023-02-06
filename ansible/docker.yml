@@ -1,0 +1,8 @@
+---
+- name: Docker
+  hosts: docker
+  roles:
+    - bind
+    - nginx
+  var_files:
+    - domain.yml
