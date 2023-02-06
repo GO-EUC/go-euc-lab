@@ -67,8 +67,8 @@ $esxCredentials = New-Object System.Management.Automation.PSCredential ($($setti
 
 # Connect to the ESX host
 try {
-    $esxSession = New-SSHSession -ComputerName $($settings.esx_host) -Credential $esxCredentials -AcceptKey
-    $esxSftpSession = New-SFTPSession -ComputerName $($settings.esx_host) -Credential $esxCredentials -AcceptKey
+    $esxSession = New-SSHSession -ComputerName $($settings.esx_host_ip) -Credential $esxCredentials -AcceptKey
+    $esxSftpSession = New-SFTPSession -ComputerName $($settings.esx_host_ip) -Credential $esxCredentials -AcceptKey
 
 } catch {
     Write-Error "Cannot create the required SSH connection."
@@ -107,7 +107,7 @@ Write-Output "$(Get-Date): Building Packer files"
 # Create Packer variables
 $packer = @{}
 
-$packer.Add("esx_host", $($settings.esx_host))
+$packer.Add("esx_host", $($settings.esx_host_ip))
 $packer.Add("esx_username", $($settings.esx_username))
 $packer.Add("vm_network_name", $($settings.esx_network))
 $packer.Add("network_cidr", $($settings.network_cidr) )
@@ -264,6 +264,17 @@ if ($vaultStatus.sealed -eq $true) {
     }
 }
 
+# Enable kv vault
+& "$env:TEMP\Hashicorp\vault.exe" secrets enable -version=1 -path go kv | Out-Null
+
+# Adding secrets to the vault
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go domain name=$($settings.domain_name)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($esx_host_name) password=$($unsecureEsxPassword) user=$($settings.esx_username) ip=$($esx_host_ip) name=$($esx_host_name) datastore=$($settings.esx_datastore) network=$($settings.esx_network)
+$ "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa_ip) name=$($settings.vcsa_name)
+$ "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network network_cidr=$($settings.network_cidr) network_gateway=$($settings.network_gateway) network_dns=$($settings.network_dns)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker_username) ip=$($dockerIp) name=$($settings.docker_name)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($dockerIp) ssl=disable
+
 Write-Output "$(Get-Date): Building Terraform variables"
 # Create variable file for the Azure DevOps variables
 $tfAdoVars = @()
@@ -306,6 +317,12 @@ $tfAdoVars += [PSCustomObject]@{
     name = "vault_token"
     value = "$($vaultInit.root_token)"
     is_secret = $true
+}
+
+$tfAdoVars += [PSCustomObject]@{
+    name = "vault_addr"
+    value = "http://$($dockerIp):8200"
+    is_secret = $false
 }
 
 $tfAdoVars = ($tfAdoVars | ConvertTo-Json).Replace(":", " =")
