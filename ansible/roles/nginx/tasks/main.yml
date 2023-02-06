@@ -1,0 +1,25 @@
+---
+- name: Make directory for NGINX configuration
+  file:
+    path: /etc/nginx
+    state: directory
+    mode: a+rwx
+  become: true
+
+- name: Copy NGINX conf file
+  template:
+    src: nginx/default.conf
+    dest: /etc/nginx/default.conf
+    mode: a+rwx
+  become: true
+
+- name: Create NGINX container
+  docker_container:
+    name: nginx
+    image: nginx:latest
+    restart_policy: unless-stopped
+    volumes:
+      - /go:/usr/share/nginx/html
+      - /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "{{ansible_default_ipv4.address}}:8080:80"
