@@ -1,0 +1,39 @@
+---
+- name: Make directory for bind configuration
+  file:
+    path: /etc/bind
+    state: directory
+    mode: a+rwx
+  become: true
+
+- name: Copy named.conf file
+  template:
+    src: bind/named.conf.j2
+    dest: /etc/bind/named.conf
+    mode: a+rwx
+  become: true
+
+- name: Copy domain.zone file
+  template:
+    src: bind/domain.zone.j2
+    dest: /etc/bind/domain.zone
+    mode: a+rwx
+  become: true
+
+- name: Add a line to a file
+  lineinfile:
+    path: /etc/bind/domain.zone
+    line: "{{item}}      IN      A     {{  hostvars[item].ansible_host }}"
+    create: true
+  loop: "{{ groups['vcsa'] }}"
+
+- name: Create a DNS container
+  docker_container:
+    name: bind
+    image: ubuntu/bind9:latest
+    restart_policy: unless-stopped
+    volumes:
+      - /etc/bind:/etc/bind
+    ports:
+      - "{{ansible_default_ipv4.address}}:53:53/tcp"
+      - "{{ansible_default_ipv4.address}}:53:53/udp"

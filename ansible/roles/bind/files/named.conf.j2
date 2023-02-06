@@ -1,0 +1,17 @@
+options {
+	directory "/var/cache/bind";
+	forwarders {
+		{{dns}};
+	};
+
+	dnssec-validation auto;
+
+	listen-on-v6 { any; };
+
+	allow-query { any; };
+};
+
+zone "{{ domain_name }}" IN {
+    type master;
+    file "/etc/bind/domain.zone";
+};
