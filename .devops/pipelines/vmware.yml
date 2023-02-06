@@ -3,151 +3,54 @@ trigger:
 
 pr: none
 
-pool: GO-EUC Linux
+pool: GO Pipelines
 
 
 stages:
-- stage: image_creation
-  displayName: Image creation
+- stage: containers
+  displayName: Setup Docker containers
 
   jobs:
-  - template: vmware/image.yml
-    parameters:
-      iso: en-us_windows_server_2022_updated_april_2022_x64_dvd_d428acee.iso
-      path: packer/vmware/windows/server/2022
-      build: vsphere-iso.windows-server-standard-dexp
-      variable_group: VMware
+    steps:
+      - task: CmdLine@2
+        displayName: Setup required packages
+        inputs: | 
+          pip3 install "docker-py"
+          pip3 install "netaddr"
+          apt install p7zip-full p7zip-rar
+          ansible-galaxy collection install community.docker
+          ansible-galaxy collection install ansible.posix
 
-- stage: infra_dc
-  displayName: Infra domain controller
+          wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update && sudo apt install vault
 
-  dependsOn: image_creation
-  
-  jobs:
-  - template: vmware/infra.yml
-    parameters:
-      terraform_argument: -target=module.ActiveDirectory
-      vmware_build: Create
-      variable_group: VMware
-      
-- stage: infra_dc_config
-  displayName: Infra domain controller config
+      - task: PowerShell@2
+        displayName: Build inventory
+        inputs:
+          targetType: 'inline'
+          script: |
+            $env:VAULT_ADDR=$(vault_addr)
+            $env:VAULT_TOKEN=$(vault_token)
 
-  dependsOn: infra_dc
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: domain.yml
-      variable_group: VMware
+            $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+            $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+            $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
+            
+            $inventory = @()
+            $inventory += "[docker]"
+            $inventory += "$($docker.data.name) ansible_host=$($docker.data.ip)"
+            $inventory += ""
+            $inventory += "[vcsa]"
+            $inventory += "$($vcsa.data.name) ansible_host=$($vcsa.data.ip)"
+            $inventory += ""
+            $inventory += "[all:vars]"
+            $inventory += "domain_name=$($domain.data.name)"
+            $inventory += "network_dns=$($network.data.network_dns)"
+            $inventory += "network_cidr=$($network.data.network_cidr)"
 
+            $inventory | Set-Content -Path ansible/inventory -Force
 
-- stage: infra_deployment
-  displayName: Infra deployment
-
-  dependsOn: infra_dc_config
-  
-  jobs:
-  - template: vmware/infra.yml
-    parameters:
-      vmware_build: Create
-      variable_group: VMware
-
-- stage: management_server_config
-  displayName: Management server configuration
-
-  dependsOn: sql_server_config
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: management.yml
-      variable_group: VMware
-
-- stage: sql_server_config
-  displayName: SQL server configuration
-
-  dependsOn: infra_deployment
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: mssql.yml
-      variable_group: VMware
-
-- stage: gateway_server_config
-  displayName: RDGateway server configuration
-
-  dependsOn: infra_deployment
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: rdgateway.yml
-      variable_group: VMware
-
-- stage: file_server_config
-  displayName: File server configuration
-
-  dependsOn: infra_deployment
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: file.yml
-      variable_group: VMware
-
-- stage: loadgen_bots
-  displayName: LoadGen Bots configuration
-
-  dependsOn: infra_deployment
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: loadgen.yml
-      variable_group: VMware
-
-
-- stage: citrix_license_server
-  displayName: Citrix License Server configuration
-
-  dependsOn: infra_deployment
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: citrix-license-server.yml
-      variable_group: VMware
-
-- stage: citrix_delivery_controller
-  displayName: Citrix Delivery Controller configuration
-
-  dependsOn: sql_server_config
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: citrix-delivery-controller.yml
-      variable_group: VMware
-
-- stage: citrix_storefront
-  displayName: Citrix Storefront configuration
-
-  dependsOn: citrix_delivery_controller
-  
-  jobs:
-  - template: vmware/ansible.yml
-    parameters:
-      ansible_playbook: citrix-storefront.yml
-      variable_group: VMware
-
-# - template: /vmware/domain.yml
-#   parameters:
-#     name: Linux
-#     vmImage: 'ubuntu-latest'
-
-# - template: /vmware/ansible.yml
-#   parameters:
-#     name: Linux
-#     vmImage: 'ubuntu-latest'
+            $env:ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook ansible/docker.yml -i ansible/inventory -e ansible_user=$($content.data.user) -e ansible_password=`'$($content.data.password)`'
