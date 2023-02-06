@@ -11,7 +11,7 @@ options {
 	allow-query { any; };
 };
 
-zone "{{ domain_name }}" IN {
+zone "{{ dns_domain_name }}" IN {
     type master;
     file "/etc/bind/domain.zone";
 };

@@ -1,8 +1,8 @@
 ;$TILL 2d
 
-$ORIGIN {{domain_name}}.
+$ORIGIN {{dns_domain_name}}.
 
-@               IN      SOA     ns.{{domain_name}}. info.{{domain_name}}. (
+@               IN      SOA     ns.{{dns_domain_name}}. info.{{dns_domain_name}}. (
                                 2022122800      ; serial
                                 12h             ; refresh
                                 15m             ; retry
@@ -10,7 +10,7 @@ $ORIGIN {{domain_name}}.
                                 2h              ; minimum ttl
                                 )
 
-                IN      NS      ns.{{domain_name}}.
+                IN      NS      ns.{{dns_domain_name}}.
 
 ns              IN      A       {{ansible_default_ipv4.address}}
 ; ----------------------------------------
