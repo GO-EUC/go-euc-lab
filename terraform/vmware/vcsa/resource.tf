@@ -8,10 +8,10 @@ resource "local_file" "vcsa_json" {
         network = var.esx_network,
         datastore = var.esx_datastore,
         vcsa_name = var.vcsa_name,
-        vcsa_ip = var.vcsa_ip,
+        vcsa_ip = cidrhost(var.vcsa_network_cidr, var.vcsa_ip),
         vcsa_prefix = var.vcsa_prefix,
-        vcsa_gateway = var.vcsa_gateway,
-        vcsa_dns = var.vcsa_dns,
+        vcsa_gateway = cidrhost(var.vcsa_network_cidr, var.vcsa_gateway),
+        vcsa_dns = cidrhost(var.vcsa_network_cidr, var.vcsa_dns),
         vcsa_password = random_password.password.result,
         vcsa_ntp = var.vcsa_ntp,
         vcsa_system_name = var.vcsa_system_name

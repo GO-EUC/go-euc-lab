@@ -13,7 +13,7 @@ variable "config_file_path" {
 variable "vcsa_installation" {
   description = "command line file"
   type = string
-  default = "C:\\Software\\VMware\\VCSA_703\\vcsa-cli-installer\\win32\\vcsa-deploy.exe"
+  default = "/tmp/iso/vcsa-cli-installer/lin64/vcsa-deploy"
 }
 
 variable "esx_host" {
@@ -42,14 +42,9 @@ variable "esx_datastore" {
   type = string
 }
 
-variable "vcsa_name" {
-  description = "VCSA VM name"
-  type = string
-  default = "vcsa"
-}
 
-variable "vcsa_ip" {
-  description = "VCSA ip address"
+variable "vcsa_network_cidr" {
+  description = "Network cidr"
   type = string
 }
 
@@ -58,14 +53,25 @@ variable "vcsa_prefix" {
   type = string
 }
 
+variable "vcsa_name" {
+  description = "VCSA VM name"
+  type = string
+  default = "vcsa"
+}
+
+variable "vcsa_ip" {
+  description = "VCSA ip address"
+  type = number
+}
+
 variable "vcsa_gateway" {
   description = "VCSA gateway"
-  type = string
+  type = number
 }
 
 variable "vcsa_dns" {
   description = "VCSA dns"
-  type = string
+  type = number
 }
 
 variable "vcsa_ntp" {
@@ -77,4 +83,15 @@ variable "vcsa_ntp" {
 variable "vcsa_system_name" {
   description = "VCSA System name, needs to be resolvable"
   type = string
+}
+
+variable "vault_address" {
+  description = "The vault address in format: http://vault.go.euc:8200"
+  type = string
+}
+
+variable "vault_token" {
+  description = "The vault token that will be used for authtentication"
+  type = string
+  sensitive = true
 }
