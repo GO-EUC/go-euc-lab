@@ -62,7 +62,7 @@ RUN apt-get update && apt-get install packer
 RUN apt-get update && apt-get install terraform
 
 # Hashicorp Vault
-RUN apt update && sudo apt install vault
+RUN apt-get update && apt-get install vault
 
 # Azure DevOps Agent
 ARG TARGETARCH=linux-amd64
