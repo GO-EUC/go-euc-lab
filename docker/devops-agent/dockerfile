@@ -61,19 +61,13 @@ RUN apt-get update && apt-get install packer
 # Hasicorp Terraform
 RUN apt-get update && apt-get install terraform
 
+# Hashicorp Vault
+RUN apt update && sudo apt install vault
 
 # Azure DevOps Agent
-ARG TARGETARCH=amd64
-ARG AGENT_VERSION=2.194.0
+ARG TARGETARCH=linux-amd64
 
 WORKDIR /azp
-
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-x64-${AGENT_VERSION}.tar.gz; \
-    else \
-      AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-${TARGETARCH}-${AGENT_VERSION}.tar.gz; \
-    fi; \
-    curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
 
 COPY ./start.sh .
 RUN chmod +x start.sh
