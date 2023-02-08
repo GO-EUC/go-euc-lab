@@ -300,7 +300,7 @@ foreach ($esx_host in $settings.esx_hosts) {
 
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa.ip) name=$($settings.vcsa.name) dns=$($settings.docker.ip)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.username) ip=$($dockerIp) name=$($settings.docker.name)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.user) ip=$($dockerIp) name=$($settings.docker.name)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($dockerIp) database=state ssl=disable
 
 Write-Output "$(Get-Date): Building Terraform variables"
