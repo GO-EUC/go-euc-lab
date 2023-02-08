@@ -113,8 +113,8 @@ stages:
             $tfVars += "vcsa_system_name=`"$($vcsa.data.name).$($domain.data.name)`""
             $tfVars += "vcsa_ip=$($vcsa.data.ip)"
             $tfVars += "vcsa_network_cidr=`"$($network.data.network_cidr)`""
-            $tfVars += "vcsa_prefix=$($network.data.network_cidr.split('/')[1])"
-            $tfVars += "vcsa_gateway=$($network.data.network_gateway)"
+            $tfVars += "vcsa_prefix=$($network.data.ncidr.split('/')[1])"
+            $tfVars += "vcsa_gateway=$($network.data.gateway)"
             $tfVars += "vcsa_dns=$($vcsa.data.dns)"
 
             $tfVars | Set-Content -Path terraform/vmware/vcsa/terraform.tfvars -Force
