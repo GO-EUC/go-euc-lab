@@ -17,8 +17,8 @@ variable "vcsa_installation" {
 }
 
 variable "esx_host" {
-  description = "Host address or ip"
-  type = string
+  description = "Host address or ip, based on CDIR so 11 will be 10.0.0.11"
+  type = number
 }
 
 variable "esx_username" {

@@ -2,7 +2,7 @@ resource "local_file" "vcsa_json" {
   content = templatefile (
     var.vcsa_template, 
     { 
-        esx_host = var.esx_host,
+        esx_host = cidrhost(var.vcsa_network_cidr, var.esx_host),
         esx_username = var.esx_username,
         esx_password = var.esx_password,
         network = var.esx_network,
