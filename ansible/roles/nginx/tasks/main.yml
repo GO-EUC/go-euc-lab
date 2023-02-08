@@ -7,8 +7,8 @@
   become: true
 
 - name: Copy NGINX conf file
-  template:
-    src: nginx/default.conf
+  copy:
+    src: files/default.conf
     dest: /etc/nginx/default.conf
     mode: a+rwx
   become: true
