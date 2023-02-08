@@ -1,6 +1,8 @@
-resource "vault_kv_secret" "secret" {
+data "vault_kv_secret" "vcsa" {
     path = "go/vmware/vcsa"
-    data_json = jsonencode({
-        password = random_password.password.result
-    })
+}
+
+resource "vault_kv_secret" "secret" {
+    path = data.vault_kv_secret.vcsa
+    data_json = jsonencode(merge( data.vault_kv_secret.data_json, { password = random_password.password.result }))
 }
