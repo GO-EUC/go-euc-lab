@@ -133,7 +133,7 @@ $packer.Add("network_address", $($settings.docker.ip))
 $packer.Add("network_gateway", $($settings.network.gateway))
 $packer.Add("network_dns", $($settings.network.dns))
 $packer.Add("vm_name", $($settings.docker.name) )
-$packer.Add("vm_disk_size", 65536 + $diskSize )
+$packer.Add("vm_disk_size", 524288  ) #+ $diskSize
 $packer.Add("vm_guest_os_timezone", "CET")
 $packer.Add("build_username", $($settings.docker.user))
 
