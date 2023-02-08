@@ -4,5 +4,5 @@
   roles:
     - bind
     - nginx
-  var_files:
+  vars_files:
     - domain.yml
