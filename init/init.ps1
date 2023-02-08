@@ -39,7 +39,15 @@ Write-Output "$(Get-Date): Checking for the Posh SSH Module"
 # Check if the Posh-SSH module is installed
 if (!(Get-Module -ListAvailable -Name "Posh-SSH")) {
     Install-Module -Name "Posh-SSH" -Scope CurrentUser -Confirm:$false
-} 
+}
+
+# Check if the Indented.Net.IP module is installed
+if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
+    Install-Module "Indented.Net.IP" Scope CurrentUser -Confirm:$false
+}
+
+# Set the network range
+$networkRange = Get-NetworkRange -IPAddress $($settings.network.cidr.split('/')[0]) -SubnetMask $($settings.network.cidr.split('/')[1])
 
 Write-Output "$(Get-Date): Downloading and extracting required Hasicorp binaries"
 # Download Hashicorp binaries using the Evergreen API from stealthpuppy (Aaron Parker)
@@ -61,14 +69,21 @@ foreach ($bin in $binaries) {
     Expand-Archive -Path "$($ENV:Temp)\$fileName" -DestinationPath "$env:TEMP\Hashicorp" -Force
 }
 
+# Select the ESX host, which is by default the first one
+if ($settings.esx_hosts.Count -gt 1) {
+    $esxHost = $settings.esx_hosts[0]
+} else {
+    $esxHost = $settings.esx_hosts
+}
+
 Write-Output "$(Get-Date): Setting ESX host requirements for Packer"
 # Creating ESX credentials
-$esxCredentials = New-Object System.Management.Automation.PSCredential ($($settings.esx_username), $ESXPassword)
+$esxCredentials = New-Object System.Management.Automation.PSCredential ($($esxHost.user), $ESXPassword)
 
 # Connect to the ESX host
 try {
-    $esxSession = New-SSHSession -ComputerName $($settings.esx_host_ip) -Credential $esxCredentials -AcceptKey
-    $esxSftpSession = New-SFTPSession -ComputerName $($settings.esx_host_ip) -Credential $esxCredentials -AcceptKey
+    $esxSession = New-SSHSession -ComputerName $($networkRange[$esxHost.ip -1].IPAddressToString) -Credential $esxCredentials -AcceptKey
+    $esxSftpSession = New-SFTPSession -ComputerName $($networkRange[$esxHost.ip -1].IPAddressToString) -Credential $esxCredentials -AcceptKey
 
 } catch {
     Write-Error "Cannot create the required SSH connection."
@@ -103,21 +118,24 @@ $encryptPassword = & $exeOpenSSL passwd -6 $randomPassword
 Remove-Item -Path "$($env:TEMP)\openssl-3.0.7-win64.zip" -Confirm:$false
 Remove-Item -Path "$($env:TEMP)\OpenSSL\" -Recurse -Confirm:$false
 
+# Calculate disksize in batches of 16GB based on the software store and adding addtional 25%
+$diskSize = [System.Math]::Ceiling([Math]::Ceiling((Get-ChildItem $($settings.software_store) -Recurse | Measure-Object -Property Length -Sum).Sum * 1.25 / 1Mb) / 16384) * 16384
+
 Write-Output "$(Get-Date): Building Packer files"
 # Create Packer variables
 $packer = @{}
 
-$packer.Add("esx_host", $($settings.esx_host_ip))
-$packer.Add("esx_username", $($settings.esx_username))
-$packer.Add("vm_network_name", $($settings.esx_network))
-$packer.Add("network_cidr", $($settings.network_cidr) )
-$packer.Add("network_address", $($settings.network_address) )
-$packer.Add("network_gateway", $($settings.network_gateway) )
-$packer.Add("network_dns", $($settings.network_dns) )
-$packer.Add("vm_name", $($settings.docker_name) )
-$packer.Add("vm_disk_size", 122880 )
+$packer.Add("esx_host", $($networkRange[$esxHost.ip -1].IPAddressToString))
+$packer.Add("esx_username", $($esxHost.user))
+$packer.Add("vm_network_name", $($esxHost.network))
+$packer.Add("network_cidr", $($settings.network.cidr))
+$packer.Add("network_address", $($settings.docker.ip))
+$packer.Add("network_gateway", $($settings.network.gateway))
+$packer.Add("network_dns", $($settings.network.dns))
+$packer.Add("vm_name", $($settings.docker.name) )
+$packer.Add("vm_disk_size", 65536 + $diskSize )
 $packer.Add("vm_guest_os_timezone", "CET")
-$packer.Add("build_username", $($settings.docker_username))
+$packer.Add("build_username", $($settings.docker.user))
 
 # Write packer variables to file
 New-Item -Path "$($RepoRoot)\packer\vmware\init\packer.pkrvars.hcl" -ItemType File -Force | Out-Null
@@ -165,13 +183,13 @@ Start-Process @packerBuild -NoNewWindow -Wait
 
 Write-Output "$(Get-Date): Starting docker host on ESX host"
 # Make sure the VM is started again, as Packer will shutdown the machine
-$id = Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/getallvms | sed '1d' | awk '{if (`$1 > 0) print `$1`":`"`$2}' | grep $($settings.docker_name) | cut -d `':`' -f1"
+$id = Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/getallvms | sed '1d' | awk '{if (`$1 > 0) print `$1`":`"`$2}' | grep $($settings.docker.name) | cut -d `':`' -f1"
 Invoke-SSHCommand -SSHSession $esxSession -Command "vim-cmd vmsvc/power.on $($id.Output)" | Out-Null
 
 # Disconnect from the ESX host, as we don't need it anymore
 $esxSession.Disconnect()
 
-$dockerIp = $($settings.network_cidr).Substring(0, $($settings.network_cidr).LastIndexOf(".") +1) + $($settings.network_address)
+$dockerIp = $networkRange[$settings.docker.ip -1].IPAddressToString
 $dockerPort = 22 # default SSH port
 
 $timeout = 120 # based 1 sec sleep this timeout is two minutes
@@ -192,7 +210,7 @@ Write-Output "$(Get-Date): Connecting to Docker host"
 $ProgressPreference = $currentProgressPreference
 
 # Create docker credentials
-$dockerCredentials = New-Object System.Management.Automation.PSCredential($($settings.docker_username), (ConvertTo-SecureString $randomPassword -AsPlainText -Force))
+$dockerCredentials = New-Object System.Management.Automation.PSCredential($($settings.docker.user), (ConvertTo-SecureString $randomPassword -AsPlainText -Force))
 
 # Connect to the docker host
 $dockerSession = New-SSHSession -ComputerName $dockerIp -Credential $dockerCredentials -AcceptKey
@@ -272,11 +290,17 @@ $env:VAULT_TOKEN=$($vaultInit.root_token)
 
 # Adding secrets to the vault
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go domain name=$($settings.domain_name)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($settings.esx_host_name) password=$($unsecureEsxPassword) user=$($settings.esx_username) ip=$($settings.esx_host_ip) name=$($settings.esx_host_name) datastore=$($settings.esx_datastore) network=$($settings.esx_network)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa_ip) name=$($settings.vcsa_name)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network network_cidr=$($settings.network_cidr) network_gateway=$($settings.network_gateway) network_dns=$($settings.network_dns)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker_username) ip=$($dockerIp) name=$($settings.docker_name)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($dockerIp) ssl=disable
+
+$counter = 1
+foreach ($esx_host in $settings.esx_hosts) {
+    & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx host($counter)=$($esx_host.name) 
+    & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($esx_host.name) password=$($unsecureEsxPassword) user=$($esx_host.user) ip=$($esx_host.ip) name=$($esx_host.name) datastore=$($esx_host.datastore) network=$($esx_host.network)
+}
+
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa.ip) name=$($settings.vcsa.name) dns=$($settings.docker.ip)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker_username) ip=$($setting.docker.ip) name=$($settings.docker.name)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($dockerIp) database=state ssl=disable
 
 Write-Output "$(Get-Date): Building Terraform variables"
 # Create variable file for the Azure DevOps variables
@@ -328,7 +352,7 @@ $tfAdoVars += [PSCustomObject]@{
     is_secret = $false
 }
 
-$tfAdoVars = ($tfAdoVars | ConvertTo-Json).Replace(":", " =")
+$tfAdoVars = ($tfAdoVars | ConvertTo-Json).Replace("`":", "`" =")
 $tfAdoVars = $tfAdoVars.Replace("`"name`"", "name")
 $tfAdoVars = $tfAdoVars.Replace("`"value`"", "value")
 $tfAdoVars = $tfAdoVars.Replace("`"is_secret`"", "is_secret")
@@ -370,6 +394,7 @@ Start-Process @tfParams -ArgumentList $tfApply -NoNewWindow -Wait
 
 # Agent command static
 $agentCommandStatic = "docker run -d --restart unless-stopped "
+$agentCommandStatic += "--cap-add=CAP_IPC_LOCK "
 $agentCommandStatic += "-e AZP_URL=$($settings.ado_url) "
 $agentCommandStatic += "-e AZP_TOKEN=$($AdoPat) "
 
@@ -400,4 +425,3 @@ $dockerSession.Disconnect()
 $dockerSftpSession.Disconnect()
 
 Write-Output "$(Get-Date): Done!"
-Write-Output "$(Get-Date): Docker password: $randomPassword"
