@@ -12,24 +12,31 @@
 
 - name: Copy named.conf file
   template:
-    src: bind/named.conf.j2
+    src: named.conf.j2
     dest: /etc/bind/named.conf
     mode: a+rwx
   become: true
 
 - name: Copy domain.zone file
   template:
-    src: bind/domain.zone.j2
+    src: domain.zone.j2
     dest: /etc/bind/domain.zone
     mode: a+rwx
   become: true
 
-- name: Add a line to a file
+- name: Add a vcsa to a zone
   lineinfile:
     path: /etc/bind/domain.zone
-    line: "{{item}}      IN      A     {{  hostvars[item].ansible_host }}"
+    line: "{{ item }}      IN      A     {{ network_cidr | ansible.utils.ipmath(hostvars[item].ansible_host) }}"
     create: true
   loop: "{{ groups['vcsa'] }}"
+
+- name: Add a esx to a zone
+  lineinfile:
+    path: /etc/bind/domain.zone
+    line: "{{ item }}      IN      A     {{ network_cidr | ansible.utils.ipmath(hostvars[item].ansible_host) }}"
+    create: true
+  loop: "{{ groups['esx'] }}"
 
 - name: Create a DNS container
   docker_container:
