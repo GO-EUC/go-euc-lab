@@ -293,8 +293,9 @@ $env:VAULT_TOKEN=$($vaultInit.root_token)
 
 $counter = 1
 foreach ($esx_host in $settings.esx_hosts) {
-    & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx host($counter)=$($esx_host.name) 
+    & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx host$($counter)=$($esx_host.name) 
     & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($esx_host.name) password=$($unsecureEsxPassword) user=$($esx_host.user) ip=$($esx_host.ip) name=$($esx_host.name) datastore=$($esx_host.datastore) network=$($esx_host.network)
+    $counter++
 }
 
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa.ip) name=$($settings.vcsa.name) dns=$($settings.docker.ip)
