@@ -11,33 +11,36 @@ stages:
   displayName: Setup Docker containers
 
   jobs:
-    steps:
+    - job: docker
+      displayName: Setup Docker
+      steps:
       - task: CmdLine@2
         displayName: Setup required packages
-        inputs: | 
-          pip3 install "docker-py"
-          pip3 install "netaddr"
-          apt install p7zip-full p7zip-rar
-          ansible-galaxy collection install community.docker
-          ansible-galaxy collection install ansible.posix
-
-          wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt update && sudo apt install vault
+        inputs:
+          script: |
+            pip3 install "docker-py"
+            pip3 install "netaddr"
+            apt install p7zip-full p7zip-rar
+            ansible-galaxy collection install community.docker
+            ansible-galaxy collection install ansible.posix
 
       - task: PowerShell@2
-        displayName: Build inventory
+        displayName: Setup DNS & NGINX
         inputs:
           targetType: 'inline'
           script: |
-            $env:VAULT_ADDR=$(vault_addr)
-            $env:VAULT_TOKEN=$(vault_token)
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $esxHosts = vault kv get -format json -mount=go vmware/esx | ConvertFrom-Json
+            $esxHostsNames = ($esxHosts.data | Get-Member | Where-Object {$_.MemberType -eq "NoteProperty"}).Name
 
             $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
             $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
             $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
             $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
-            
+
             $inventory = @()
             $inventory += "[docker]"
             $inventory += "$($docker.data.name) ansible_host=$($docker.data.ip)"
@@ -45,12 +48,143 @@ stages:
             $inventory += "[vcsa]"
             $inventory += "$($vcsa.data.name) ansible_host=$($vcsa.data.ip)"
             $inventory += ""
+            $inventory += "[esx]"
+
+            foreach ($esxHost in $esxHostsNames) {
+              $esxData = vault kv get -format json -mount=go vmware/esx/$($esxHosts.data.$esxHost) | ConvertFrom-Json
+              $inventory += "$($esxData.data.name) ansible_host=$($esxData.data.ip)"
+            }
+            
+            $inventory += ""
             $inventory += "[all:vars]"
             $inventory += "domain_name=$($domain.data.name)"
-            $inventory += "network_dns=$($network.data.network_dns)"
-            $inventory += "network_cidr=$($network.data.network_cidr)"
+            $inventory += "network_dns=$($network.data.dns)"
+            $inventory += "network_cidr=$($network.data.cidr)"
 
             $inventory | Set-Content -Path ansible/inventory -Force
 
-            $env:ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook ansible/docker.yml -i ansible/inventory -e ansible_user=$($content.data.user) -e ansible_password=`'$($content.data.password)`'
+            $env:ANSIBLE_HOST_KEY_CHECKING=$false
+            ansible-playbook ansible/docker.yml -i ansible/inventory -e ansible_user=$($docker.data.user) -e ansible_password=`'$($docker.data.password)`'
+
+- stage: vcsa
+  displayName: VMware vCenter Server Appliance
+  jobs:
+    - job: vcsa
+      displayName: Setup VMware vCenter Server Appliance
+      # dependsOn: [docker]
+      steps:
+      - task: PowerShell@2
+        displayName: Download and extract vCenter iso
+        inputs:
+          targetType: 'inline'
+          script: |
+            apt install p7zip-full p7zip-rar
+
+            New-Item -Path /tmp/vcsa -ItemType Directory -Force | Out-Null
+
+            $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/"
+            $version = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+            $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/$($version)"
+            $iso = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+
+            Invoke-RestMethod -Uri "http://$(postgress_address):8080/VMware/VCSA/$($version)/$($iso)" -OutFile "/tmp/vcsa.iso"
+
+            7z x -y /tmp/vcsa.iso -o/tmp/iso/
+            chmod -R 755 /tmp/iso
+
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+            $esx = vault kv get -format json -mount=go vmware/esx | ConvertFrom-Json
+            
+            $infra = vault kv get -format json -mount=go vmware/esx/$($esx.data.host1) | ConvertFrom-Json
+
+            $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+            $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            
+            $tfVars = @()
+            $tfVars += "esx_host=`"$($infra.data.ip)`""
+            $tfVars += "esx_username=`"$($infra.data.user)`""
+            $tfVars += "esx_network=`"$($infra.data.network)`""
+            $tfVars += "esx_datastore=`"$($infra.data.datastore)`""
+            $tfVars += "vcsa_name=`"$($vcsa.data.name)`""
+            $tfVars += "vcsa_system_name=`"$($vcsa.data.name).$($domain.data.name)`""
+            $tfVars += "vcsa_ip=$($vcsa.data.ip)"
+            $tfVars += "vcsa_network_cidr=`"$($network.data.network_cidr)`""
+            $tfVars += "vcsa_prefix=$($network.data.network_cidr.split('/')[1])"
+            $tfVars += "vcsa_gateway=$($network.data.network_gateway)"
+            $tfVars += "vcsa_dns=$($vcsa.data.dns)"
+
+            $tfVars | Set-Content -Path terraform/vmware/vcsa/terraform.tfvars -Force
+            echo "##vso[task.setvariable variable=esx_password]$($infra.data.password)"
+
+      - task: CmdLine@2
+        displayName: Terraform init
+        inputs:
+          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+      - task: CmdLine@2
+        displayName: Terraform plan
+        inputs:
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -var="esx_password=$(esx_password)" -out=plan.tfplan'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+      - task: CmdLine@2
+        displayName: Terraform apply
+        inputs:
+          script: 'terraform apply "plan.tfplan"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+# - stage: packer
+#   displayName: Build Windows Template
+#   jobs:
+#     - job: packer
+#       displayName: Setup VMware vCenter Server Appliance
+#       steps:
+
+#       - task: PowerShell@2
+#         displayName: Set the Packer variables
+#         inputs:
+#           targetType: 'inline'
+#           script: |
+#             apt install p7zip-full p7zip-rar
+
+#             New-Item -Path /tmp/vcsa -ItemType Directory -Force | Out-Null
+
+#             $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/"
+#             $version = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+#             $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/$($version)"
+#             $iso = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+
+#             $env:VAULT_FORMAT="json"
+#             $env:VAULT_ADDR="$(vault_addr)"
+#             $env:VAULT_TOKEN="$(vault_token)"
+
+#             $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+#             $esx = vault kv get -format json -mount=go vmware/esx | ConvertFrom-Json
+            
+#             $infra = vault kv get -format json -mount=go vmware/esx/$($esx.data.host1) | ConvertFrom-Json
+
+#             $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+#             $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            
+#             $packerVars = @()
+#             $packerVars += "iso_datastore=`"$($infra.data.datastore)`""
+#             $packerVars += "network_cidr=`"$($infra.data.user)`""
+#             $packerVars += "esx_network=`"$($infra.data.network)`""
+#             $packerVars += "esx_datastore=`"$($infra.data.datastore)`""
+#             $packerVars += "vcsa_name=`"$($vcsa.data.name)`""
+
+
+#             $tfVars += "vcsa_system_name=`"$($vcsa.data.name).$($domain.data.name)`""
+#             $tfVars += "vcsa_ip=$($vcsa.data.ip)"
+#             $tfVars += "vcsa_network_cidr=`"$($network.data.network_cidr)`""
+#             $tfVars += "vcsa_prefix=$($network.data.network_cidr.split('/')[1])"
+#             $tfVars += "vcsa_gateway=$($network.data.network_gateway)"
+#             $tfVars += "vcsa_dns=6"
+
+#             $tfVars | Set-Content -Path terraform/vmware/vcsa/terraform.tfvars -Force
+#             echo "##vso[task.setvariable variable=esx_password]$($infra.data.password)"
