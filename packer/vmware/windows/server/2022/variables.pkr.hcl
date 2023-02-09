@@ -288,10 +288,10 @@ variable "common_content_library_skip_export" {
 
 // Removable Media Settings
 
-variable "iso_datastore" {
-  type        = string
-  description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
-}
+# variable "iso_datastore" {
+#   type        = string
+#   description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
+# }
 
 variable "iso_path" {
   type        = string
