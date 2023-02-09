@@ -393,11 +393,17 @@ Start-Process @tfParams -ArgumentList $tfApply -NoNewWindow -Wait
 # Remove the terraform.tfvar file
 # Remove-Item -Path "$($RepoRoot)\terraform\devops\terraform.tfvars" -Force -Confirm:$false | Out-Null
 
+$customDns = $networkRange[$settings.docker.ip -1]
+$primaryDns = $networkRange[$settings.network.dns -1]
+
 # Agent command static
 $agentCommandStatic = "docker run -d --restart unless-stopped "
 $agentCommandStatic += "--cap-add=CAP_IPC_LOCK "
+$agentCommandStatic += "--dns $customDns "
+$agentCommandStatic += "--dns $primaryDns "
 $agentCommandStatic += "-e AZP_URL=$($settings.ado_url) "
 $agentCommandStatic += "-e AZP_TOKEN=$($AdoPat) "
+$agentCommandStatic += "-e AZP_POOL=`"GO Pipelines`" "
 
 Write-Output "$(Get-Date): Starting Azure DevOps Agent containers"
 # Start DevOps agents containers with timeout as the download requires some time
@@ -406,7 +412,6 @@ for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
     # Create the docker command line
     $agentCommand = $agentCommandStatic
     $agentCommand += "-e AZP_AGENT_NAME=agent-$($i + 1) "
-    $agentCommand += "-e AZP_POOL=`"GO Pipelines`" "
     $agentCommand += "--name agent$($i + 1) "
     $agentCommand += "goeuc/ado-agent:latest"
 
