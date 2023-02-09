@@ -10,11 +10,6 @@ variable "vsphere_cluster" {
     type        = string
 }
 
-# variable "vsphere_hosts" {
-#     description = "VMware vSphere hosts that needs to be added (based on cidr, example: 11 will be 10.0.0.11)"
-#     type = set(string)
-# }
-
 variable "esx_hosts" {
     type = set(string)
 }
