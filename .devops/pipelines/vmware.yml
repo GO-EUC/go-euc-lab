@@ -105,14 +105,14 @@ stages:
             $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
             
             $tfVars = @()
-            $tfVars += "esx_host=`"$($infra.data.ip)`""
+            $tfVars += "esx_host=$($infra.data.ip)"
             $tfVars += "esx_username=`"$($infra.data.user)`""
             $tfVars += "esx_network=`"$($infra.data.network)`""
             $tfVars += "esx_datastore=`"$($infra.data.datastore)`""
             $tfVars += "vcsa_name=`"$($vcsa.data.name)`""
             $tfVars += "vcsa_system_name=`"$($vcsa.data.name).$($domain.data.name)`""
             $tfVars += "vcsa_ip=$($vcsa.data.ip)"
-            $tfVars += "vcsa_network_cidr=`"$($network.data.network_cidr)`""
+            $tfVars += "vcsa_network_cidr=`"$($network.data.cidr)`""
             $tfVars += "vcsa_prefix=$($network.data.cidr.split('/')[1])"
             $tfVars += "vcsa_gateway=$($network.data.gateway)"
             $tfVars += "vcsa_dns=$($vcsa.data.dns)"
