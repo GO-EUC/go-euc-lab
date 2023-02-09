@@ -92,7 +92,7 @@ variable "vm_memory" {
 }
 
 variable "vm_disk_datastore" {
-    type = number
+    type = string
 }
 
 variable "vm_disk_size" {
