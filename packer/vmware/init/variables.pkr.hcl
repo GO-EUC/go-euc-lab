@@ -91,6 +91,10 @@ variable "vm_memory" {
     default = 2048
 }
 
+variable "vm_disk_datastore" {
+    type = number
+}
+
 variable "vm_disk_size" {
     type = number
     default = 40960

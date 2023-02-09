@@ -56,6 +56,7 @@ source "vmware-iso" "docker" {
     version              = var.vm_version
     cpus                 = var.vm_cpus
     memory               = var.vm_memory
+    remote_datastore     = var.vm_disk_datastore
     disk_size            = var.vm_disk_size
     disk_type_id         = var.vm_disk_type_id
     network_name         = var.vm_network_name

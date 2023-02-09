@@ -5,9 +5,9 @@ param (
     $RepoRoot,
 
     # Settings Json
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]
-    $SettingsFile,
+    $SettingsFile = "settings.json",
 
     # Azure DevOps PAT Token
     [Parameter(Mandatory = $true)]
@@ -20,6 +20,10 @@ param (
     $ESXPassword
 )
 
+# Set error action and progress preference
+$ErrorActionPreference  = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+
 Write-Output "$(Get-Date): Collecting settings"
 # Collecting settings JSON
 $settingsCheck = Test-Path -Path $SettingsFile
@@ -29,22 +33,22 @@ if ($settingsCheck -eq $false) {
     $settings = Get-Content -Path $SettingsFile -Raw | ConvertFrom-Json
 }
 
-Write-Output "$(Get-Date): Clear the SSH trusted hosts"
-Get-SSHTrustedHost | Remove-SSHTrustedHost | Out-Null
-
 # Trim the RepoRoot
 $RepoRoot = $RepoRoot.Trim("\")
 
 Write-Output "$(Get-Date): Checking for the Posh SSH Module"
 # Check if the Posh-SSH module is installed
 if (!(Get-Module -ListAvailable -Name "Posh-SSH")) {
-    Install-Module -Name "Posh-SSH" -Scope CurrentUser -Confirm:$false
+    Install-Module -Name "Posh-SSH" -Scope CurrentUser -Confirm:$false -Force
 }
 
 # Check if the Indented.Net.IP module is installed
 if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
-    Install-Module "Indented.Net.IP" Scope CurrentUser -Confirm:$false
+    Install-Module "Indented.Net.IP" Scope CurrentUser -Confirm:$false -Force
 }
+
+Write-Output "$(Get-Date): Clear the SSH trusted hosts"
+Get-SSHTrustedHost | Remove-SSHTrustedHost | Out-Null
 
 # Set the network range
 $networkRange = Get-NetworkRange -IPAddress $($settings.network.cidr.split('/')[0]) -SubnetMask $($settings.network.cidr.split('/')[1])
@@ -133,6 +137,7 @@ $packer.Add("network_address", $($settings.docker.ip))
 $packer.Add("network_gateway", $($settings.network.gateway))
 $packer.Add("network_dns", $($settings.network.dns))
 $packer.Add("vm_name", $($settings.docker.name) )
+$packer.Add("vm_disk_datastore", $($esxHost.datastore))
 $packer.Add("vm_disk_size", 524288  ) #+ $diskSize
 $packer.Add("vm_guest_os_timezone", "CET")
 $packer.Add("build_username", $($settings.docker.user))
