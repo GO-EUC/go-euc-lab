@@ -68,7 +68,9 @@ source "vmware-iso" "docker" {
     boot_wait    = "5s"
     boot_command = [
     "c<wait>",
-    "linux /casper/vmlinuz --- autoinstall ${local.data_source_command}",
+    "linux /casper/vmlinuz --- autoinstall ",
+    "ip=${cidrhost(var.network_cidr, var.network_address)}::${cidrhost(var.network_cidr, var.network_gateway)}:${cidrnetmask(var.network_cidr)}::::${cidrhost(var.network_cidr, var.network_dns)} ",
+    "${local.data_source_command}",
     "<enter><wait>",
     "initrd /casper/initrd",
     "<enter><wait>",
