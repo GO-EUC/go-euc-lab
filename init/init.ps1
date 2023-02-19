@@ -1,9 +1,4 @@
 param (
-    # Repository root
-    [Parameter(Mandatory = $true)]
-    [string]
-    $RepoRoot,
-
     # Settings Json
     [Parameter(Mandatory = $false)]
     [string]
@@ -34,7 +29,7 @@ if ($settingsCheck -eq $false) {
 }
 
 # Trim the RepoRoot
-$RepoRoot = $RepoRoot.Trim("\")
+$RepoRoot = $settings.repo_root.Trim("\")
 
 Write-Output "$(Get-Date): Checking for the Posh SSH Module"
 # Check if the Posh-SSH module is installed
@@ -44,7 +39,7 @@ if (!(Get-Module -ListAvailable -Name "Posh-SSH")) {
 
 # Check if the Indented.Net.IP module is installed
 if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
-    Install-Module "Indented.Net.IP" Scope CurrentUser -Confirm:$false -Force
+    Install-Module "Indented.Net.IP" -Scope CurrentUser -Confirm:$false -Force
 }
 
 Write-Output "$(Get-Date): Clear the SSH trusted hosts"
@@ -93,6 +88,9 @@ try {
     Write-Error "Cannot create the required SSH connection."
 }
 
+# Get VMware ESX version
+$esxVersion = Invoke-SSHCommand -SSHSession $esxSession -Command "vmware -v" 
+
 # Set required Packer setting
 Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" | Out-Null
 
@@ -105,12 +103,12 @@ $esxSftpSession.Disconnect()
 
 Write-Output "$(Get-Date): Download and extracting OpenSSL for password encryption"
 # Download OpenSSL to generate an SHA512 enqrypted password for the Ubuntu installation
-$urlOpenSSL = "http://wiki.overbyte.eu/arch/openssl-3.0.7-win64.zip"
-Invoke-WebRequest -Uri $urlOpenSSL -OutFile "$($env:TEMP)\openssl-3.0.7-win64.zip"
-Expand-Archive -Path "$($env:TEMP)\openssl-3.0.7-win64.zip" -DestinationPath "$($env:TEMP)\OpenSSL\" -Force
+$urlOpenSSL = "https://download.firedaemon.com/FireDaemon-OpenSSL/openssl-3.0.8.zip"
+Invoke-WebRequest -Uri $urlOpenSSL -OutFile "$($env:TEMP)\openssl-3.0.8.zip"
+Expand-Archive -Path "$($env:TEMP)\openssl-3.0.8.zip" -DestinationPath "$($env:TEMP)\OpenSSL\" -Force
 
 # Collect the openssl executable in the Temp location
-$exeOpenSSL = (Get-ChildItem -Path "$($env:TEMP)\OpenSSL\" -Recurse -Filter "openssl.exe").FullName
+$exeOpenSSL = (Get-ChildItem -Path "$($env:TEMP)\OpenSSL\openssl-3\x64\bin" -Recurse -Filter "openssl.exe").FullName
 
 # Generate and encrypt random password for the Ubunut installation
 $randomPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789$%&*#'.ToCharArray() | Get-Random -Count 16)
@@ -119,7 +117,7 @@ $randomPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789$%&*
 $encryptPassword = & $exeOpenSSL passwd -6 $randomPassword
 
 # Cleanup the openssl locaiton as this not rquired anymore
-Remove-Item -Path "$($env:TEMP)\openssl-3.0.7-win64.zip" -Confirm:$false
+Remove-Item -Path "$($env:TEMP)\openssl-3.0.8.zip" -Confirm:$false
 Remove-Item -Path "$($env:TEMP)\OpenSSL\" -Recurse -Confirm:$false
 
 # Calculate disksize in batches of 16GB based on the software store and adding addtional 25%
@@ -128,6 +126,10 @@ $diskSize = [System.Math]::Ceiling([Math]::Ceiling((Get-ChildItem $($settings.so
 Write-Output "$(Get-Date): Building Packer files"
 # Create Packer variables
 $packer = @{}
+
+if ($esxVersion.Output[0].Contains("8.0")) {
+    $packer.Add("vm_guest_os_type", "ubuntu-64")
+}
 
 $packer.Add("esx_host", $($networkRange[$esxHost.ip -1].IPAddressToString))
 $packer.Add("esx_username", $($esxHost.user))
@@ -298,15 +300,22 @@ $env:VAULT_TOKEN=$($vaultInit.root_token)
 
 $counter = 1
 foreach ($esx_host in $settings.esx_hosts) {
-    & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx host$($counter)=$($esx_host.name) 
+    $hosts += "hosts$($counter)=$($esx_host.name) "
     & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($esx_host.name) password=$($unsecureEsxPassword) user=$($esx_host.user) ip=$($esx_host.ip) name=$($esx_host.name) datastore=$($esx_host.datastore) network=$($esx_host.network)
     $counter++
 }
 
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx $hosts 
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa.ip) name=$($settings.vcsa.name) dns=$($settings.docker.ip)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.user) ip=$($dockerIp) name=$($settings.docker.name)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($dockerIp) database=state ssl=disable
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.user) ip=$($settings.docker.ip) name=$($settings.docker.name)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($settings.docker.ip) database=state ssl=disable
+
+# Generate a random password for the build
+$buildPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 6)
+
+# Adding build info to vault
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go build ip=$($settings.build.ip) user=$($settings.build.user) password=$($buildPassword)
 
 Write-Output "$(Get-Date): Building Terraform variables"
 # Create variable file for the Azure DevOps variables
