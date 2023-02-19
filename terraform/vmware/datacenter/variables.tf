@@ -10,10 +10,6 @@ variable "vsphere_cluster" {
     type        = string
 }
 
-variable "esx_hosts" {
-    type = set(string)
-}
-
 variable "vault_address" {
     description = "The vault address in format: http://vault.go.euc:8200"
     type = string
