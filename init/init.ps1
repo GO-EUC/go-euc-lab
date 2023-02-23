@@ -300,14 +300,12 @@ $env:VAULT_TOKEN=$($vaultInit.root_token)
 
 $counter = 1
 foreach ($esx_host in $settings.esx_hosts) {
-    $hosts += "hosts$($counter)=$($esx_host.name) "
     & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx/$($esx_host.name) password=$($unsecureEsxPassword) user=$($esx_host.user) ip=$($esx_host.ip) name=$($esx_host.name) datastore=$($esx_host.datastore) network=$($esx_host.network)
     $counter++
 }
 
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/esx $hosts 
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/vcsa ip=$($settings.vcsa.ip) name=$($settings.vcsa.name) dns=$($settings.docker.ip)
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns)
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go vmware/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns) start=$($settings.network.start) end=$($settings.network.end)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.user) ip=$($settings.docker.ip) name=$($settings.docker.name)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($settings.docker.ip) database=state ssl=disable
 
