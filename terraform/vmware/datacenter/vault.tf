@@ -15,6 +15,6 @@ data "vault_kv_secrets_list" "hosts" {
 }
 
 data "vault_kv_secret" "hosts" {
-    for_each = data.vault_kv_secrets_list.hosts.names
+    for_each = nonsensitive(toset(data.vault_kv_secrets_list.hosts.names))
     path = "go/vmware/esx/${each.value}"
 }

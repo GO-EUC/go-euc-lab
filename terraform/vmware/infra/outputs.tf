@@ -10,58 +10,26 @@ output "sql" {
   value = module.sql_server.vm_info
 }
 
-output "ctx_ddc" {
-  value = module.citrix_delivery_controller[*].vm_info
+output "citrix_cc" {
+  value = module.citrix_cloud_connectors[*].vm_info
 }
 
-output "ctx_lic" {
-  value = module.citrix_license_server[*].vm_info
-}
-
-output "ctx_sf" {
+output "citrix_sf" {
   value = module.citrix_storefront[*].vm_info
 }
 
-output "vmw_vcs" {
-  value = module.vmware_connection_server[*].vm_info
+output "citrix_dc" {
+  value = module.citrix_delivery_controller[*].vm_info
 }
 
-# output "fs" {
-#   value = module.FileServer.vm_info
-# }
-
-# output "rdgw" {
-#   value = module.RemoteGateway.vm_info
-# }
-
-
-
-output "lg_bots" {
-  value = module.Bots[*].vm_info
+output "citrix_lic" {
+  value = module.citrix_license_server[*].vm_info
 }
 
-# Output for DHCP configuration
-output "reverse_dns_zone" {
-  value      = var.vsphere_nic_cidr
-  depends_on = [module.domain_controller]
+output "vmware_hcs" {
+  value = module.vmware_horizon[*].vm_info
 }
 
-output "dhcp_start_range" {
-  value      = cidrhost(var.vsphere_nic_cidr, 20)
-  depends_on = [module.domain_controller]
-}
-
-output "dhcp_end_range" {
-  value      = cidrhost(var.vsphere_nic_cidr, 253)
-  depends_on = [module.domain_controller]
-}
-
-output "dhcp_subnetmask" {
-  value      = cidrnetmask(var.vsphere_nic_cidr)
-  depends_on = [module.domain_controller]
-}
-
-output "dhcp_router" {
-  value      = cidrhost(var.vsphere_nic_cidr, 1)
-  depends_on = [module.domain_controller]
+output "vcsa" {
+  value = nonsensitive(formatlist("%s ansible_host=%s", jsondecode(data.vault_kv_secret.vcsa.data_json).name, cidrhost(local.nic_cidr, jsondecode(data.vault_kv_secret.vcsa.data_json).ip)))
 }

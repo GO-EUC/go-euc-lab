@@ -14,14 +14,20 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  # }
+    backend "pg" { 
+        schema_name = "infra"
+    }
 }
 
 provider "vsphere" {
-  user           = var.vsphere_user
-  password       = var.vsphere_password
-  vsphere_server = var.vsphere_server
+    user           = jsondecode(data.vault_kv_secret.vcsa.data_json).user
+    password       = jsondecode(data.vault_kv_secret.vcsa.data_json).password
+    vsphere_server = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr ,jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
 
-  allow_unverified_ssl = true
+    allow_unverified_ssl = true
+}
+
+provider "vault" {
+    address = var.vault_address
+    token   = var.vault_token
 }

@@ -1,88 +1,55 @@
 locals {
-  template_ubuntu_2204  = jsondecode(file("${var.root_path}\\manifests\\linux-ubuntu-22.04-lts.json"))
-  template_windows_2022 = jsondecode(file("${var.root_path}\\manifests\\windows-server-2022-standard.json"))
-  # template_windows_10   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-10.json"))
-  template_windows_11   = jsondecode(file("${var.root_path}\\manifests\\windows-desktop-11.json"))
-}
+  template_windows_2022 = jsondecode(file("${var.root_path}/manifests/windows-server-2022-standard.json"))
+  
+  vsphere_server = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr ,jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
+  vsphere_user = jsondecode(data.vault_kv_secret.vcsa.data_json).user
+  vsphere_password = jsondecode(data.vault_kv_secret.vcsa.data_json).password
+  
+  # Note, the first host will be used to the primary deployments
+  vsphere_nic = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[0]].data_json).network
+  vsphere_datastore = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[0]].data_json).datastore
 
-module "vcsa" {
-  count  = var.vsphere_deploy == true ? 1 : 0
-  source = "./modules/vmware.vcsa"
+  domain = jsondecode(data.vault_kv_secret.domain.data_json).name
+  build_password = jsondecode(data.vault_kv_secret.build.data_json).password
 
-  vsphere_datacenter = var.vsphere_datacenter
-  vsphere_cluster    = var.vsphere_cluster
-  vsphere_datastore  = var.vsphere_datastore
-  vsphere_nic        = var.vsphere_nic
-  vsphere_nic_cidr   = var.vsphere_nic_cidr
-  vsphere_hosts      = var.vsphere_hosts
-
-  esx_username = var.esx_username
-  esx_password = var.esx_password
+  nic_cidr = jsondecode(data.vault_kv_secret.network.data_json).cidr
+  nic_gateway = jsondecode(data.vault_kv_secret.network.data_json).gateway
+  nic_main_dns = jsondecode(data.vault_kv_secret.network.data_json).dns
+  nic_custom_dns = jsondecode(data.vault_kv_secret.vcsa.data_json).dns
 }
 
 module "domain_controller" {
   source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
   vm_name               = "dc"
   vm_cpu                = 4
-  vm_memory             = 2048
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(var.vsphere_nic_cidr, 2)   #matches to the 2st IP address of the address space I.E. "172.16.0.2"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)   #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-
-  depends_on = [
-    module.vcsa
-  ]
-}
-
-module "docker_host" {
-  source = "./modules/vmware.vsphere.vm.linux"
-
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
-
-  vm_name               = "docker"
-  vm_cpu                = 4
-  vm_memory             = 2048
-  domain                = var.domain_fqdn
-
-  network_address                = cidrhost(var.vsphere_nic_cidr, 6)   #matches to the 2st IP address of the address space I.E. "172.16.0.2"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)   #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_ubuntu_2204.builds[0].artifact_id
-
-  depends_on = [
-    module.vcsa
-  ]
 }
 
 module "management_server" {
   source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
   vm_name   = "mngt"
   vm_cpu    = 4
@@ -97,32 +64,28 @@ module "management_server" {
     size        = 512
   }]
 
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(var.vsphere_nic_cidr, 3)                                      #matches to the 2st IP address of the address space I.E. "172.16.0.3"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)                                      #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 2), cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
+  network_address                = cidrhost(local.nic_cidr, var.network_list[1])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-
-  depends_on = [
-    module.vcsa
-  ]
 }
 
 module "sql_server" {
   source    = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
   vm_name   = "sql"
   vm_cpu    = 4
@@ -137,213 +100,155 @@ module "sql_server" {
     size        = 64
   }]
 
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(var.vsphere_nic_cidr, 4)                                      #matches to the 2st IP address of the address space I.E. "172.16.0.4"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)                                      #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 2), cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
+  network_address                = cidrhost(local.nic_cidr, var.network_list[2])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter = var.vsphere_datacenter
-  vsphere_datastore  = var.vsphere_datastore
+  vsphere_datastore  = local.vsphere_datastore
   vsphere_cluster    = var.vsphere_cluster
 
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-
-  depends_on = [
-    module.vcsa
-  ]
 }
 
-module "citrix_delivery_controller" {
-  count  = local.delivery_solutions[var.delivery] == "cvad" ? 1 : 0
+module "citrix_cloud_connectors" {
+  count  = var.citrix_cloud ? 1 : 0
+  source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
-  source    = "./modules/vmware.vsphere.vm.windows"
-  vm_name   = "ctxddc"
-  vm_cpu    = 2
-  vm_memory = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  network_address                = cidrhost(var.vsphere_nic_cidr, 20)                                      #matches to the 2st IP address of the address space I.E. "172.16.0.4"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)                                      #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 2), cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  vm_count              = 2
+  vm_name               = "ctx-cc"
+  vm_cpu                = 4
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
+
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "citrix_storefront" {
-  count  = local.delivery_solutions[var.delivery] == "cvad" ? 1 : 0
+  count  = var.citrix_vad ? 1 : 0
+  source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
-  source    = "./modules/vmware.vsphere.vm.windows"
-  vm_name   = "ctxsf"
-  vm_cpu    = 2
-  vm_memory = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  network_address                = cidrhost(var.vsphere_nic_cidr, 21)                                      #matches to the 2st IP address of the address space I.E. "172.16.0.4"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)                                      #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 2), cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  vm_name               = "ctx-sf"
+  vm_cpu                = 4
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
+
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+}
+
+module "citrix_delivery_controller" {
+  count  = var.citrix_vad ? 1 : 0
+  source = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name               = "ctx-dc"
+  vm_cpu                = 4
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
 module "citrix_license_server" {
-  count  = local.delivery_solutions[var.delivery] == "cvad" ? 1 : 0
+  count  = var.citrix_vad ? 1 : 0
+  source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
-  source    = "./modules/vmware.vsphere.vm.windows"
-  vm_name   = "ctxlic"
-  vm_cpu    = 2
-  vm_memory = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  network_address                = cidrhost(var.vsphere_nic_cidr, 22)                                      #matches to the 2st IP address of the address space I.E. "172.16.0.4"
-  network_gateway                = cidrhost(var.vsphere_nic_cidr, 1)                                      #matches to the 1th IP address of the address space I.E. "172.16.0.1"
-  network_dns_list               = [cidrhost(var.vsphere_nic_cidr, 2), cidrhost(var.vsphere_nic_cidr, 1)] #matches to the 1st IP address of the address space I.E. "172.16.0.1"
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  vm_name               = "ctx-lic"
+  vm_cpu                = 4
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
+
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = var.vsphere_datastore
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
-module "vmware_connection_server" {
-  source    = "./modules/vmware.vsphere.vm.windows"
+module "vmware_horizon" {
+  count  = var.vmware_horizon ? 1 : 0
+  source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
 
-  vm_count  = 1
-  vm_name   = "vcs"
-  vm_cpu    = 4
-  vm_memory = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
+  vm_name               = "vmw-hcs"
+  vm_cpu                = 4
+  vm_memory             = 4096
+  local_admin_password  = local.build_password
+  domain                = local.domain
   domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
+  domain_admin_password = random_password.password.result
 
-  virtual_network_portgroup_name = var.vsphere_nic
+  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = "datastore2"
+  vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-}
-
-module "Bots" {
-  source    = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
-
-  vm_count  = 2
-  vm_name   = "bot"
-  vm_cpu    = 4
-  vm_memory = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
-  domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
-
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = "datastore2"
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-}
-
-module "builds" {
-  source    = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = var.vsphere_server
-  vsphere_user     = var.vsphere_user
-  vsphere_password = var.vsphere_password
-  
-  vm_guest_id = local.template_windows_11.builds[0].custom_data.vm_guest_os_type
-  vm_count    = 2
-  vm_name     = "build"
-  vm_cpu      = 4
-  vm_memory   = 2048
-  vm_disks = [{
-    unit_number = 0
-    label       = "disk0"
-    size        = 128
-  }]
-
-  local_admin_password  = var.local_admin_password
-  domain                = var.domain_fqdn
-  domain_admin          = var.domain_admin
-  domain_admin_password = var.domain_admin_password
-
-  virtual_network_portgroup_name = var.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = "datastore2"
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_11.builds[0].artifact_id
 }
