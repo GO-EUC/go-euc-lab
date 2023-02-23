@@ -1,14 +1,49 @@
 ---
-# - hosts: localhost
-#   connection: local
-#   gather_facts: yes
-#   collections:
-#     - azure.azcollection
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
 
-#   tasks:
-#   - name: Start the Azure Key Vault actions
-#     include_tasks: azure-keyvault.yml
-#   when: lookup('env', 'azure') == 'true'
+  - name: Read build credentials from vault
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      path: go/build
+      token : '{{ vault_token }}'
+    register: build
+
+  - name: Read domain info from vault
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      path: go/domain
+      token : '{{ vault_token }}'
+    register: domain
+
+  - name: Read network info from vault
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      path: go/vmware/network
+      token : '{{ vault_token }}'
+    register: network
+  
+  - name: Read vcsa info from vault
+    community.hashi_vault.vault_read:
+      url: "{{ vault_addr }}"
+      path: go/vmware/vcsa
+      token : '{{ vault_token }}'
+    register: vcsa
+
+  - name: Set variables 
+    set_fact:
+      ansible_user: "{{ build.data.data.user }}"
+      ansible_password: "{{ build.data.data.password }}"
+      dns_domain_name: "{{ domain.data.data.name }}"
+      reverse_dns_zone:  "{{ network.data.data.cidr }}"
+      public_dns1: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.dns) }}"
+      public_dns2: "{{ network.data.data.cidr | ansible.utils.ipmath(vcsa.data.data.dns) }}"
+      dhcp_start_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.start) }}"
+      dhcp_end_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.end) }}"
 
 - name: Domain Controller
   hosts: dc
@@ -17,3 +52,12 @@
   vars_files:
     - ansible.yml
     - domain.yml
+  vars:
+    ansible_user: "{{ hostvars['localhost']['ansible_user'] }}"
+    ansible_password: "{{ hostvars['localhost']['ansible_password'] }}"
+    dns_domain_name: "{{ hostvars['localhost']['dns_domain_name'] }}"
+    reverse_dns_zone: "{{ hostvars['localhost']['reverse_dns_zone'] }}"
+    public_dns1: "{{ hostvars['localhost']['public_dns1'] }}"
+    public_dns2: "{{ hostvars['localhost']['public_dns2'] }}"
+    dhcp_start_range: "{{ hostvars['localhost']['dhcp_start_range'] }}"
+    dhcp_end_range: "{{ hostvars['localhost']['dhcp_end_range'] }}"
