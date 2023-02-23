@@ -286,7 +286,7 @@ stages:
     - infra
   displayName: Domain Controller
   jobs:
-  - template: templates/ansible-playbook.yml
+  - template: ../templates/ansible-playbook.yml
     parameters:
       ansible_path: $(Build.Repository.LocalPath)/ansible
       ansible_playbook: domain.yml

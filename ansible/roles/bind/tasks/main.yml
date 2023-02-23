@@ -27,14 +27,14 @@
 - name: Add a vcsa to a zone
   lineinfile:
     path: /etc/bind/domain.zone
-    line: "{{ item }}      IN      A     {{ network_cidr | ansible.utils.ipmath(hostvars[item].ansible_host) }}"
+    line: "{{ item }}      IN      A     {{ hostvars[item].ansible_host }}"
     create: true
   loop: "{{ groups['vcsa'] }}"
 
 - name: Add a esx to a zone
   lineinfile:
     path: /etc/bind/domain.zone
-    line: "{{ item }}      IN      A     {{ network_cidr | ansible.utils.ipmath(hostvars[item].ansible_host) }}"
+    line: "{{ item }}      IN      A     {{ hostvars[item].ansible_host }}"
     create: true
   loop: "{{ groups['esx'] }}"
 
