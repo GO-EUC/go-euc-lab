@@ -1,0 +1,8 @@
+---
+- name: Install hvac 
+  ansible.builtin.pip:
+    name: hvac
+
+- name: Install netaddr 
+  ansible.builtin.pip:
+    name: netaddr
