@@ -1,6 +1,9 @@
 data "azuredevops_users" "svc" {
     subject_types = ["svc"]
     origin = "vsts"
+    depends_on = [
+        azuredevops_project.project
+    ]
 }
 
 locals {
