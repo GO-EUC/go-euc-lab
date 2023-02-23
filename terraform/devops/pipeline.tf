@@ -17,6 +17,11 @@ resource "azuredevops_build_definition" "infa" {
         value = azuredevops_build_definition.image.id
     }
 
+    variable {
+        name = "project_id"
+        value = azuredevops_project.project.id
+    }
+
     variable_groups = [
         azuredevops_variable_group.lab.id
     ]

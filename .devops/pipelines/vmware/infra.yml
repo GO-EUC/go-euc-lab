@@ -236,8 +236,8 @@ stages:
         displayName: Download Packer manifests
         inputs:
           buildType: 'specific'
-          project: '48c8c81e-ad6a-4c59-bad1-2575c60b0fcb'
-          pipeline: '45'
+          project: $(project_id)
+          pipeline: $(pipeline_id)
           buildVersionToDownload: 'latest'
           downloadType: 'single'
           artifactName: 'manifests'
