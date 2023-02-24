@@ -1,0 +1,10 @@
+---
+- name: Citrix Storefront
+  hosts: ctx_sf
+  roles:
+    - domain-join
+    - citrix-storefront
+  vars_files:
+    - ansible.yml
+    - domain.yml
+    - citrix.yml

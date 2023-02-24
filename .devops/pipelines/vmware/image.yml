@@ -1,56 +1,85 @@
-parameters:
-- name: variable_group
-  type: string
+trigger:
+- none
+
+pr: none
+
+pool: GO Pipelines
+
+variables:
+- group: Lab
 
 stages:
-  - stage: ImageBuilder
-    displayName: "Building Images"
-    
-    variables:
-    - group: ${{parameters.variable_group}}
+- stage: image_creation
+  displayName: Image creation
 
-    jobs:
-      - job: Build
-        workspace:
-          clean: all
-        steps:
+  jobs:
+    - job: packer
+      displayName: Packer Build Windows Server 2022
+      steps:
 
-        - task: PowerShell@2
-          displayName: Terraform variables
-          inputs:
-            targetType: 'inline'
-            script: |
+      - task: PowerShell@2
+        displayName: Set the Packer variables
+        inputs:
+          targetType: 'inline'
+          script: |
+            $msPath = "http://$(postgress_address):8080/Microsoft/"
+            $html = Invoke-WebRequest -Uri $msPath
+            $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2022')}).href
 
-              $variables = @()
-              $variables += "common_iso_datastore=`"$(common_iso_datastore)`""
+            $checksum = $iso | Where-Object {$_.Contains('checksum')}
+            $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
 
-              $variables += "build_username=`"$(build_username)`""
-              $variables += "build_password=`"$(build_password)`""
+            Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
+            $checksumContent = Get-Content -Path "checksum"
 
-              $variables += "vsphere_endpoint=`"$(vsphere_endpoint)`""
-              $variables += "vsphere_username=`"$(vsphere_username)`""
-              $variables += "vsphere_password=`"$(vsphere_password)`""
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
 
-              $variables += "vsphere_datacenter=`"$(vsphere_datacenter)`""
-              $variables += "vsphere_cluster=`"$(vsphere_cluster)`""
-              $variables += "vsphere_datastore=`"$(vsphere_datastore)`""
-              $variables += "vsphere_network=`"$(vsphere_network)`""
-              $variables += "vsphere_folder=`"$(vsphere_folder)`""
+            $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+            $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+            $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
+            $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-              $variables += "iso_path=`"$(iso_path)`""
-              $variables += "iso_file=`"$(iso_file)`""
+            $packerVars = @()
+            $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
+            $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
+            $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
+            $packerVars += "iso_file = `"$($isoFile)`""
+            $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
+            $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
+            $packerVars += "build_username = `"$($build.data.user)`""
+            $packerVars += "build_organization = `"GO-EUC`""
+            $packerVars += "network_address = `"$($build.data.ip)`""
+            $packerVars += "network_cidr = `"$($network.data.cidr)`""
+            $packerVars += "network_gateway = $($network.data.gateway)"
+            $packerVars += "network_dns = $($network.data.dns)"
+            $packerVars += "vsphere_datacenter = `"GO`""
+            $packerVars += "vsphere_cluster = `"Infra`""
+            $packerVars += "vsphere_folder = `"Templates`""
+            $packerVars += "vsphere_datastore = `"$($esx.data.datastore)`""
+            $packerVars += "vsphere_network = `"$($esx.data.network)`""
+            
+            $packerVars | Set-Content -Path packer/vmware/server_2022.pkvars.hcl -Force
+            echo "##vso[task.setvariable variable=vcsa_password]$($vcsa.data.password)"
+            echo "##vso[task.setvariable variable=build_password]$($build.data.password)"
 
-              Set-Content -Value $variables -Path packer/vmware/vsphere.pkrvars.hcl -Force
-            workingDirectory: '$(Build.SourcesDirectory)'
+      - task: CmdLine@2
+        displayName: Packer init
+        inputs:
+          script: 'packer init .'
+          workingDirectory: '$(Build.Repository.LocalPath)/packer/vmware/windows/server/2022'
 
-        - task: CmdLine@2
-          displayName: 'Packer init'
-          inputs:
-            script: 'packer init packer/vmware/windows/server/2022/.'
-            workingDirectory: '$(Build.SourcesDirectory)'
+      - task: CmdLine@2
+        displayName: Packer build
+        inputs:
+          script: 'packer build -force -var-file="$(Build.Repository.LocalPath)/packer/vmware/server_2022.pkvars.hcl" -var "vsphere_password=$(vcsa_password)" -var "build_password=$(build_password)" ./packer/vmware/windows/server/2022'
+          workingDirectory: '$(Build.Repository.LocalPath)'
 
-        - task: CmdLine@2
-          displayName: 'Packer build'
-          inputs:
-            script: 'packer build -force --only vsphere-iso.windows-server-standard-dexp -var-file="packer/vmware/vsphere.pkrvars.hcl" packer/vmware/windows/server/2022'
-            workingDirectory: '$(Build.SourcesDirectory)'
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Packer manifest
+        inputs:
+          PathtoPublish: '$(Build.Repository.LocalPath)/manifests'
+          ArtifactName: 'manifests'
+          publishLocation: 'Container'

@@ -1,0 +1,60 @@
+---
+- name: Check for offline disks
+  win_shell: (Get-Disk | Where-Object {$_.OperationalStatus -eq "Offline"}).Count
+  register: offline_disks
+
+- name: Cleanup output
+  set_fact:
+    offline_disk_count: "{{ offline_disks.stdout | trim | int }}"
+
+- name: Setting disk to online
+  win_shell: Get-Disk | Where-Object {$_.OperationalStatus -eq "Offline"} | Set-Disk -IsOffline $false
+  when: offline_disk_count != "0"
+
+- name: Removing read-only from disk
+  win_shell: Get-Disk | Where-Object {$_.IsReadOnly -eq $true} | Set-Disk -IsOffline $false
+  when: offline_disk_count != "0"
+
+- name: Initialize the disk
+  win_shell: Get-Disk | Where-Object {$_.PartitionStyle -eq "RAW"} | Initialize-Disk
+  when: offline_disk_count != "0"
+
+- name: Create partition partition on the disk
+  win_partition:
+    drive_letter: D
+    partition_size: -1
+    disk_number: 1
+
+- name: format disk to NTFS
+  win_format:
+    drive_letter: D
+    file_system: NTFS
+    new_label: Share
+
+- name: Create directory for software structure for Citrix
+  win_file:
+    path: "D:\\Software\\Citrix\\CVAD\\{{item}}"
+    state: directory
+  loop:
+    - v2212
+    - v2209
+    - v2206
+    - v2203_LTSR
+
+- name: Create directory for software structure for VMware
+  win_file:
+    path: "D:\\Software\\VMware\\Horizon\\{{item}}"
+    state: directory
+  loop:
+    - v8_2111
+    - v8_2209
+    - v8_2206
+
+- name: Create share for Software
+  win_share:
+    name: Software
+    description: Software library
+    path: D:\Software
+    list: true
+    full: Administrators
+    read: Domain Users

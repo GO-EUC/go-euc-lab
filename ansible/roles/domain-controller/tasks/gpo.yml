@@ -1,0 +1,109 @@
+---
+- name: Install GroupPolicyDSC
+  win_psmodule:
+    name: GroupPolicyDSC
+    state: present
+
+- name: Set fact for Domain Path
+  set_fact:
+    domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
+
+- name: Create GPO
+  win_dsc:
+    resource_name: GroupPolicy
+    name: Default VDI Policy
+    status: AllSettingsEnabled
+    ensure: present
+
+- name: Set setting in GPO
+  win_dsc:
+    resource_name: GPRegistryValue
+    name: Default VDI Policy
+    key: "{{ item.key }}"
+    valuename: "{{ item.name }}"
+    valuetype: "{{ item.type }}"
+    value: "{{ item.value }}"
+    ensure: present
+  loop:
+    - { key: HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoAutorun, type: DWORD, value: 1}
+    - { key: HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\WAU, name: Disabled, type: DWORD, value: 1}
+    - { key: HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\Ext, name: DisableAddonLoadTimePerformanceNotifications, type: DWORD, value: 1}
+    - { key: HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\MobilityCenter, name: NoMobilityCenter, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer, name: AllowServicePoweredQSA, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Feed Discovery, name: Enabled, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Geolocation, name: PolicyDisableGeolocation, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions, name: NoUpdateCheck, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions, name: NoSplash, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Main, name: EnableAutoUpgrade, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Main, name: DisableFirstRunCustomize, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Main, name: TabProcGrowth, type: string, value: 'Low'}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Main, name: EnableAlternativeCodec, type: string, value: 'no'}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Main\FormatDetection, name: PhoneNumberEnabled, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\Recovery, name: NoReopenLastSession, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\SearchScopes, name: ShowSearchSuggestionsGlobal, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\SQM, name: DisableCustomerImprovementProgram, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Internet Explorer\TabbedBrowsing, name: NewTabPageShow, type: DWORD, value: 2}
+    - { key: HKLM\Software\Policies\Microsoft\PeerDist\Service, name: Enable, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Peernet, name: Disabled, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\BITS, name: DisableBranchCache, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\BITS, name: DisablePeerCachingClient, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\BITS, name: DisablePeerCachingServer, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\BITS, name: EnablePeercaching, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\CloudContent, name: DisableSoftLanding, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\CloudContent, name: DisableWindowsConsumerFeatures, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Device Metadata, name: PreventDeviceMetadataFromNetwork, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DeviceInstall\Settings, name: DisableSendGenericDriverNotFoundToWER, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DeviceInstall\Settings, name: DisableSystemRestore, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DeviceInstall\Settings, name: DisableSendRequestAdditionalSoftwareToWER, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DeviceInstall\Settings, name: DisableBalloonTips, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DWM, name: DisallowFlip3d, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DWM, name: DisallowAnimations, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\DWM, name: DisableAccentGradient, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\EdgeUI, name: AllowEdgeSwipe, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\EdgeUI, name: DisableHelpSticker, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Explorer, name: NoNewAppAlert, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\HomeGroup, name: DisableHomeGroup, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\HotspotAuthentication, name: Enabled, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Installer, name: MaxPatchCacheSize, type: DWORD, value: 5}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Installer, name: LimitSystemRestoreCheckpointing, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\NetCache, name: Enabled, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\OneDrive, name: DisableFileSyncNGSC, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\OneDrive, name: DisableLibrariesDefaultSaveToOneDrive, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Reliability Analysis\WMI, name: WMIEnable, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\System, name: UserPolicyMode, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Error Reporting, name: AutoApproveOSDumps, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Error Reporting, name: Disabled, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: AllowCortana, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: AllowCortanaAboveLock, type: DWORD, value: 0}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: DisableWebSearch, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: HideUNCTab, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: ConnectedSearchUseWeb, type: DWORD, value: 0}    
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: PreventIndexingOfflineFiles, type: DWORD, value: 1}    
+    - { key: HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate, name: SetDisableUXWUAccess, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate\AU, name: AutoInstallMinorUpdates, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\WindowsMediaPlayer, name: GroupPrivacyAcceptance, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\WindowsMediaPlayer, name: PreventLibrarySharing, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\WindowsStore, name: DisableOSUpgrade, type: DWORD, value: 1}
+    - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoRecentDocsNetHood, type: DWORD, value: 1}
+    - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: ClearRecentProgForNewUserInStartMenu, type: DWORD, value: 1}
+    - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoInstrumentation, type: DWORD, value: 1}
+    - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoThumbnailCache, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\CloudContent, name: DisableWindowsSpotlightFeatures, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\CurrentVersion\PushNotifications, name: NoToastApplicationNotification, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\Directory UI, name: QueryLimit, type: DWORD, value: 1388}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\Explorer, name: NoRemoteDestinations, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\Explorer, name: NoBalloonFeatureAdvertisements, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\Explorer, name: DisableSearchBoxSuggestions, type: DWORD, value: 1}
+    - { key: HKCU\Software\Policies\Microsoft\Windows\Explorer, name: DisableThumbsDBOnNetworkFolders, type: DWORD, value: 1}
+
+- name: Link GPO on OUs
+  win_dsc:
+    resource_name: GPLink
+    path: "{{ item }}"
+    gponame: Default VDI Policy
+    ensure: present
+  loop:
+    - "OU=VDI,OU=Machines,OU=GO,{{ domain_path }}"
+    - "OU=RDS,OU=Machines,OU=GO,{{ domain_path }}"
+    - "OU=GPU,OU=Machines,OU=GO,{{ domain_path }}"
+    - "OU=Builds,OU=Machines,OU=GO,{{ domain_path }}"

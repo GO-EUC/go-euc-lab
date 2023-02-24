@@ -1,0 +1,46 @@
+---
+- name: Install Citrix Studio prerequisites
+  win_feature:
+    name:
+      - NET-Framework-45-Core
+    state: present
+  register: win_feature
+
+- name: Reboot machine
+  win_reboot:
+  when: win_feature.changed
+    
+- name: Check if Citrix ISO is there
+  win_stat:
+    path: D:\Share\Software\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2209.iso
+  register: source_file
+
+- name: Register iso path
+  set_fact:
+    iso_path: D:\Share\Software\Citrix\Citrix_Virtual_Apps_and_Desktops_7_2209.iso
+  when: source_file.stat.exists == True
+
+- name: Ensure an ISO is mounted
+  win_disk_image:
+    image_path: "{{ iso_path }}"
+    state: present
+  register: disk_image_out
+
+- name: Run installer from mounted Citrix ISO
+  win_package:
+    path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+    product_id: '{11C5CDBC-3850-4543-ABB2-F1ECC881B6A8}'
+    arguments: /components desktopstudio /configure_firewall /nosql /noreboot /quiet /IGNORE_HW_CHECK_FAILURE
+    expected_return_code: [0, 3, 3010]
+    creates_path: C:\Program Files\Citrix\Desktop Studio
+    state: present
+  register: citrix_install
+
+- name: Unmount the Citrix ISO
+  win_disk_image:
+    image_path: "{{ iso_path }}"
+    state: absent
+
+- name: Reboot after Citrix Studio installation
+  win_reboot:
+  when: citrix_install.changed

@@ -1,0 +1,296 @@
+parameters:
+- name: citrix_cloud
+  displayName: Citrix Cloud
+  type: boolean
+  default: false
+
+- name: citrix_vad
+  displayName: Citrix Virtual Apps & Desktop
+  type: boolean
+  default: false
+
+- name: vmware_horizon
+  displayName: VMware Horizon
+  type: boolean
+  default: false
+
+trigger:
+- none
+
+pr: none
+
+pool: GO Pipelines
+
+
+stages:
+- stage: unseal
+  displayName: Unseal Vault
+
+  jobs:
+    - job: unseal
+      displayName: Unseal Vault
+      steps:
+      - task: PowerShell@2
+        displayName: Run operator unseal
+        inputs:
+          targetType: 'inline'
+          script: |
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $status = vault status | ConvertFrom-Json
+
+            if ($status.sealed -eq $true) {
+              vault operator unseal $(vault_unseal_1)
+              vault operator unseal $(vault_unseal_2)
+              vault operator unseal $(vault_unseal_3)
+            }
+
+- stage: containers
+  displayName: Setup Docker containers
+
+  jobs:
+    - job: docker
+      displayName: Setup Docker
+      steps:
+      - task: CmdLine@2
+        displayName: Setup required packages
+        inputs:
+          script: |
+            pip3 install "docker-py"
+            pip3 install "netaddr"
+            apt install p7zip-full p7zip-rar
+            ansible-galaxy collection install community.docker
+            ansible-galaxy collection install ansible.posix
+
+      - task: PowerShell@2
+        displayName: Setup DNS & NGINX
+        inputs:
+          targetType: 'inline'
+          script: |
+            if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
+              Install-Module "Indented.Net.IP" -Scope CurrentUser -Confirm:$false -Force
+            }
+
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $esxHosts = vault kv get -format json -mount=go vmware/esx | ConvertFrom-Json
+            $esxHostsNames = vault kv list go/vmware/esx/ | ConvertFrom-Json
+
+            $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+            $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+
+            $cidr = $network.data.cidr
+            $networkRange = Get-NetworkRange -IPAddress $($cidr.split('/')[0]) -SubnetMask $($cidr.split('/')[1])
+
+            $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
+
+            $inventory = @()
+            $inventory += "[docker]"
+            $inventory += "$($docker.data.name) ansible_host=$($networkRange[$docker.data.ip -1])"
+            $inventory += ""
+            $inventory += "[vcsa]"
+            $inventory += "$($vcsa.data.name) ansible_host=$($networkRange[$vcsa.data.ip -1])"
+            $inventory += ""
+            $inventory += "[esx]"
+
+            foreach ($esxHost in $esxHostsNames) {
+              $esxData = vault kv get -format json -mount=go vmware/esx/$($esxHost) | ConvertFrom-Json
+              $inventory += "$($esxData.data.name) ansible_host=$($networkRange[$esxData.data.ip -1])"
+            }
+            
+            $inventory += ""
+            $inventory += "[all:vars]"
+            $inventory += "domain_name=$($domain.data.name)"
+            $inventory += "network_dns=$($network.data.dns)"
+            $inventory += "network_cidr=$($network.data.cidr)"
+
+            $inventory | Set-Content -Path ansible/inventory -Force
+
+            $env:ANSIBLE_HOST_KEY_CHECKING=$false
+            ansible-playbook ansible/docker.yml -i ansible/inventory -e ansible_user=$($docker.data.user) -e ansible_password=`'$($docker.data.password)`'
+
+- stage: vcsa
+  displayName: VMware vCenter Server Appliance
+  jobs:
+    - job: vcsa
+      displayName: Setup VMware vCenter Server Appliance
+      # dependsOn: [docker]
+      steps:
+      - task: PowerShell@2
+        displayName: Download and extract vCenter iso
+        inputs:
+          targetType: 'inline'
+          script: |
+            apt install p7zip-full p7zip-rar
+
+            New-Item -Path /tmp/vcsa -ItemType Directory -Force | Out-Null
+
+            $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/"
+            $version = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+            $html = Invoke-WebRequest -Uri "http://$(postgress_address):8080/VMware/VCSA/$($version)"
+            $iso = ($html.Links | Where-Object {$_.href -ne '../'} | Select -First 1).href
+
+            Invoke-RestMethod -Uri "http://$(postgress_address):8080/VMware/VCSA/$($version)/$($iso)" -OutFile "/tmp/vcsa.iso"
+
+            7z x -y /tmp/vcsa.iso -o/tmp/iso/
+            chmod -R 755 /tmp/iso
+
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
+            $esx = vault kv list go/vmware/esx/ | ConvertFrom-Json
+            
+            $infra = vault kv get -format json -mount=go vmware/esx/$($esx[0]) | ConvertFrom-Json
+
+            $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+            $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+            
+            $tfVars = @()
+            $tfVars += "esx_host=$($infra.data.ip)"
+            $tfVars += "esx_username=`"$($infra.data.user)`""
+            $tfVars += "esx_network=`"$($infra.data.network)`""
+            $tfVars += "esx_datastore=`"$($infra.data.datastore)`""
+            $tfVars += "vcsa_name=`"$($vcsa.data.name)`""
+            $tfVars += "vcsa_system_name=`"$($vcsa.data.name).$($domain.data.name)`""
+            $tfVars += "vcsa_ip=$($vcsa.data.ip)"
+            $tfVars += "vcsa_network_cidr=`"$($network.data.cidr)`""
+            $tfVars += "vcsa_prefix=$($network.data.cidr.split('/')[1])"
+            $tfVars += "vcsa_gateway=$($network.data.gateway)"
+            $tfVars += "vcsa_dns=$($vcsa.data.dns)"
+
+            $tfVars | Set-Content -Path terraform/vmware/vcsa/terraform.tfvars -Force
+            echo "##vso[task.setvariable variable=esx_password]$($infra.data.password)"
+
+      - task: CmdLine@2
+        displayName: Terraform init
+        inputs:
+          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+      - task: CmdLine@2
+        displayName: Terraform plan
+        inputs:
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -var="esx_password=$(esx_password)" -out=plan.tfplan'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+      - task: CmdLine@2
+        displayName: Terraform apply
+        inputs:
+          script: 'terraform apply "plan.tfplan"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/vcsa'
+
+- stage: datacenter
+  displayName: VMware vCenter Datacenter
+  jobs:
+    - job: vcsa
+      displayName: Setup VMware vCenter Datacenter
+      # dependsOn: [docker]
+      steps:
+
+      - task: CmdLine@2
+        displayName: Terraform init
+        inputs:
+          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/datacenter'
+
+      - task: CmdLine@2
+        displayName: Terraform plan
+        inputs:
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -out=plan.tfplan'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/datacenter'
+
+      - task: CmdLine@2
+        displayName: Terraform apply
+        inputs:
+          script: 'terraform apply "plan.tfplan"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/datacenter'
+
+- stage: image
+  displayName: Create image
+  jobs:
+    - job: image
+      displayName: Trigger Image creation pipeline
+      steps:
+      - task: PowerShell@2
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken) 
+        inputs:
+          filePath: '$(Build.Repository.LocalPath)/.devops/pipelines/scripts/trigger.ps1'
+          arguments: '-Address "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$env:SYSTEM_TEAMPROJECTID/" -PipelineId $(pipeline_id) -Branch $(build.sourceBranch) -Token $(System.AccessToken)'
+
+- stage: infra
+  displayName: Deploy infra
+  jobs:
+    - job: infra
+      displayName: Infrastructure deployment
+      steps:
+
+      - task: DownloadBuildArtifacts@1
+        displayName: Download Packer manifests
+        inputs:
+          buildType: 'specific'
+          project: $(project_id)
+          pipeline: $(pipeline_id)
+          buildVersionToDownload: 'latest'
+          downloadType: 'single'
+          artifactName: 'manifests'
+          downloadPath: '$(Build.Repository.LocalPath)'
+
+      - task: PowerShell@2
+        displayName: Set variables 
+        inputs:
+          targetType: 'inline'
+          script: |
+            $env:VAULT_FORMAT="json"
+            $env:VAULT_ADDR="$(vault_addr)"
+            $env:VAULT_TOKEN="$(vault_token)"
+
+            $range = .devops/pipelines/scripts/network-plan.ps1
+
+            $tfVars = @()
+            $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
+            $tfVars += "network_list = $($range | ConvertTo-Json)"
+            $tfVars += "citrix_cloud = ${{lower(parameters.citrix_cloud)}}"
+            $tfVars += "citrix_vad = ${{lower(parameters.citrix_vad)}}"
+            $tfVars += "vmware_horizon = ${{lower(parameters.vmware_horizon)}}"
+
+            $tfVars | Set-Content -Path terraform/vmware/infra/terraform.tfvars -Force
+
+      - task: CmdLine@2
+        displayName: Terraform init
+        inputs:
+          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+
+      - task: CmdLine@2
+        displayName: Terraform plan
+        inputs:
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -out=plan.tfplan'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+
+      - task: CmdLine@2
+        displayName: Terraform apply
+        inputs:
+          script: 'terraform apply "plan.tfplan"'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+
+- stage: DomainController
+  dependsOn: 
+    - infra
+  displayName: Domain Controller
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: domain.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra

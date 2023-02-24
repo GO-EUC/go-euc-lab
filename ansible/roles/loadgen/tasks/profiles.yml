@@ -1,3 +1,4 @@
+---
 - name: Create ProgramData for Director Config
   win_copy:
     src: LoadGenRunAsProfiles.xml
@@ -12,49 +13,49 @@
 
 - name: Set the LoadGen RunAsProfiles configuration property profileName
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='profileName']"
-   fragment: "{{ profile_name }}"
-   type: text
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='profileName']"
+    fragment: "{{ loadgen.profile.name }}"
+    type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property Domain
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Domain']"
-   fragment: "{{ domain_name }}"
-   type: text
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Domain']"
+    fragment: "{{ domain_name }}"
+    type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property DomainController
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='DomainController']"
-   fragment: "{{ domain_controller }}.{{ dns_domain_name }}"
-   type: text
-   
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='DomainController']"
+    fragment: "{{ domain_controller }}.{{ dns_domain_name }}"
+    type: text
+
 - name: Set the LoadGen RunAsProfiles configuration property DomainDnsName
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='DomainDnsName']"
-   fragment: "{{ dns_domain_name }}"
-   type: text
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='DomainDnsName']"
+    fragment: "{{ dns_domain_name }}"
+    type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property Password
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Password']"
-   fragment: "{{ ansible_user }}"
-   type: text
-   
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Password']"
+    fragment: "{{ loadgen_password }}"
+    type: text
+
 - name: Set the LoadGen RunAsProfiles configuration property Username
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Username']"
-   fragment: "{{ loadgen_password }}"
-   type: text
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Username']"
+    fragment: "Administrator"
+    type: text
 
 - name: Set the LoadGen RunAsProfiles configuration property Workgroup
   win_xml:
-   path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
-   xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Workgroup']"
-   fragment: "{{ profile_workgroup | lower }}"
-   type: text
+    path: C:\ProgramData\LoadGen\Director\LoadGenRunAsProfiles.xml
+    xpath: "/*[local-name()='RunAsProfileDataset']/*[local-name()='RunAsProfiles']/*[local-name()='Workgroup']"
+    fragment: "{{ loadgen.profile.workgroup | lower }}"
+    type: text

@@ -1,20 +1,20 @@
 ---
 - hosts: localhost
   connection: local
-  gather_facts: yes
+  gather_facts: true
   collections:
     - azure.azcollection
 
   tasks:
-  - name: Start the Azure Key Vault actions
-    include_tasks: azure-keyvault.yml
+    - name: Start the Azure Key Vault actions
+      include_tasks: azure-keyvault.yml
 
 - name: Citrix Cloud Connector
   hosts: cc
   serial: 1
   roles:
-  - domain-join
-  - citrix-cloud-connector
+    - domain-join
+    - citrix-cloud-connector
   vars:
     dns_domain_name: 'GO.EUC'
     domain_admin_user: "GO\\{{ ansible_user }}"
@@ -27,13 +27,13 @@
   hosts: localhost
   connection: local
   roles:
-  - citrix-cloud-configuration
+    - citrix-cloud-configuration
 
 - name: Domain Controller
   hosts: dc
   roles:
-  - domain-controller
-  - domain-config
+    - domain-controller
+    - domain-config
   vars:
     ansible_connection: winrm
     ansible_winrm_transport: ntlm
@@ -43,9 +43,9 @@
 - name: Management Server
   hosts: mgnt
   roles:
-  - domain-join
-  - visual-studio-code
-  - loadgen
+    - domain-join
+    - visual-studio-code
+    - loadgen
   vars:
     dns_domain_name: 'GO.EUC'
     domain_name: GO
@@ -55,5 +55,3 @@
     ansible_winrm_transport: ntlm
     ansible_winrm_server_cert_validation: ignore
     ansible_port: 5985
-
-

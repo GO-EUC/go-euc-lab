@@ -1,0 +1,27 @@
+---
+citrix:
+  version: '2212'
+  source: Citrix_Virtual_Apps_and_Desktops_7_2212.iso
+  path: "\\\\{{ groups['mngt'][0] }}\\Software\\Citrix\\CVAD"
+  site: Default
+  database_port: 1433
+  database_site: CVAD_Site_DB
+  database_logging: CVAD_Logging_DB
+  database_monitoring: CVAD_Monitoring_DB
+  admin: Domain Admins
+  role: Full Administrator
+  scope: All
+  grooming: 365
+  licensing:
+    port: 27000
+    model: Concurrent
+    code: XDT
+    edition: PLT
+  storefront:
+    url: http://citrix.go.euc
+    path: /Citrix/Store
+    transport: http
+    gateway:
+      name: ADCGW1
+      url: https://adc.go.euc
+      sta_url: http://ctxddc-1/scripts/ctxa.dll

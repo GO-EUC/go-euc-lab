@@ -1,0 +1,35 @@
+name: '$(BuildDefinitionName)_$(Date:yyMM).$(DayOfYear)$(Rev:.r)'
+
+trigger:
+- none
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: 'goeuc/ado-agent'
+  DOCKER_BUILDKIT: 1
+    
+steps:
+- task: Docker@2
+  displayName: Build an image
+  inputs:
+    repository: '$(imageName)'
+    command: 'build'
+    Dockerfile: 'docker/devops-agent/dockerfile'
+    tags: |
+      latest
+      $(Build.BuildId)
+
+- task: Docker@2
+  displayName: Push image
+  inputs:
+    containerRegistry: |
+      $(dockerHub)
+    repository: $(imageName)
+    command: push
+    tags: |
+      latest
+      $(Build.BuildId)

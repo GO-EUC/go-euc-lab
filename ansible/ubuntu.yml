@@ -1,0 +1,7 @@
+---
+- name: Ubuntu base playbook
+  hosts: all
+  roles:
+    - ubuntu-default
+  become: true
+  become_method: sudo

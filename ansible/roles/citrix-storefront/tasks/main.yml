@@ -1,0 +1,9 @@
+---
+- name: Install Citrix Storefront
+  include_tasks: install.yml
+
+- name: Init Citrix Storefront
+  include_tasks: init.yml
+
+# - name: Join Citrix Storefront
+#   include: join.yml

@@ -1,0 +1,27 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: YAML lint on Ansible
+        run: yamllint -c ./tests/ymllint/config.yml ./ansible
+        
+      - name: PSScriptAnalyzer on Ansible
+        run: pwsh -Command Invoke-ScriptAnalyzer -Path "./ansible/*" -Setting "./tests/psscript/config.psd1" -EnableExit
+      
+      - name: TFLint for Terraform
+        continue-on-error: true # added to ignore the outcome for now as there needs to be a lot adjusted
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --recursive

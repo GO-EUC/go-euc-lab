@@ -1,0 +1,205 @@
+---
+- name: Obtain information from registry for site check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: ddc_version
+  register: citrix_version
+
+- name: Block for Citrix installation
+  block:
+
+    - name: Check for PendingReboot module
+      win_psmodule:
+        name: PendingReboot
+        state: present
+      retries: 3
+      delay: 10
+      register: result
+      until: result is not failed
+
+    - name: Install Citrix Delivery Controller prerequisites
+      win_feature:
+        name:
+          - NET-Framework-Core
+          - NET-Framework-45-Core
+          - NET-Framework-45-ASPNET
+          - GPMC
+          - RSAT-ADDS-Tools
+          - RDS-Licensing-UI
+          - WAS
+          - Telnet-Client
+          - GPMC
+          - Remote-Assistance
+          - RSAT-AD-Tools
+          - Web-Server
+          - Web-WebServer
+          - Web-Common-Http
+          - Web-Default-Doc
+          - Web-Dir-Browsing
+          - Web-Http-Errors
+          - Web-Static-Content
+          - Web-Http-Redirect
+          - Web-Health
+          - Web-Http-Logging
+          - Web-Log-Libraries
+          - Web-Http-Tracing
+          - Web-Performance
+          - Web-Stat-Compression
+          - Web-Dyn-Compression
+          - Web-Security
+          - Web-Filtering
+          - Web-Basic-Auth
+          - Web-Windows-Auth
+          - Web-Net-Ext45
+          - Web-ASP
+          - Web-ASP-Net45
+          - Web-CGI
+          - Web-ISAPI-Ext
+          - Web-ISAPI-Filter
+          - Web-Includes
+          - Web-WebSockets
+          - Web-Mgmt-Tools
+          - Web-Mgmt-Console
+          - Web-Mgmt-Compat
+          - Web-Metabase
+          - Web-Lgcy-Mgmt-Console
+          - Web-Lgcy-Scripting
+          - Web-WMI
+          - Web-Scripting-Tools
+        state: present
+      register: win_feature
+
+    - name: Reboot machine for Windows Features
+      ansible.windows.win_reboot:
+      when: win_feature.reboot_required
+
+    - name: Create Log Folder
+      win_file:
+        path: C:\Logs
+        state: directory
+
+    - name: Create Download Folder
+      win_file:
+        path: C:\Download
+        state: directory
+
+    - name: Create Citrix Download Folder
+      win_file:
+        path: C:\Download\Citrix
+        state: directory
+
+    - name: Check if Citrix ISO is downloaded yet
+      win_stat:
+        path: "C:\\Download\\Citrix\\{{citrix.source}}"
+      register: citrix_iso
+
+    - name: Copy file from UNC path
+      win_copy:
+        src: "{{citrix.path}}\\v{{citrix.version}}\\{{citrix.source}}"
+        dest: "C:\\Download\\Citrix\\{{citrix.source}}"
+        remote_src: true
+      vars:
+        ansible_become: true
+        ansible_become_user: "{{ ansible_user }}"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
+      when: citrix_iso.stat.exists == false
+
+    - name: Register iso path
+      set_fact:
+        iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
+
+    - name: Check for pending reboot
+      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+      register: pending_reboot
+
+    - name: Set fact for pending reboot
+      set_fact:
+        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+    - name: Reboot to remove the pending reboot
+      ansible.windows.win_reboot:
+      when: pending_reboot == true
+
+    - name: Mount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    - name: Install Citrix Delivery Controller role
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+        arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        state: present
+        expected_return_code: [0, 3, 3010]
+      register: citrix_installation
+
+    - name: Unmount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: absent
+      register: disk_image_out
+
+    - name: Reboot to complete Citrix Delivery Controller installation
+      ansible.windows.win_reboot:
+      when: citrix_installation.reboot_required == true
+
+    - name: Check for pending reboot
+      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+      register: pending_reboot
+
+    - name: Set fact for pending reboot
+      set_fact:
+        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+    - name: Reboot to remove the pending reboot
+      ansible.windows.win_reboot:
+      when: pending_reboot == true
+
+    - name: Remove Citrix Delivery Controller RunOnce key from registry
+      win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+        name: "!XenDesktopSetup"
+        state: absent
+      register: install_resume
+
+    - name: Mount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    - name: Resume the Citrix Delivery Controller installation
+      win_package:
+        path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
+        state: present
+        expected_return_code: [0, 3, 3010]
+      when: install_resume.changed
+
+    - name: Unmount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    - name: Check for pending reboot
+      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
+      register: pending_reboot
+
+    - name: Set fact for pending reboot
+      set_fact:
+        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
+
+    - name: Reboot to remove the pending reboot
+      ansible.windows.win_reboot:
+      when: pending_reboot == true
+
+    - name: Add registry for future installation check
+      win_regedit:
+        path: HKLM:\Software\GO-EUC\Citrix
+        name: ddc_version
+        data: "{{ citrix.version }}"
+        type: string
+
+  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)

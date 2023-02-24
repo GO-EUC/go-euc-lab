@@ -1,0 +1,10 @@
+---
+- name: Citrix License Server
+  hosts: ctx_lic
+  roles:
+  - domain-join
+  - citrix-license-server
+  vars_files:
+  - ansible.yml
+  - domain.yml
+  - citrix.yml

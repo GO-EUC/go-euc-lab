@@ -1,0 +1,125 @@
+---
+- name: Set fact
+  set_fact:
+    domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
+
+- name: Check for ActiveDirectory DSC Powershell module
+  win_psmodule:
+    name: ActiveDirectoryDsc
+    state: present
+  retries: 5
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: GO
+    path: "{{ domain_path }}"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: "{{ item }}"
+    path: "OU=GO,{{ domain_path }}"
+  loop:
+    - Accounts
+    - Groups
+    - LoadGen
+    - ServiceAccounts
+    - Machines
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: "{{ item }}"
+    path: "OU=Machines,OU=GO,{{ domain_path }}"
+  loop:
+    - Bots
+    - Builds
+    - GPU
+    - Infra
+    - RDS
+    - VDI
+
+- name: Ensure the group LoadGen exists using sAMAccountName
+  win_domain_group:
+    name: LoadGen
+    scope: global
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
+
+- name: Create RDGateway Group
+  win_domain_group:
+    name: RD Gateway Users
+    scope: global
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
+
+- name: Generate array random passwords
+  set_fact:
+    passwords: [
+      { user: sql_svc, password: "{{ lookup('password', '/dev/null length=15') }}"},
+      { user: sql_agt, password: "{{ lookup('password', '/dev/null length=15') }}"},
+      { user: ansible, password: "{{ lookup('password', '/dev/null length=15') }}"},
+      { user: loadgen, password: "{{ lookup('password', '/dev/null length=15') }}"},
+      { user: loadgen_bot, password: "{{ lookup('password', '/dev/null length=15') }}"}
+    ]
+
+- name: Write secret to Vault using key value V2 engine
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: "go/domain/{{item.user}}"
+    token : "{{ vault_token }}"
+    data:
+      data:
+        password: "{{ item.password }}"
+    loop: "{{ passwords }}"
+    delegate_to: localhost
+
+- name: Create Service accounts - SQL Server
+  win_domain_user:
+    name: sql_svc
+    password: "{{ (passwords | selectattr('user', '==', 'sql_svc') | first).password }}"
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    description: SQL Server - Service Account
+
+- name: Create Service accounts
+  win_domain_user:
+    name: sql_agt
+    password: "{{ (passwords | selectattr('user', '==', 'sql_agt') | first).password }}"
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    description: SQL Agent - Service Account
+
+- name: Create Service accounts - SQL Agent
+  win_domain_user:
+    name: ansible
+    password: "{{ (passwords | selectattr('user', '==', 'ansible') | first).password }}"
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    groups:
+      - Domain Admins
+
+- name: Create Service accounts
+  win_domain_user:
+    name: loadgen_bot
+    password: "{{ (passwords | selectattr('user', '==', 'loadgen_bot') | first).password }}"
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    description: SQL Server - Service Account
+    groups:
+      - LoadGen
+
+- name: Create LoadGen accounts
+  win_domain_user:
+    name: "{{ 'LoadGen%03d' | format(item | int) }}"
+    upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
+    company: LoadGen
+    password: "{{ (passwords | selectattr('user', '==', 'loadgen') | first).password }}"
+    password_expired: false
+    user_cannot_change_password: true
+    state: present
+    path: "OU=LoadGen,OU=GO,{{ domain_path }}"
+    description: LoadGen simulation account
+    groups:
+      - LoadGen
+  when: "{{ item }} != 0"
+  loop: "{{ range(51) | list }}"
