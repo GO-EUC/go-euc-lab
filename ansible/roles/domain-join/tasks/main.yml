@@ -2,35 +2,24 @@
 - name: Domain join machine
   block:
 
-  - name: Check for PowerShellGet & PackageManagement modules
-    win_psmodule:
-      name: PowerShellGet
-      state: present
-    retries: 5
-    delay: 30
-    loop:
-      - PowerShellGet
-      - PackageManagement
+  - name: Set fact for Domain Path
+    set_fact:
+      domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
 
-  - name: Install package provider NuGet
-    win_shell: Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-
-  - name: Check for xDSCDomainjoin DSC Powershell module
-    win_psmodule:
-      accept_license: true
-      name: xDSCDomainjoin
-      state: present
-    retries: 5
-    delay: 30
-    register: result
-    until: result is not failed
+  - name: Set DNS to primary domain controller
+    win_dns_client:
+      adapter_names: '*'
+      ipv4_addresses:
+        - "{{ hostvars[groups['dc'][0]].ansible_host }}"
 
   - name: Domain join
-    win_dsc:
-      resource_name: xDSCDomainjoin
-      Domain: '{{ dns_domain_name }}'
-      Credential_username: '{{ domain_admin_user }}'
-      Credential_password: '{{ ansible_password }}'
+    win_domain_membership:
+      dns_domain_name: "{{ dns_domain_name }}"
+      hostname: "{{ inventory_hostname }}"
+      domain_admin_user: "{{ domain_admin_user }}"
+      domain_admin_password: "{{ domain_password }}"
+      domain_ou_path: "{{ ou_path }},{{ domain_path }}"
+      state: domain
     register: domain_state
     retries: 2
     delay: 30
