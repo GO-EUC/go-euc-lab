@@ -1,16 +1,25 @@
 ---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements and collect secrets
+    include_tasks: vault.yml
+
 - name: Domain join the Management Server
-  hosts: mngt
+  hosts: mgmt
   roles:
     - domain-join
   vars_files:
     - ansible.yml
     - domain.yml
   vars:
-    ansible_user: "{{ local_admin_user }}"
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
+    ansible_user: "{{ hostvars['localhost']['ansible_local_user'] }}"
+    ansible_password: "{{ hostvars['localhost']['ansible_local_password'] }}"
 
 - name: Install and configure the Management Server
-  hosts: mngt
+  hosts: mgmt
   roles:
     - file-share
     - management
@@ -22,8 +31,9 @@
     - domain.yml
     - loadgen.yml
   vars:
-    ansible_user: "{{ domain_admin_user }}"
+    ansible_user: "{{ hostvars['localhost']['ansible_domain_user'] }}@{{ hostvars['localhost']['dns_domain_name'] }}"
+    ansible_password: "{{ hostvars['localhost']['ansible_domain_password'] }}"
     sql_admin: "GO\\sql_svc"
-    sql_password: "{{ ansible_password }}"
+    sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
     sql_server: "{{ groups['sql'][0] }}"
     sql_database: "LoadGen"
