@@ -6,3 +6,58 @@
 - name: Install netaddr 
   ansible.builtin.pip:
     name: netaddr
+
+- name: Read build credentials from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/build
+    token : '{{ vault_token }}'
+  register: build
+
+- name: Read domain info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/domain
+    token : '{{ vault_token }}'
+  register: domain
+
+- name: Read domain accounts info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/domain/accounts
+    token : '{{ vault_token }}'
+  register: accounts
+
+- name: Read network info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/vmware/network
+    token : '{{ vault_token }}'
+  register: network
+
+- name: Read vcsa info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/vmware/vcsa
+    token : '{{ vault_token }}'
+  register: vcsa
+
+- name: Set variables 
+  set_fact:
+    ansible_local_user: "{{ build.data.data.user }}"
+    ansible_local_password: "{{ build.data.data.password }}"
+    ansible_domain_user: "{{ domain.data.data.user }}"
+    ansible_domain_password: "{{ domain.data.data.password }}"
+    dns_domain_name: "{{ domain.data.data.name }}"
+    reverse_dns_zone:  "{{ network.data.data.cidr }}"
+    dhcp_router:  "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.gateway) }}"
+    dhcp_subnetmask: "{{ network.data.data.cidr | ansible.utils.ipaddr('netmask') }}"
+    public_dns1: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.dns) }}"
+    public_dns2: "{{ network.data.data.cidr | ansible.utils.ipmath(vcsa.data.data.dns) }}"
+    dhcp_start_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.start) }}"
+    dhcp_end_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.end) }}"
+    ansible: "{{ accounts.data.data.ansible }}"
+    loadgen: "{{ accounts.data.data.loadgen }}"
+    loadgen_bot: "{{ accounts.data.data.loadgen_bot }}"
+    sql_agt: "{{ accounts.data.data.sql_agt }}"
+    sql_svc: "{{ accounts.data.data.sql_svc }}"
