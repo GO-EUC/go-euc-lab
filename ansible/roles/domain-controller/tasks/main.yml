@@ -1,9 +1,9 @@
 ---
-# - name: Install Domain 
-#   include_tasks: install.yml
+- name: Install Domain 
+  include_tasks: install.yml
 
-# - name: Domain configuration
-#   include_tasks: config.yml
+- name: Domain configuration
+  include_tasks: config.yml
 
 - name: Configure Group Policies
   include_tasks: gpo.yml

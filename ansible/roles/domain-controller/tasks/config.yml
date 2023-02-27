@@ -52,31 +52,10 @@
     scope: global
     path: "OU=Groups,OU=GO,{{ domain_path }}"
 
-- name: Generate array random passwords
-  set_fact:
-    passwords: [
-      { user: sql_svc, password: "{{ lookup('password', '/dev/null length=15') }}"},
-      { user: sql_agt, password: "{{ lookup('password', '/dev/null length=15') }}"},
-      { user: ansible, password: "{{ lookup('password', '/dev/null length=15') }}"},
-      { user: loadgen, password: "{{ lookup('password', '/dev/null length=15') }}"},
-      { user: loadgen_bot, password: "{{ lookup('password', '/dev/null length=15') }}"}
-    ]
-
-- name: Write secret to Vault using key value V2 engine
-  community.hashi_vault.vault_write:
-    url: "{{ vault_addr }}"
-    path: "go/domain/{{item.user}}"
-    token : "{{ vault_token }}"
-    data:
-      data:
-        password: "{{ item.password }}"
-    loop: "{{ passwords }}"
-    delegate_to: localhost
-
 - name: Create Service accounts - SQL Server
   win_domain_user:
     name: sql_svc
-    password: "{{ (passwords | selectattr('user', '==', 'sql_svc') | first).password }}"
+    password: "{{ sql_svc }}"
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Server - Service Account
@@ -84,7 +63,7 @@
 - name: Create Service accounts
   win_domain_user:
     name: sql_agt
-    password: "{{ (passwords | selectattr('user', '==', 'sql_agt') | first).password }}"
+    password: "{{ sql_agt }}"
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Agent - Service Account
@@ -92,7 +71,7 @@
 - name: Create Service accounts - SQL Agent
   win_domain_user:
     name: ansible
-    password: "{{ (passwords | selectattr('user', '==', 'ansible') | first).password }}"
+    password: "{{ ansible }}"
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     groups:
@@ -101,10 +80,9 @@
 - name: Create Service accounts
   win_domain_user:
     name: loadgen_bot
-    password: "{{ (passwords | selectattr('user', '==', 'loadgen_bot') | first).password }}"
+    password: "{{ loadgen_bot }}"
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
-    description: SQL Server - Service Account
     groups:
       - LoadGen
 
@@ -113,7 +91,7 @@
     name: "{{ 'LoadGen%03d' | format(item | int) }}"
     upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
     company: LoadGen
-    password: "{{ (passwords | selectattr('user', '==', 'loadgen') | first).password }}"
+    password: "{{ loadgen }}"
     password_expired: false
     user_cannot_change_password: true
     state: present

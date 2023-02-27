@@ -1,50 +1,32 @@
 ---
-- name: Check for DnsServerDsc DSC Powershell module
+- name: Ensure the required NuGet package provider is installed
+  win_shell: Install-PackageProvider -Name "NuGet" -Force
+
+- name: Install required PowerShell modules
   win_psmodule:
-    name: PowerShellGet
+    name: "{{ item }}"
     state: present
+    accept_license: true
+    skip_publisher_check: true
   retries: 5
   delay: 30
   loop:
     - PowerShellGet
     - PackageManagement
+    - DnsServerDsc
 
-- name: Register a PowerShell repository
-  win_shell: Install-PackageProvider -Name "NuGet" -Force
+# - name: Stop the time service
+#   win_service:
+#     name: w32time
+#     state: stopped
 
-- name: Check for DnsServerDsc DSC Powershell module
-  win_psmodule:
-    accept_license: true
-    name: DnsServerDsc
-    state: present
-  retries: 5
-  delay: 30
+# - name: Set NTP Servers
+#   win_shell: 'w32tm /config /syncfromflags:manual /manualpeerlist:"{{ public_ntp }}"'
 
-- name: Set upstream DNS server
-  win_dns_client:
-    adapter_names: '*'
-    ipv4_addresses:
-      - '{{ public_dns1 }}'
-      - '{{ public_dns2 }}'
-
-- name: Stop the time service
-  win_service:
-    name: w32time
-    state: stopped
-
-- name: Set NTP Servers
-  win_shell: 'w32tm /config /syncfromflags:manual /manualpeerlist:"{{ public_ntp }}"'
-
-- name: Start the time service
-  win_service:
-    name: w32time
-    state: started
-
-- name: Set internal DNS server
-  win_dns_client:
-    adapter_names: '*'
-    ipv4_addresses:
-      - '127.0.0.1'
+# - name: Start the time service
+#   win_service:
+#     name: w32time
+#     state: started
 
 - name: Install Active Directory
   win_feature:
@@ -56,40 +38,13 @@
 
 - name: Create Domain
   win_domain:
-    dns_domain_name: '{{ dns_domain_name }}'
-    safe_mode_password: '{{ ansible_password }}'   # '{{ recovery_password }}'
+    dns_domain_name: "{{ dns_domain_name }}"
+    safe_mode_password: "{{ domain_password }}"
   register: ad
 
 - name: Reboot
   win_reboot:
   when: ad.changed
-
-- name: Ensure AD Services is in a running state
-  win_service:
-    name: NTDS
-    state: started
-  register: ntds
-  until: ntds.state == "running"
-  retries: 30
-  delay: 30
-
-- name: Ensure DNS Services is in a running state
-  win_service:
-    name: DNS
-    state: started
-  register: dns
-  until: dns.state == "running"
-  retries: 15
-  delay: 30
-
-# - name: Ensure DNS Client is in a running state
-#   win_service:
-#     name: Dnscache
-#     state: started
-#   register: dnscache
-#   until: dnscache.state == "running"
-#   retries: 15
-#   delay: 30
 
 - name: Create reverse DNS zone
   win_dsc:
@@ -97,41 +52,32 @@
     Name: '{{ reverse_dns_zone[:-5] }}-.in-addr.arpa'
     Ensure: Present
 
-# - name: Create forward DNS zone
-#   win_dsc:
-#     resource_name: DnsServerForwarder
-#     IsSingleInstance : 'Yes'
-#     IPAddresses: ["{{ public_dns1 }}", "{{ public_dns2 }}"]
-#     UseRootHint: false
-
 - name: Create forward DNS zone
   win_shell: Add-DnsServerForwarder -IPAddress '{{ public_dns1 }}', '{{ public_dns2 }}' -PassThru
 
-- name: Install DHCP Services
-  ansible.windows.win_feature:
-    name: DHCP
-    state: present
-    include_sub_features: true
-    include_management_tools: true
+- block:
+  - name: Install DHCP Services
+    ansible.windows.win_feature:
+      name: DHCP
+      state: present
+      include_sub_features: true
+      include_management_tools: true
+
+  - name: Create DHCP config
+    win_shell: |
+      $scope = Get-DhcpServerv4Scope
+      if (!($scope.Name -eq '{{ dns_domain_name }}-Scope')) {
+        Add-DhcpServerv4Scope -Name '{{ dns_domain_name }}-Scope' -StartRange {{ dhcp_start_range }} -EndRange {{ dhcp_end_range }} -SubnetMask {{ dhcp_subnetmask }} -State Active
+
+        Set-DhcpServerv4OptionValue -OptionID 3 -Value {{ dhcp_router }} -ScopeID {{ dhcp_start_range }} -ComputerName {{ inventory_hostname }}.{{ dns_domain_name | lower }}
+        Set-DhcpServerv4OptionValue -DnsDomain {{ dns_domain_name }} -DnsServer {{ ansible_host }} -Router {{ dhcp_router }}
+
+        Add-DhcpServerInDC -DnsName {{ inventory_hostname }}.{{ dns_domain_name | lower }} -IPAddress {{ ansible_host }}
+      }
+
+    vars:
+      ansible_become: true
+      ansible_become_user: system
+      ansible_become_method: runas
+
   when: lookup('env', 'platform') != 'azure'
-
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ inventory_hostname }}.{{ dns_domain_name }}"
-
-- name: Create DHCP config
-  win_shell: |
-    $scope = Get-DhcpServerv4Scope
-    if (!($scope.Name -eq '{{ dns_domain_name }}-Scope')) {
-      Add-DhcpServerv4Scope -Name '{{ dns_domain_name }}-Scope' -StartRange {{ dhcp_start_range }} -EndRange {{ dhcp_end_range }} -SubnetMask {{ dhcp_subnetmask }} -State Active
-
-      Set-DhcpServerv4OptionValue -OptionID 3 -Value {{ dhcp_router }} -ScopeID {{ dhcp_start_range }} -ComputerName {{ inventory_hostname }}.{{ dns_domain_name | lower }}
-      Set-DhcpServerv4OptionValue -DnsDomain {{ dns_domain_name }} -DnsServer {{ ansible_host }} -Router {{ dhcp_router }}
-
-      Add-DhcpServerInDC -DnsName {{ inventory_hostname }}.{{ dns_domain_name | lower }} -IPAddress {{ ansible_host }}
-    }
-  when: lookup('env', 'platform') != 'azure'
-  vars:
-    ansible_become: true
-    ansible_become_user: system
-    ansible_become_method: runas
