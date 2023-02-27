@@ -24,13 +24,13 @@
     new_label: MSSQLData
 
 # Load required powershell modules
+- name: Ensure the required NuGet package provider is installed
+  win_shell: Install-PackageProvider -Name "NuGet" -Force
+
 - name: Check for SQLServerDsc DSC Powershell module
   win_psmodule:
-    accept_license: true
     name: SQLServerDsc
     state: present
-  retries: 5
-  delay: 30
 
 - name: Powershell | Check for SQLServer DSC Powershell module
   win_psmodule:

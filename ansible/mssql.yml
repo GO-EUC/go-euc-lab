@@ -1,16 +1,28 @@
 ---
-# - hosts: localhost
-#   connection: local
-#   gather_facts: yes
-#   collections:
-#     - azure.azcollection
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements and collect secrets
+    include_tasks: vault.yml
 
-#   tasks:
-#   - name: Start the Azure Key Vault actions
-#     include_tasks: azure-keyvault.yml
+- name: Domain join the MSSQL Server
+  hosts: sql
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - domain.yml
+  vars:
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
+    ansible_user: "{{ hostvars['localhost']['ansible_local_user'] }}"
+    ansible_password: "{{ hostvars['localhost']['ansible_local_password'] }}"
 
 - name: SQL Server
   hosts: sql
+  vars_files:
+    - ansible.yml
+    - domain.yml
   roles:
   - domain-join
   - mssql
@@ -19,17 +31,6 @@
       win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
       loop:
         - LoadGen
-      vars:
-        ansible_become: true
-        ansible_become_user: "GO\\Administrator"
-        ansible_become_password: "{{ ansible_password }}"
-        ansible_become_method: runas
   vars:
-    dns_domain_name: 'GO.EUC'
-    domain_name: GO
-    domain_controller: "{{ groups['dc'][0] }}"
-    domain_admin_user: "GO\\{{ ansible_user }}"
-    ansible_connection: winrm
-    ansible_winrm_transport: ntlm
-    ansible_winrm_server_cert_validation: ignore
-    ansible_port: 5985
+    ansible_user: "{{ hostvars['localhost']['ansible_domain_user'] }}@{{ hostvars['localhost']['dns_domain_name'] }}"
+    ansible_password: "{{ hostvars['localhost']['ansible_domain_password'] }}"
