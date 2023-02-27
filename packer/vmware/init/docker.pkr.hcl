@@ -48,6 +48,7 @@ source "vmware-iso" "docker" {
     shutdown_command = "echo ${var.build_password} | sudo -S -E shutdown -P now"
 
     skip_export     = true
+    skip_compaction = true
     keep_registered = true
     headless = true
 
