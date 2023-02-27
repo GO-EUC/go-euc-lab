@@ -134,9 +134,6 @@ module "citrix_cloud_connectors" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
-  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
@@ -161,9 +158,6 @@ module "citrix_storefront" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
-  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
@@ -188,9 +182,6 @@ module "citrix_delivery_controller" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
-  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
@@ -215,9 +206,6 @@ module "citrix_license_server" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
-  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
@@ -242,9 +230,6 @@ module "vmware_horizon" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
-  network_address                = cidrhost(local.nic_cidr, var.network_list[0])
-  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [cidrhost(local.nic_cidr, local.nic_main_dns), cidrhost(local.nic_cidr, local.nic_custom_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter

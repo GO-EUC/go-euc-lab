@@ -2,7 +2,7 @@ output "dc" {
   value = module.domain_controller.vm_info
 }
 
-output "mgnt" {
+output "mgmt" {
   value = module.management_server.vm_info
 }
 
