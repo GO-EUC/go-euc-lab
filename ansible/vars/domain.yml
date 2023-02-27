@@ -1,6 +1,12 @@
 ---
-dns_domain_name: 'GO.EUC'
-domain_name: GO
+dns_domain_name: "{{ hostvars['localhost']['dns_domain_name'] }}"
 domain_controller: "{{ groups['dc'][0] }}"
-domain_admin_user: "{{domain_name}}\\Administrator"
-local_admin_user: gouser
+domain_admin_user: "{{ hostvars['localhost']['ansible_domain_user'] }}@{{ hostvars['localhost']['dns_domain_name'] }}"
+domain_password: "{{ hostvars['localhost']['ansible_domain_password'] }}"
+reverse_dns_zone: "{{ hostvars['localhost']['reverse_dns_zone'] }}"
+dhcp_router: "{{ hostvars['localhost']['dhcp_router'] }}"
+dhcp_subnetmask: "{{ hostvars['localhost']['dhcp_subnetmask'] }}"
+public_dns1: "{{ hostvars['localhost']['public_dns1'] }}"
+public_dns2: "{{ hostvars['localhost']['public_dns2'] }}"
+dhcp_start_range: "{{ hostvars['localhost']['dhcp_start_range'] }}"
+dhcp_end_range: "{{ hostvars['localhost']['dhcp_end_range'] }}"
