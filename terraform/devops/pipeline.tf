@@ -1,4 +1,4 @@
-resource "azuredevops_build_definition" "infa" {
+resource "azuredevops_build_definition" "infra" {
     project_id = azuredevops_project.project.id
     name       = "Lab Deployment Pipeline"
 
