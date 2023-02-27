@@ -105,7 +105,7 @@ stages:
             
             $inventory += ""
             $inventory += "[all:vars]"
-            $inventory += "domain_name=$($domain.data.name)"
+            $inventory += "dns_domain_name=$($domain.data.name)"
             $inventory += "network_dns=$($network.data.dns)"
             $inventory += "network_cidr=$($network.data.cidr)"
 
