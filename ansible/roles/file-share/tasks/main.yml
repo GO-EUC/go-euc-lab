@@ -17,7 +17,6 @@
 
 - name: Initialize the disk
   win_shell: Get-Disk | Where-Object {$_.PartitionStyle -eq "RAW"} | Initialize-Disk
-  when: offline_disk_count != "0"
 
 - name: Create partition partition on the disk
   win_partition:
@@ -31,30 +30,15 @@
     file_system: NTFS
     new_label: Share
 
-- name: Create directory for software structure for Citrix
+- name: Create share directory
   win_file:
-    path: "D:\\Software\\Citrix\\CVAD\\{{item}}"
+    path: D:\Share
     state: directory
-  loop:
-    - v2212
-    - v2209
-    - v2206
-    - v2203_LTSR
 
-- name: Create directory for software structure for VMware
-  win_file:
-    path: "D:\\Software\\VMware\\Horizon\\{{item}}"
-    state: directory
-  loop:
-    - v8_2111
-    - v8_2209
-    - v8_2206
-
-- name: Create share for Software
+- name: Create share
   win_share:
-    name: Software
-    description: Software library
-    path: D:\Software
+    name: Share
+    path: D:\Share
     list: true
     full: Administrators
     read: Domain Users
