@@ -318,7 +318,7 @@ $accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!
 $accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
 
 # Adding accounts to vault
-& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go domain/accounts ansible=$($accountPasswords[0]) loadgen=$($accountPasswords[1]) loadgen_bot=$($accountPasswords[2]) sql_agt=$($accountPasswords[3]) sql_agt=$($accountPasswords[4])
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go domain/accounts ansible=$($accountPasswords[0]) loadgen=$($accountPasswords[1]) loadgen_bot=$($accountPasswords[2]) sql_agt=$($accountPasswords[3]) sql_svc=$($accountPasswords[4])
 
 # Generate a random password for the build
 $buildPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 6)
@@ -447,11 +447,11 @@ Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go" | Out-
 Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | Out-Null
 
 # Copy over the software repo
-$folders = Get-ChildItem -Path $($settings.software_store)
-foreach ($folder in $folders) {
-    Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($settings.software_store)\$($folder.Name)\*" -Destination "/go/" -Force
+$files = Get-ChildItem -Path $($settings.software_store) -Recurse | Where-Object {$_.Attributes -ne "Directory"}
+foreach ($file in $files) {
+    $dest = $file.DirectoryName.Replace("$($settings.software_store)", "").Replace("\", "/")
+    Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
 }
-
 
 # Disconnect the sessions
 $dockerSession.Disconnect()
