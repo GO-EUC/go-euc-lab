@@ -121,7 +121,7 @@ Remove-Item -Path "$($env:TEMP)\openssl-3.0.8.zip" -Confirm:$false
 Remove-Item -Path "$($env:TEMP)\OpenSSL\" -Recurse -Confirm:$false
 
 # Calculate disksize in batches of 16GB based on the software store and adding addtional 25%
-$diskSize = [System.Math]::Ceiling([Math]::Ceiling((Get-ChildItem $($settings.software_store) -Recurse | Measure-Object -Property Length -Sum).Sum * 1.25 / 1Mb) / 16384) * 16384
+# $diskSize = [System.Math]::Ceiling([Math]::Ceiling((Get-ChildItem $($settings.software_store) -Recurse | Measure-Object -Property Length -Sum).Sum * 1.25 / 1Mb) / 16384) * 16384
 
 Write-Output "$(Get-Date): Building Packer files"
 # Create Packer variables
@@ -447,7 +447,11 @@ Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go" | Out-
 Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | Out-Null
 
 # Copy over the software repo
-Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($settings.software_store)\*" -Destination "/go/" -Force
+$folders = Get-ChildItem -Path $($settings.software_store)
+foreach ($folder in $folders) {
+    Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($settings.software_store)\$($folder.Name)\*" -Destination "/go/" -Force
+}
+
 
 # Disconnect the sessions
 $dockerSession.Disconnect()
