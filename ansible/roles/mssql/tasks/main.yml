@@ -27,14 +27,10 @@
 - name: Ensure the required NuGet package provider is installed
   win_shell: Install-PackageProvider -Name "NuGet" -Force
 
-- name: Check for SQLServerDsc DSC Powershell module
-  win_psmodule:
-    name: SQLServerDsc
-    state: present
-
 - name: Powershell | Check for SQLServer DSC Powershell module
   win_psmodule:
     name: SQLServerDsc
+    skip_publisher_check: true
     state: present
 
 - name: Powershell | Check for Storage DSC Powershell module
