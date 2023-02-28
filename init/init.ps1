@@ -309,6 +309,17 @@ foreach ($esx_host in $settings.esx_hosts) {
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go docker password=$randomPassword user=$($settings.docker.user) ip=$($settings.docker.ip) name=$($settings.docker.name)
 & "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go postgress password=$($postgressPassword) user=tf ip=$($settings.docker.ip) database=state ssl=disable
 
+# Account passwords
+$accountPasswords = @()
+$accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
+$accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
+$accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
+$accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
+$accountPasswords += -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 16)
+
+# Adding accounts to vault
+& "$env:TEMP\Hashicorp\vault.exe" kv put -mount=go domain/accounts ansible=$($accountPasswords[0]) loadgen=$($accountPasswords[1]) loadgen_bot=$($accountPasswords[2]) sql_agt=$($accountPasswords[3]) sql_agt=$($accountPasswords[4])
+
 # Generate a random password for the build
 $buildPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 6)
 
@@ -403,7 +414,7 @@ Write-Output "$(Get-Date): Terraform apply"
 Start-Process @tfParams -ArgumentList $tfApply -NoNewWindow -Wait
 
 # Remove the terraform.tfvar file
-# Remove-Item -Path "$($RepoRoot)\terraform\devops\terraform.tfvars" -Force -Confirm:$false | Out-Null
+Remove-Item -Path "$($RepoRoot)\terraform\devops\terraform.tfvars" -Force -Confirm:$false | Out-Null
 
 $customDns = $networkRange[$settings.docker.ip -1]
 $primaryDns = $networkRange[$settings.network.dns -1]
@@ -443,3 +454,5 @@ $dockerSession.Disconnect()
 $dockerSftpSession.Disconnect()
 
 Write-Output "$(Get-Date): Done!"
+Write-Output "$(Get-Date): Vault token: $($vaultInit.root_token)"
+Write-Output "$(Get-Date): Ensure to save the vault token in a safe place!"
