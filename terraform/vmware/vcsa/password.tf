@@ -5,5 +5,5 @@ resource "random_password" "password" {
     min_special      = 1
     min_numeric      = 1
     special          = true
-    override_special = "!#$%&"
+    override_special = "!#@%&"
 }
