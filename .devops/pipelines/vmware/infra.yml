@@ -294,3 +294,31 @@ stages:
       vault_token: $(vault_token)
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: Management
+  dependsOn: 
+    - DomainController
+  displayName: Management Server
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: management.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: SQL
+  dependsOn: 
+    - DomainController
+  displayName: SQL Server
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: mssql.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
