@@ -1,0 +1,6 @@
+---
+ansible_user: "{{ hostvars['localhost']['ansible_local_user'] }}"
+ansible_password: "{{ hostvars['localhost']['ansible_local_password'] }}"
+dns_domain_name: "{{ hostvars['localhost']['dns_domain_name'] }}"
+domain_admin_user: "ansible@{{ hostvars['localhost']['dns_domain_name'] }}"
+domain_password: "{{ hostvars['localhost']['ansible'] }}"

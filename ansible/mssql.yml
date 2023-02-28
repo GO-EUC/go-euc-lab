@@ -12,11 +12,9 @@
     - domain-join
   vars_files:
     - ansible.yml
-    - domain.yml
+    - local.yml
   vars:
     ou_path: "OU=Infra,OU=Machines,OU=GO"
-    ansible_user: "{{ hostvars['localhost']['ansible_local_user'] }}"
-    ansible_password: "{{ hostvars['localhost']['ansible_local_password'] }}"
 
 - name: SQL Server
   hosts: sql
@@ -24,13 +22,9 @@
     - ansible.yml
     - domain.yml
   roles:
-  - domain-join
   - mssql
   tasks:
     - name: Create databases
       win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
       loop:
         - LoadGen
-  vars:
-    ansible_user: "{{ hostvars['localhost']['ansible_domain_user'] }}@{{ hostvars['localhost']['dns_domain_name'] }}"
-    ansible_password: "{{ hostvars['localhost']['ansible_domain_password'] }}"

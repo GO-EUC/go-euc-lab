@@ -12,11 +12,9 @@
     - domain-join
   vars_files:
     - ansible.yml
-    - domain.yml
+    - local.yml
   vars:
     ou_path: "OU=Infra,OU=Machines,OU=GO"
-    ansible_user: "{{ hostvars['localhost']['ansible_local_user'] }}"
-    ansible_password: "{{ hostvars['localhost']['ansible_local_password'] }}"
 
 - name: Install and configure the Management Server
   hosts: mgmt
@@ -31,8 +29,6 @@
     - domain.yml
     - loadgen.yml
   vars:
-    ansible_user: "{{ hostvars['localhost']['ansible_domain_user'] }}@{{ hostvars['localhost']['dns_domain_name'] }}"
-    ansible_password: "{{ hostvars['localhost']['ansible_domain_password'] }}"
     sql_admin: "GO\\sql_svc"
     sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
     sql_server: "{{ groups['sql'][0] }}"

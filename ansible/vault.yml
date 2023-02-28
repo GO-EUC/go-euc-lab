@@ -46,8 +46,6 @@
   set_fact:
     ansible_local_user: "{{ build.data.data.user }}"
     ansible_local_password: "{{ build.data.data.password }}"
-    ansible_domain_user: "{{ domain.data.data.user }}"
-    ansible_domain_password: "{{ domain.data.data.password }}"
     dns_domain_name: "{{ domain.data.data.name }}"
     reverse_dns_zone:  "{{ network.data.data.cidr }}"
     dhcp_router:  "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.gateway) }}"
