@@ -450,6 +450,7 @@ Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | O
 $files = Get-ChildItem -Path $($settings.software_store) -Recurse | Where-Object {$_.Attributes -ne "Directory"}
 foreach ($file in $files) {
     $dest = $file.DirectoryName.Replace("$($settings.software_store)", "").Replace("\", "/")
+    New-SFTPItem -SFTPSession $dockerSftpSession -Path "/go$dest" -ItemType Directory -Recurse | Out-Null
     Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
 }
 
