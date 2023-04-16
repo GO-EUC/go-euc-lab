@@ -174,7 +174,7 @@ module "citrix_delivery_controller" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "ctx-dc"
+  vm_name               = "ctx-ddc"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
