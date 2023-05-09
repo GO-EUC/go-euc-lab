@@ -10,11 +10,18 @@
 
 $ErrorActionPreference = "Stop"
 
+# Set network to private
+Set-NetConnectionProfile -NetworkCategory Private
+
 # Enable Windows Remote Management in the Windows Firewall.
 Write-Output "Enabling Windows Remote Management in the Windows Firewall..."
-$NetworkListManager = [Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))
-$Connections = $NetworkListManager.GetNetworkConnections()
-$Connections | ForEach-Object { $_.GetNetwork().SetCategory(1) }
+try {
+    $NetworkListManager = [Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))
+    $Connections = $NetworkListManager.GetNetworkConnections()
+    $Connections | ForEach-Object { $_.GetNetwork().SetCategory(1) }
+} catch {
+    Write-Output "Handled for Windows 11"
+}
 
 # Set the Windows Remote Management configuration.
 Write-Output "Setting the Windows Remote Management configuration..."

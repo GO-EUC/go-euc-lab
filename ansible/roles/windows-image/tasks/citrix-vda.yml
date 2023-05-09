@@ -1,0 +1,95 @@
+---
+- name: Obtain information from registry for site check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: version
+  register: citrix_version
+
+- name: Block for Citrix installation
+  block:
+
+    - name: Set fact for Workstation
+      set_fact:
+        citrix_type: Workstation
+      when: ansible_facts.os_installation_type == 'Client'
+
+    - name: Set fact for Server
+      set_fact:
+        citrix_type: Server
+      when: ansible_facts.os_installation_type == 'Server'
+
+    - name: Check pending reboot
+      import_tasks: pending-reboot.yml
+
+    - name: Create Citrix temp directory
+      win_file:
+        path: C:\Temp\Citrix
+        state: directory
+
+    - name: Check if Citrix VDA is copied
+      win_stat:
+        path: "C:\\Temp\\Citrix\\VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+      register: citrix_source
+
+    - name: Copy file from UNC path
+      win_copy:
+        src: "{{citrix.path}}\\v{{citrix.version}}\\VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+        dest: "C:\\Temp\\Citrix\\VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+        remote_src: true
+      vars:
+        ansible_become: true
+        ansible_become_user: "{{ domain_name }}\\Administrator"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
+      when: citrix_source.stat.exists == false
+
+    - name: Install Microsoft Visual C++ Redistributable Latest - X86"
+      win_package:
+        path: https://aka.ms/vs/17/release/vc_redist.x86.exe
+        arguments: /q /norestart
+
+    - name: Install Microsoft Visual C++ Redistributable Latest - X64"
+      win_package:
+        path: https://aka.ms/vs/17/release/vc_redist.x64.exe
+        arguments: /q /norestart
+
+    - name: Install Microsoft .NET Framework 4.8 - Offline installer
+      win_package:
+        path: https://go.microsoft.com/fwlink/?linkid=2088631
+        arguments: /q /norestart
+
+    - name: Check pending reboot
+      import_tasks: pending-reboot.yml
+
+    - name: Install Citrix VDA
+      win_package:
+        path: "C:\\Temp\\Citrix\\VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+        arguments: /components VDA /controllers "{{ groups['ctx_ddc'] | join(', ') }}" /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /enable_remote_assistance /enable_ss_ports /exclude `"Citrix Telemetry Service`",`"Citrix Personalization for App-V - VDA`",`"Citrix Files for Windows`",`"Citrix Files for Outlook`",`"User personalization layer`",`"Citrix WEM Agent`",`"Citrix VDA Upgrade Agent`" /includeadditional `"Citrix MCS IODriver`" /masterimage /noreboot /quiet
+        state: present
+        expected_return_code: [0, 3, 3010]
+      register: install
+
+    - name: Reboot after VDA
+      win_reboot:
+      when: vda_install.reboot_required
+
+    - name: Resume VDA Install
+      win_package:
+        path: "C:\\Temp\\Citrix\\VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+        state: present
+        expected_return_code: [0, 3, 3010]
+      when: vda_install.changed
+      register: install_resume
+
+    - name: Reboot after vda install
+      win_reboot:
+      when: install_resume.reboot_required
+
+    - name: Add registry for future installation check
+      win_regedit:
+        path: HKLM:\Software\GO-EUC\Citrix
+        name: version
+        data: "{{ citrix.version }}"
+        type: string
+
+  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)

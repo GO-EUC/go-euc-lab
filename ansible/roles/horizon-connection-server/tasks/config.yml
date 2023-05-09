@@ -1,0 +1,174 @@
+---
+- name: Set fact Login body
+  set_fact:
+    login_body:
+      domain: "{{ dns_domain_name }}"
+      passwd: "{{ ansible_password }}"
+      name: "{{ domain_admin_user | split(slash) | last }}"
+  vars:
+    slash: '\'
+
+- name: Post login
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/login
+    method: POST
+    content_type: application/json
+    body: "{{ login_body | to_json }}"
+    validate_certs: false
+    return_content: true
+  register: token
+
+- name: Get InstantCloneEngineDomainAdministrator
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/InstantCloneEngineDomainAdministrator/List
+    method: GET
+    content_type: application/json
+    headers:
+      Cookie: "{{ token.set_cookie | split(';') | first }}"
+      CSRFToken: "{{ token.csrf_token }}"
+    validate_certs: false
+    return_content: true
+  register: domain_admin_clone_list
+
+- name: Block for InstantCloneEngineDomainAdministrator
+  block:
+
+    - name: Get ADDomain list
+      win_uri:
+        url: https://localhost/view-vlsi/rest/v1/ADDomain/List
+        method: GET
+        content_type: application/json
+        headers:
+          Cookie: "{{ token.set_cookie | split(';') | first }}"
+          CSRFToken: "{{ token.csrf_token }}"
+        validate_certs: false
+        return_content: true
+      register: domain_list
+
+    - name: Convert password to byte array
+      win_shell: |
+        $enc = [System.Text.Encoding]::UTF8
+        $password = "{{ vsphere_password }}"
+        $encKey = $enc.GetBytes($password)
+        $encKey
+      register: enc_password
+
+    - name: Set fact InstantCloneEngineDomainAdministrator post body 
+      set_fact:
+        post_body: 
+          base: 
+            domain: "{{ domain_list.json[0] }}"
+            userName: "{{ login_body.name }}"
+            password:
+              utf8String: "{{ enc_password.stdout_lines | map('int') | list }}"
+
+    - name: Post InstantCloneEngineDomainAdministrator
+      win_uri:
+        url: https://localhost/view-vlsi/rest/v1/InstantCloneEngineDomainAdministrator/Create
+        method: POST
+        content_type: application/json
+        body: "{{ post_body | to_json }}"
+        headers:
+          Cookie: "{{ token.set_cookie | split(';') | first }}"
+          CSRFToken: "{{ token.csrf_token }}"
+        validate_certs: false
+        return_content: true
+      register: domain_admin_clone_post
+
+  when: (domain_admin_clone_list.json is not defined) or (login_body.name not in (domain_admin_clone_list | json_query('json[*].base.userName') | list))
+
+- name: Get VirtualCenter
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/VirtualCenter/List
+    method: GET
+    content_type: application/json
+    headers:
+      Cookie: "{{ token.set_cookie | split(';') | first }}"
+      CSRFToken: "{{ token.csrf_token }}"
+    validate_certs: false
+    return_content: true
+  register: virtual_center
+
+- name: Block for VirtualCenter
+  block:
+
+    - name: Get certificate from the vCenter server
+      win_cert_export:
+        host: "{{ vmware.vsphere.host }}"
+        port: 443
+      register: public_cert
+
+    - name: Convert password to byte array
+      win_shell: |
+        $enc = [System.Text.Encoding]::UTF8
+        $password = "{{ vsphere_password }}"
+        $encKey = $enc.GetBytes($password)
+        $encKey
+      register: enc_password
+
+    - name: Set fact VirtualCenter post body 
+      set_fact:
+        post_body: 
+          certificateOverride:
+            sslCertThumbprint: "{{ public_cert.cert }}"
+            sslCertThumbprintAlgorithm: DER_BASE64_PEM
+          enabled: true
+          limits:
+            instantCloneEngineProvisioningLimit: 20
+            vcPowerOperationsLimit: 50
+            vcProvisioningLimit: 20
+            viewComposerMaintenanceLimit: 12
+          seSparseReclamationEnabled: true
+          serverSpec:
+            port: 443
+            serverName: "{{ vmware.vsphere.host }}"
+            serverType: VIRTUAL_CENTER
+            useSSL: true
+            userName: "{{ vmware.vsphere.username }}"
+            password:
+              utf8String: "{{ enc_password.stdout_lines | map('int') | list }}"
+          storageAcceleratorData:
+            enabled: true
+            defaultCacheSizeMB: 1024
+          deploymentType: GENERAL
+
+    - name: Post VirtualCenter
+      win_uri:
+        url: https://localhost/view-vlsi/rest/v1/VirtualCenter/Create
+        method: POST
+        content_type: application/json
+        body: "{{ post_body | to_json }}"
+        headers:
+          Cookie: "{{ token.set_cookie | split(';') | first }}"
+          CSRFToken: "{{ token.csrf_token }}"
+        validate_certs: false
+        return_content: true
+      register: vcenter
+
+  when: (virtual_center.json is not defined) or (vmware.vsphere.host not in (virtual_center | json_query('json[*].serverSpec.serverName') | list ))
+
+- name: Get License
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/License/get
+    method: GET
+    content_type: application/json
+    headers:
+      Cookie: "{{ token.set_cookie | split(';') | first }}"
+      CSRFToken: "{{ token.csrf_token }}"
+    validate_certs: false
+    return_content: true
+  register: license
+
+- name: Set License
+  win_uri:
+    url: https://localhost/view-vlsi/rest/v1/License/Set
+    method: POST
+    content_type: application/json
+    body: "{{ horizon_lic }}"
+    headers:
+      Cookie: "{{ token.set_cookie | split(';') | first }}"
+      CSRFToken: "{{ token.csrf_token }}"
+    validate_certs: false
+    return_content: true
+  register: license_set
+  when: license.json.licensed == false

@@ -1,0 +1,107 @@
+---
+- name: Set fact
+  set_fact:
+    domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
+
+- name: Check for ActiveDirectory DSC Powershell module
+  win_psmodule:
+    name: ActiveDirectoryDsc
+    state: present
+  retries: 5
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: GO
+    path: "{{ domain_path }}"
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: "{{ item }}"
+    path: "OU=GO,{{ domain_path }}"
+  loop:
+    - Accounts
+    - Groups
+    - LoadGen
+    - ServiceAccounts
+    - Machines
+
+- name: Create OU
+  win_dsc:
+    resource_name: ADOrganizationalUnit
+    name: "{{ item }}"
+    path: "OU=Machines,OU=GO,{{ domain_path }}"
+  loop:
+    - Bots
+    - Builds
+    - GPU
+    - Infra
+    - RDS
+    - VDI
+
+- name: Ensure the group LoadGen exists using sAMAccountName
+  win_domain_group:
+    name: LoadGen
+    scope: global
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
+
+- name: Create RDGateway Group
+  win_domain_group:
+    name: RD Gateway Users
+    scope: global
+    path: "OU=Groups,OU=GO,{{ domain_path }}"
+
+- name: Create Service accounts - SQL Server
+  win_domain_user:
+    name: sql_svc
+    password: "{{ sql_svc }}"
+    password_never_expires: false
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    description: SQL Server - Service Account
+
+- name: Create Service accounts
+  win_domain_user:
+    name: sql_agt
+    password: "{{ sql_agt }}"
+    password_never_expires: false
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    description: SQL Agent - Service Account
+
+- name: Create Service accounts - SQL Agent
+  win_domain_user:
+    name: ansible
+    password: "{{ ansible }}"
+    password_never_expires: false
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    groups:
+      - Domain Admins
+
+- name: Create Service accounts
+  win_domain_user:
+    name: loadgen_bot
+    password: "{{ loadgen_bot }}"
+    password_never_expires: false
+    state: present
+    path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
+    groups:
+      - LoadGen
+
+- name: Create LoadGen accounts
+  win_domain_user:
+    name: "{{ 'LoadGen%03d' | format(item | int) }}"
+    upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
+    company: LoadGen
+    password: "{{ loadgen }}"
+    password_never_expires: false
+    user_cannot_change_password: true
+    state: present
+    path: "OU=LoadGen,OU=GO,{{ domain_path }}"
+    description: LoadGen simulation account
+    groups:
+      - LoadGen
+  when: "{{ item }} != 0"
+  loop: "{{ range(51) | list }}"

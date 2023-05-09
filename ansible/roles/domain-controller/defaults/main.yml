@@ -1,5 +1,4 @@
+---
 public_dns1: 8.8.8.8
 public_dns2: 8.8.4.4
-reverse_dns_zone: 
 public_ntp: 0.nl.pool.ntp.org,1.nl.pool.ntp.org
-dns_domain_name: GO.EUC

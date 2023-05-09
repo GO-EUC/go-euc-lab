@@ -1,20 +1,20 @@
 ---
-- hosts: localhost
-  connection: local
-  gather_facts: yes
-  collections:
-    - azure.azcollection
+# - hosts: localhost
+#   connection: local
+#   gather_facts: yes
+#   collections:
+#     - azure.azcollection
 
-  tasks:
-  - name: Start the Azure Key Vault actions
-    include_tasks: azure-keyvault.yml
+#   tasks:
+#   - name: Start the Azure Key Vault actions
+#     include_tasks: azure-keyvault.yml
 
 - name: Citrix Cloud Connector
   hosts: cc
   serial: 1
   roles:
-  - domain-join
-  - citrix-cloud-connector
+    - domain-join
+    - citrix-cloud-connector
   vars:
     dns_domain_name: 'GO.EUC'
     domain_admin_user: "GO\\{{ ansible_user }}"
@@ -27,4 +27,4 @@
   hosts: localhost
   connection: local
   roles:
-  - citrix-cloud-configuration
+    - citrix-cloud-configuration

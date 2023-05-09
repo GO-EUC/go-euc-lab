@@ -1,0 +1,41 @@
+---
+
+- name: Create Citrix Site
+  citrix_site:
+    name: "{{ citrix.site }}"
+    db_server: "{{ groups['sql'][0] }}"
+    db_port: "{{ citrix.database_port }}"
+    admin_group: "{{ dns_domain_name }}\\{{ citrix.admin }}"
+    state: present
+  vars:
+    ansible_become: true
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+
+- name: Set the Citrix License Server
+  citrix_license:
+    lic_server: "{{ groups['citrix_lic'][0] }}"
+    lic_port: 27000
+    lic_model: UserDevice
+    lic_product_code: XDT
+    lic_product_edition: PLT
+    state: present
+  vars:
+    ansible_become: true
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+
+- name: Set Hypervisor connection
+  citrix_hosting_connection:
+    name: Default
+    type: vSphere
+    host_address: 10.2.0.5
+    host_username: administrator@vsphere.local
+    host_password: "{{vsphere_password}}"
+    host_datacenter: GO
+    host_cluster: Infra
+    host_storage: datastore2
+    host_network: VM Network
+    state: present

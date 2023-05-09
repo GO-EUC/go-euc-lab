@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements and collect secrets
+    include_tasks: vault.yml
+
+- name: Domain join the MSSQL Server
+  hosts: sql
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - local.yml
+  vars:
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
+
+- name: SQL Server
+  hosts: sql
+  vars_files:
+    - ansible.yml
+    - domain.yml
+  roles:
+  - mssql
+  tasks:
+    - name: Create databases
+      win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
+      loop:
+        - LoadGen
