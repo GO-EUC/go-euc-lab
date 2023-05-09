@@ -14,7 +14,7 @@
         creates: C:\Logs\sf-vars.xml
       environment:
         HostbaseUrl: "{{ citrix.storefront.url }}"
-        FarmServers: "{{ groups['ctx_sf'] | join(', ') }}"
+        FarmServers: "{{ groups['citrix_sf'] | join(', ') }}"
         StoreVirtualPath: "{{ citrix.storefront.path }}"
         TransportType: "{{ citrix.storefront.transport }}"
         GatewayUrl: "{{ citrix.storefront.gateway.url }}"

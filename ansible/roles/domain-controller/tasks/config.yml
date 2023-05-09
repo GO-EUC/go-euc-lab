@@ -56,6 +56,7 @@
   win_domain_user:
     name: sql_svc
     password: "{{ sql_svc }}"
+    password_never_expires: false
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Server - Service Account
@@ -64,6 +65,7 @@
   win_domain_user:
     name: sql_agt
     password: "{{ sql_agt }}"
+    password_never_expires: false
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     description: SQL Agent - Service Account
@@ -72,6 +74,7 @@
   win_domain_user:
     name: ansible
     password: "{{ ansible }}"
+    password_never_expires: false
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     groups:
@@ -81,6 +84,7 @@
   win_domain_user:
     name: loadgen_bot
     password: "{{ loadgen_bot }}"
+    password_never_expires: false
     state: present
     path: "OU=ServiceAccounts,OU=GO,{{ domain_path }}"
     groups:
@@ -92,7 +96,7 @@
     upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
     company: LoadGen
     password: "{{ loadgen }}"
-    password_expired: false
+    password_never_expires: false
     user_cannot_change_password: true
     state: present
     path: "OU=LoadGen,OU=GO,{{ domain_path }}"

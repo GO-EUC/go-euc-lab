@@ -1,10 +1,11 @@
 ---
+
 - name: Create Citrix Site
   citrix_site:
     name: "{{ citrix.site }}"
     db_server: "{{ groups['sql'][0] }}"
     db_port: "{{ citrix.database_port }}"
-    admin_group: "{{ domain_name }}\\{{ citrix.admin }}"
+    admin_group: "{{ dns_domain_name }}\\{{ citrix.admin }}"
     state: present
   vars:
     ansible_become: true
@@ -14,7 +15,7 @@
 
 - name: Set the Citrix License Server
   citrix_license:
-    lic_server: "{{ groups['ctx_lic'][0] }}"
+    lic_server: "{{ groups['citrix_lic'][0] }}"
     lic_port: 27000
     lic_model: UserDevice
     lic_product_code: XDT

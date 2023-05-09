@@ -7,10 +7,19 @@
 
 - name: Block for Citrix installation
   block:
+
+    - name: Install NuGet
+      win_shell: Install-PackageProvider -Name Nuget -Force
+
     - name: Check for PendingReboot module
       win_psmodule:
         name: PendingReboot
         state: present
+        accept_license: true
+      retries: 3
+      delay: 10
+      register: result
+      until: result is not failed
 
     - name: Install Citrix License Server prerequisites
       win_feature:
@@ -47,16 +56,10 @@
         path: "C:\\Download\\Citrix\\{{citrix.source}}"
       register: citrix_iso
 
-    - name: Copy file from UNC path
-      win_copy:
-        src: "{{citrix.path}}\\v{{citrix.version}}\\{{citrix.source}}"
+    - name: Download Citrix ISO
+      win_get_url:
+        url: "{{citrix.path}}/{{citrix.version}}/{{citrix.source}}"
         dest: "C:\\Download\\Citrix\\{{citrix.source}}"
-        remote_src: true
-      vars:
-        ansible_become: true
-        ansible_become_user: "{{ ansible_user }}"
-        ansible_become_password: "{{ ansible_password }}"
-        ansible_become_method: runas
       when: citrix_iso.stat.exists == false
 
     - name: Register iso path
