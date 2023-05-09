@@ -2,7 +2,7 @@
 citrix:
   version: '2212'
   source: Citrix_Virtual_Apps_and_Desktops_7_2212.iso
-  path: "\\\\{{ groups['mngt'][0] }}\\Software\\Citrix\\CVAD"
+  path: "http://10.2.0.6:8080/Citrix/CVAD"
   site: Default
   database_port: 1433
   database_site: CVAD_Site_DB
