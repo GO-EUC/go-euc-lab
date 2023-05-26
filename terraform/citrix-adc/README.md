@@ -10,6 +10,3 @@
 
 ### HowTo
 Due to runtime restrictions, for now the submodules of the terraform repo are adressed individually. The file "run.sh" executes all modules and adds the required timeouts. The process will subsequently be altered to automatically match all runtime requirements.
-
-
-fghfgh
