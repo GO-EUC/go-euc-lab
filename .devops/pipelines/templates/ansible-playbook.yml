@@ -1,0 +1,48 @@
+parameters:
+
+- name: terraform_backend
+  type: string
+
+- name: terraform_path
+  type: string
+
+- name: vault_addr
+  type: string
+
+- name: vault_token
+  type: string
+
+- name: ansible_path
+  type: string
+
+- name: ansible_playbook
+  type: string
+
+jobs:
+- job: ansible
+  displayName: Ansible deployment
+
+  steps:
+  - task: CmdLine@2
+    displayName: Terraform init
+    inputs:
+      script: 'terraform init -backend-config="${{ parameters.terraform_backend }}"'
+      workingDirectory: '${{ parameters.terraform_path }}'
+
+  - task: CmdLine@2
+    displayName: Terraform pull state
+    inputs:
+      script: 'terraform state pull > download.tfstate'
+      workingDirectory: '${{ parameters.terraform_path }}'
+
+  - task: PowerShell@2
+    displayName: Generate Ansible inventory file 
+    inputs:
+      filePath: '$(Build.Repository.LocalPath)/.devops/pipelines/scripts/inventory.ps1'
+      arguments: '-StateFile "${{ parameters.terraform_path }}/download.tfstate" -InventoryFile "${{ parameters.terraform_path }}/inventory"'
+
+  - task: PowerShell@2
+    displayName: Run playbook
+    inputs:
+      targetType: 'inline'
+      script: ansible-playbook ${{ parameters.ansible_path }}/${{ parameters.ansible_playbook }} -i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }}

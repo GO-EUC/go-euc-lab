@@ -84,9 +84,9 @@ variable adc-lb-sg-server-binding {
       "YourThirdServer"
     ]
     port = [
-      YourFirstPort,
-      YourSecondPort,
-      YourThirdPort
+      "YourFirstPort",
+      "YourSecondPort",
+      "YourThirdPort"
     ]
   }
 }
@@ -116,8 +116,8 @@ variable adc-lb-vserver-ssl{
       "YourSecondIP"
     ]
     port = [
-      YourFirstPort,
-      YourSecondPort
+      "YourFirstPort",
+      "YourSecondPort"
     ]
     lbmethod = [
       "YourFirstLBMethod",
@@ -152,7 +152,7 @@ variable adc-lb-vserver-dns{
       "YourFirstIP"
     ]
     port = [
-      YourFirstPort
+      "YourFirstPort"
     ]
     lbmethod = [
       "YourFirstLBMethod"

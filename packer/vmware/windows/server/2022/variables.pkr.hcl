@@ -125,7 +125,7 @@ variable "vm_guest_os_keyboard" {
 variable "vm_guest_os_timezone" {
   type        = string
   description = "The guest operating system timezone."
-  default     = "UTC"
+  default     = "CET"
 }
 
 variable "vm_guest_os_family" {
@@ -162,12 +162,6 @@ variable "vm_guest_os_experience_core" {
   type        = string
   description = "The guest operating system minimal experience. Used for naming. (e.g. 'core')"
   default     = "core"
-}
-
-variable "vm_guest_os_experience_desktop" {
-  type        = string
-  description = "The guest operating system desktop experience. Used for naming. (e.g. 'dexp')"
-  default     = "dexp"
 }
 
 variable "vm_guest_os_type" {
@@ -294,10 +288,10 @@ variable "common_content_library_skip_export" {
 
 // Removable Media Settings
 
-variable "common_iso_datastore" {
-  type        = string
-  description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
-}
+# variable "iso_datastore" {
+#   type        = string
+#   description = "The name of the source vSphere datastore for ISO images. (e.g. 'sfo-w01-cl01-nfs01')"
+# }
 
 variable "iso_path" {
   type        = string
@@ -307,6 +301,16 @@ variable "iso_path" {
 variable "iso_file" {
   type        = string
   description = "The file name of the ISO image used by the vendor. (e.g. '<language>_windows_server_version_<version>_updated_<month_year>_x64_dvd_<string>.iso')"
+}
+
+variable "iso_checksum_type" {
+  type        = string
+  description = "The checksum algorithm used by the vendor. (e.g. 'sha256')"
+}
+
+variable "iso_checksum_value" {
+  type        = string
+  description = "The checksum value provided by the vendor."
 }
 
 // Boot Settings
@@ -379,6 +383,12 @@ variable "build_username" {
   sensitive   = true
 }
 
+variable "build_organization" {
+  type        = string
+  description = "The build organization. (e.g. 'GO-EUC')"
+  sensitive   = true
+}
+
 variable "build_password" {
   type        = string
   description = "The password to login to the guest operating system."
@@ -416,4 +426,26 @@ variable "inline" {
   default     = [
     "Get-EventLog -LogName * | ForEach { Clear-EventLog -LogName $_.Log }"
   ]
+}
+
+// Static Network Address
+
+variable "network_cidr" {
+  type        = string
+  description = "Default network cidr, example: 10.2.0.0/24"
+}
+
+variable "network_address" {
+  type        = number
+  description = "Network address of the template machine, example: 31, will be 10.2.0.31/24"
+}
+
+variable "network_gateway" {
+  type        = number
+  description = "Default network gateway address, example: 1, will be 10.2.0.1"
+}
+
+variable "network_dns" {
+  type        = number
+  description = "Default network DNS address, example: 1, will be 10.2.0.1"
 }

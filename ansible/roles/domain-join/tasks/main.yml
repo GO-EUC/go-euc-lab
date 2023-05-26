@@ -1,23 +1,32 @@
-- name: Collect hostname
-  win_shell: |
-      $env:COMPUTERNAME
-  register: hostname
+---
+- name: Domain join machine
+  block:
 
-- name: Check for xDSCDomainjoin DSC Powershell module
-  win_psmodule:
-    name: xDSCDomainjoin
-    state: present
+  - name: Set fact for Domain Path
+    set_fact:
+      domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
 
-- name: Domain join
-  win_dsc:
-    resource_name: xDSCDomainjoin
-    Domain: '{{ dns_domain_name }}'
-    Credential_username: '{{ domain_admin_user }}'
-    Credential_password: '{{ ansible_password }}'
-  register: domain_state
-  retries: 2
-  delay: 30
+  - name: Set DNS to primary domain controller
+    win_dns_client:
+      adapter_names: '*'
+      ipv4_addresses:
+        - "{{ hostvars[groups['dc'][0]].ansible_host }}"
 
-- name: Reboot to complete domain join
-  win_reboot:
-  when: domain_state.reboot_required
+  - name: Domain join
+    win_domain_membership:
+      dns_domain_name: "{{ dns_domain_name }}"
+      hostname: "{{ inventory_hostname }}"
+      domain_admin_user: "{{ domain_admin_user }}"
+      domain_admin_password: "{{ domain_password }}"
+      domain_ou_path: "{{ ou_path }},{{ domain_path }}"
+      state: domain
+    register: domain_state
+    retries: 2
+    delay: 30
+    until: domain_state is not failed
+
+  - name: Reboot to complete domain join
+    win_reboot:
+    when: domain_state.reboot_required
+
+  when: ansible_facts['windows_domain_member'] == false

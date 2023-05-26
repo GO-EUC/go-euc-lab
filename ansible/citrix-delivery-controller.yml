@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
+
+- name: Domain join the Citrix Delivery Controller
+  hosts: citrix_ddc
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - local.yml
+  vars:
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
+
+- name: Install and configure Citrix Delivery Controller
+  hosts: citrix_ddc
+  roles:
+    - citrix-delivery-controller
+  vars_files:
+    - citrix.yml
+    - ansible.yml
+    - domain.yml

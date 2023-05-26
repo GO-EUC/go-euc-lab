@@ -2,27 +2,34 @@
 - hosts: localhost
   connection: local
   gather_facts: yes
-  collections:
-    - azure.azcollection
-
   tasks:
-  - name: Start the Azure Key Vault actions
-    include_tasks: azure-keyvault.yml
+  - name: Install requirements and collect secrets
+    include_tasks: vault.yml
 
-- name: Management Server
-  hosts: mgnt
+- name: Domain join the Management Server
+  hosts: mgmt
   roles:
-  - domain-join
-  - visual-studio-code
-  - loadgen
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - local.yml
   vars:
-    dns_domain_name: 'GO.EUC'
-    domain_name: GO
-    domain_controller: "{{ groups['dc'][0] }}"
-    domain_admin_user: "GO\\{{ ansible_user }}"
-    ansible_connection: winrm
-    ansible_winrm_transport: ntlm
-    ansible_winrm_server_cert_validation: ignore
-    ansible_port: 5985
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
 
-
+- name: Install and configure the Management Server
+  hosts: mgmt
+  roles:
+    - file-share
+    - management
+    - mssql-studio
+    - visual-studio-code
+    - loadgen
+  vars_files:
+    - ansible.yml
+    - domain.yml
+    - loadgen.yml
+  vars:
+    sql_admin: "GO\\sql_svc"
+    sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
+    sql_server: "{{ groups['sql'][0] }}"
+    sql_database: "LoadGen"

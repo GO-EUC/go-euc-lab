@@ -1,0 +1,77 @@
+---
+- name: Obtain information from registry for site check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\VMware
+    name: version
+  register: version
+
+- name: Block for VMware Horizon installation
+  block:
+
+    - name: Install VMware PowerCLI
+      win_psmodule:
+        name: Vmware.PowerCLI
+        state: present
+
+    - name: Create VMware Download Folder
+      win_file:
+        path: C:\Download\VMware
+        state: directory
+
+    - name: Create VMware Download Folder
+      win_file:
+        path: C:\Program Files\WindowsPowerShell\Modules\VMware.Hv.Helper
+        state: directory
+
+    - name: Download VMware Horizon helper files from GitHub
+      win_get_url:
+        url: "https://raw.githubusercontent.com/vmware/PowerCLI-Example-Scripts/master/Modules/VMware.Hv.Helper/{{ item }}"
+        dest: "C:\\Program Files\\WindowsPowerShell\\Modules\\VMware.Hv.Helper\\{{ item }}"
+      loop:
+        - VMware.HV.Helper.format.ps1xml
+        - VMware.HV.Helper.psd1
+        - VMware.HV.Helper.psm1
+
+    - name: Disable invalid certificate and CEIP participation
+      win_shell: |
+        Set-PowerCLIConfiguration -Scope User -ParticipateInCeip:$false -Confirm:$false
+        Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false
+
+    - name: Check for VMware installation file
+      win_stat:
+        path: "C:\\Download\\VMware\\{{vmware.source}}"
+      register: vmware_exe
+
+    - name: Copy file from UNC path
+      win_copy:
+        src: "{{vmware.path}}\\{{vmware.version}}\\{{vmware.source}}"
+        dest: "C:\\Download\\vmware\\{{vmware.source}}"
+        remote_src: true
+      vars:
+        ansible_become: true
+        ansible_become_user: "{{ ansible_user }}"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
+      when: vmware_exe.stat.exists == false
+
+    - name: Install VMware Horizon Connection Server
+      win_package:
+        path: "C:\\Download\\vmware\\{{vmware.source}}"
+        arguments: /s /v"/qn VDM_SERVER_INSTANCE_TYPE=1 VDM_INITIAL_ADMIN_SID=S-1-5-32-544 VDM_SERVER_RECOVERY_PWD={{ansible_password}} VDM_SERVER_RECOVERY_PWD_REMINDER=""Default"""
+        state: present
+        expected_return_code: [0, 3010]
+      vars:
+        ansible_become: true
+        ansible_become_user: "{{ ansible_user }}"
+        ansible_become_password: "{{ ansible_password }}"
+        ansible_become_method: runas
+      register: install
+
+    - name: Add registry for future installation check
+      win_regedit:
+        path: HKLM:\Software\GO-EUC\VMware
+        name: version
+        data: "{{ vmware.version }}"
+        type: string
+
+  when: (version.exists == false) or (version.value != vmware.version)

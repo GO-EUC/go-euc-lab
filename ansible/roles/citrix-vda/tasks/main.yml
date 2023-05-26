@@ -3,9 +3,9 @@
   set_fact:
     branch: "{{ lookup('env', 'environment') | lower }}"
     environments:
-        default: "pois" 
-        cards:   "card"
-        flowers: "flow"
+      default: "pois"
+      cards: "card"
+      flowers: "flow"
 
 - name: Built the environment dictonary and variables
   set_fact:
@@ -47,14 +47,14 @@
     msg: "{{ citrix_username }}"
 
 - name: Download Citrix VDA
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}" -VDAVersion latest -VDAType server 
+  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}" -VDAVersion latest -VDAType server
   register: citrix_download
 
 - name: Debug Citrix download
   ansible.builtin.debug:
     msg: "{{ citrix_download }}"
 
-- name: Install Citrix VDA 
+- name: Install Citrix VDA
   win_package:
     chdir: C:\Download\Citrix
     path: "{{ citrix_download.stdout | trim }}"

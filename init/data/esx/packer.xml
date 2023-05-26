@@ -1,0 +1,16 @@
+<ConfigRoot> 
+    <service id="1000">
+        <id>packer-vnc</id>
+        <rule id="0000">
+            <direction>inbound</direction>
+            <protocol>tcp</protocol>
+            <porttype>dst</porttype>
+            <port>
+            <begin>5900</begin>
+            <end>6000</end>
+            </port>
+        </rule>
+        <enabled>true</enabled>
+        <required>true</required>
+    </service>
+</ConfigRoot>

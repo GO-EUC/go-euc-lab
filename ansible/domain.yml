@@ -2,20 +2,16 @@
 - hosts: localhost
   connection: local
   gather_facts: yes
-  collections:
-    - azure.azcollection
-
   tasks:
-  - name: Start the Azure Key Vault actions
-    include_tasks: azure-keyvault.yml
+  - name: Install requirements
+    include_tasks: vault.yml
 
 - name: Domain Controller
   hosts: dc
   roles:
-  - domain-controller
-  - domain-config
-  vars:
-    ansible_connection: winrm
-    ansible_winrm_transport: ntlm
-    ansible_winrm_server_cert_validation: ignore
-    ansible_port: 5985
+    - domain-controller
+  vars_files:
+    - ansible.yml
+    - domain.yml
+    - accounts.yml
+    - local.yml

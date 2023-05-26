@@ -1,0 +1,6 @@
+---
+- name: Install Citrix Delivery Controller
+  import_tasks: install.yml
+
+- name: Configure Citrix Delivery Controller
+  import_tasks: config.yml

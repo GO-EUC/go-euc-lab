@@ -4,15 +4,22 @@
 *.tfstate.*
 *.tfplan
 
+# Ignore the ansible inventory file
+**/ansible/*inventory*
+
 .terraformrc
 terraform.rc
 
 *.tfvars
 *backend.conf
 
+terraform**/deploy.json
+
 # ignore any log and lock file
 *.log
 *.lock*
 
 # Packer ignore
+**/packer_cache
 *.pkrvars.hcl
+/manifests/*.json
