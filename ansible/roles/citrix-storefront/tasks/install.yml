@@ -8,9 +8,6 @@
 - name: Block for Citrix installation
   block:
 
-    - name: Install NuGet
-      win_shell: Install-PackageProvider -Name Nuget -Force
-
     - name: Check for PendingReboot module
       win_psmodule:
         name: PendingReboot

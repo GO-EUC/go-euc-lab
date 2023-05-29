@@ -16,7 +16,7 @@
   vars:
     ou_path: "OU=Infra,OU=Machines,OU=GO"
 
-- name: Citrix License Server
+- name: Install and configure Citrix License Server
   hosts: citrix_lic
   roles:
   - citrix-license-server
