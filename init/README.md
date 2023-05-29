@@ -1,4 +1,3 @@
-__TOC__
 
 The goal of the initialization script is to begin the deployment of the GO-EUC infrastructure. It will deploy the initial requirements depending on the platform and provision the project in your Azure DevOps environment. Once the project is provisioned, you will have the ability to start deploying the rest of the infrastructure.
 
@@ -148,7 +147,7 @@ Start the init script as followed:
 As mentioned earlier, the init script will provision your environment and consists of the following steps:
 
 1. Collecting the settings.json file and converting it to an object
-2. Installing required modules: Posh-SSH and Indented.Net.IP
+2 .Installing required modules: Posh-SSH and Indented.Net.IP
 3. Clearing any existing trusted SSH hosts
 4. Calculating the network range based on CIDR
 5. Collecting and downloading Hashicorp Terraform, Packer & Vault binaries via Evergreen (stealthpuppy.com)
