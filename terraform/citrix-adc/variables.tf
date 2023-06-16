@@ -30,7 +30,7 @@ variable vm {
     ip      = "192.168.1.15"
     gateway = "192.168.1.1"
     netmask = "255.255.255.0"
-    name    = "inf-adc-01"
+    name    = "adc-01"
   }
 }
 
@@ -44,7 +44,7 @@ variable adc-base {
     username        = "nsroot"
     oldpassword     = "nsroot"
     password        = "NewSecurePassword"
-    hostname        = "inf-adc-01"
+    hostname        = "adc-01"
     environmentname = "YourEnvironment"
     timezone        = "GMT+01:00-CET-Europe/Berlin"
     fqdn_int        = "domain.local"
@@ -115,7 +115,7 @@ variable adc-lb-srv {
   default = {
     name = [
     "citrix-ctrl-01",
-		"inf-dc-01"
+		"dc-01"
     ]
     ip = [
       "192.168.1.101",
@@ -129,8 +129,8 @@ variable adc-lb {
   default = {
     name = [
 		"sf",
-    "inf-dc",
-		"inf-dc"
+    "dc",
+		"dc"
     ]
     type = [
 		"http",
@@ -144,8 +144,8 @@ variable adc-lb {
     ]
     backend-server = [
       "citrix-ctrl-01",
-      "inf-dc-01",
-      "inf-dc-01"
+      "dc-01",
+      "dc-01"
     ]
     lb-type = [
       "content-switch",
@@ -173,7 +173,7 @@ variable adc-gw {
   default = {
     name                 = "citrix"
     staserver            = "citrix-ctrl-01"
-    dnsvservername       = "lb_vs_inf-dc.domain.local_DNS_53"
+    dnsvservername       = "lb_vs_dc.domain.local_DNS_53"
     authenticationpolicy = "auth_pol_ldap_domain.local"
     citrix-backend       = "http://citrix-ctrl-01.domain.local/Citrix/StoreWeb/"
     servicetype          = "SSL"
@@ -268,7 +268,6 @@ variable "adc-cs-lb" {
   type = map
   default = {
     name = [
-      "guac"
     ]
   }
 }
@@ -277,7 +276,7 @@ variable adc-finish {
   type = map
   description = ""
   default = {
-    dnsvservername  = "lb_vs_inf-dc.domain.local_DNS_53"
+    dnsvservername  = "lb_vs_dc.domain.local_DNS_53"
     dnsvservertype  = ""
   }
 }
