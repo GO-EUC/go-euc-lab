@@ -1,5 +1,7 @@
-terraform init &&
-terraform destroy --auto-approve -target="module._01_build" &&
-rm ./terraform.tfstate -f &&
-rm ./terraform.tfstate.backup -f &&
-rm ./.terraform.lock.hcl -f
+terraform init --upgrade &&
+terraform destroy --auto-approve -target="module.adc-01-build" &&
+sleep 15s &&
+rm .terraform.lock.hcl -f &&
+rm terraform.tfstate.backup -f &&
+rm terraform.tfstate -f &&
+rm .terraform -f -r
