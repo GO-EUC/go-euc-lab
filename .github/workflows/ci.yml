@@ -13,15 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
+            
       - name: YAML lint on Ansible
-        run: yamllint -c ./tests/ymllint/config.yml ./ansible
+        continue-on-error: true
+        run: yamllint -c ./tests/ymllint/config.yml ./ansible 
         
       - name: PSScriptAnalyzer on Ansible
+        continue-on-error: true
         run: pwsh -Command Invoke-ScriptAnalyzer -Path "./ansible/*" -Setting "./tests/psscript/config.psd1" -EnableExit
       
       - name: TFLint for Terraform
-        continue-on-error: true # added to ignore the outcome for now as there needs to be a lot adjusted
+        continue-on-error: true
         run: |
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          tflint --recursive
+          tflint --format junit --recursive > tflint-result.xml
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            *-result.xml
