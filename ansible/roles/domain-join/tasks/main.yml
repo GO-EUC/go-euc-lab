@@ -2,6 +2,10 @@
 - name: Domain join machine
   block:
 
+  - name: Set timezone to 'W. Europe Standard Time' (GMT+01:00)
+    win_timezone:
+      timezone: W. Europe Standard Time
+
   - name: Set fact for Domain Path
     set_fact:
       domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"

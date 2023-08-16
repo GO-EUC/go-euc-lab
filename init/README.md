@@ -147,7 +147,7 @@ Start the init script as followed:
 As mentioned earlier, the init script will provision your environment and consists of the following steps:
 
 1. Collecting the settings.json file and converting it to an object
-2 .Installing required modules: Posh-SSH and Indented.Net.IP
+2. Installing required modules: Posh-SSH and Indented.Net.IP
 3. Clearing any existing trusted SSH hosts
 4. Calculating the network range based on CIDR
 5. Collecting and downloading Hashicorp Terraform, Packer & Vault binaries via Evergreen (stealthpuppy.com)
