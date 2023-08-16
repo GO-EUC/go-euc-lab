@@ -16,7 +16,7 @@
   vars:
     ou_path: "OU=Infra,OU=Machines,OU=GO"
 
-- name: Citrix Storefront
+- name: Install and configure Citrix Storefront
   hosts: citrix_sf
   roles:
     - citrix-storefront

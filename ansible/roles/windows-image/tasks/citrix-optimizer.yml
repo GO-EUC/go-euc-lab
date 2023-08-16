@@ -1,0 +1,23 @@
+---
+- name: Create Temp folder
+  win_file:
+    path: C:\Temp
+    state: directory
+
+- name: Download Citrix Optimizer
+  win_get_url:
+    url: "{{citrix.optimizer.path}}/{{citrix.optimizer.version}}/CitrixOptimizerTool.zip"
+    dest: C:\Temp\CitrixOptimizerTool.zip
+
+- name: Extract zip file
+  win_unzip:
+    src: C:\Temp\CitrixOptimizerTool.zip
+    dest: C:\Temp\
+
+- name: Apply optimizations
+  win_shell: C:\Temp\CtxOptimizerEngine.ps1 -Template AutoSelect -Mode Execute
+
+- name: Remove Temp directory structure
+  win_file:
+    path: C:\Temp
+    state: absent

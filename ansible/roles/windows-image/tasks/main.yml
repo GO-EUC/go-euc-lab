@@ -1,7 +1,23 @@
 ---
+- name: Set variables
+  set_fact:
+    delivery: "{{ lookup('ansible.builtin.env', 'delivery') }}"
+    gpu_check: "{{ lookup('ansible.builtin.env', 'vgpu') }}"
+
 - name: Deployment Information
   debug:
     msg: "Running deployment for {{delivery}} on {{ansible_facts.os_name}}"
+
+- name: Add registry DelayedDesktopSwitchTimeout to value 0
+  win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: DelayedDesktopSwitchTimeout
+    data: 0
+    type: dword
+
+- name: Install NVIDIA driver
+  import_tasks: nvidia.yml
+  when: gpu_check == true
 
 - name: Install Citrix VDA
   import_tasks: citrix-vda.yml
@@ -11,8 +27,20 @@
   import_tasks: vmware-horizon.yml
   when: delivery == 'vmware'
 
+- name: Install LoadGen AddIn
+  import_tasks: loadgen-addin.yml
+
+- name: Install Office 365
+  import_tasks: office365.yml
+
+- name: Install Adobe Reader DC
+  import_tasks: adobe-reader-dc.yml
+
 - name: Apply Windows updates
   import_tasks: updates.yml
+
+- name: Apply Citrix Optimizer
+  import_tasks: citrix-optimizer.yml
 
 - name: Deployment Information
   debug:
