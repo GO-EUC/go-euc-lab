@@ -28,11 +28,11 @@ jobs:
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
           tflint --format junit --recursive > tflint-result.xml
       
-      - name: Checkov
+      - name: Checkov for Terraform
         continue-on-error: true
         run: |
           pip3 install checkov
-          checkov -o junitxml > checkov-results.xml
+          checkov --directory ./terraform -o junitxml > checkov-results.xml
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
