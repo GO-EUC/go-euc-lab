@@ -1,4 +1,3 @@
-
 The goal of the initialization script is to begin the deployment of the GO-EUC infrastructure. It will deploy the initial requirements depending on the platform and provision the project in your Azure DevOps environment. Once the project is provisioned, you will have the ability to start deploying the rest of the infrastructure.
 
 ## Getting started
