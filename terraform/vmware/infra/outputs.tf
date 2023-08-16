@@ -18,7 +18,7 @@ output "citrix_sf" {
   value = module.citrix_storefront[*].vm_info
 }
 
-output "citrix_dc" {
+output "citrix_ddc" {
   value = module.citrix_delivery_controller[*].vm_info
 }
 
@@ -26,8 +26,16 @@ output "citrix_lic" {
   value = module.citrix_license_server[*].vm_info
 }
 
+output "bots" {
+  value = module.bots[*].vm_info
+}
+
 output "vmware_hcs" {
   value = module.vmware_horizon[*].vm_info
+}
+
+output "build" {
+  value = module.build[*].vm_info
 }
 
 output "vcsa" {

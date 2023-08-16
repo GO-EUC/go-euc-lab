@@ -36,6 +36,12 @@ Write-Output "Disabling system hibernation..."
 Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Power\" -Name "HiberFileSizePercent" -Value 0 | Out-Null
 Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Power\" -Name "HibernateEnabled" -Value 0 | Out-Null
 
+# Set Power options
+Powercfg /Change monitor-timeout-ac 0
+Powercfg /Change monitor-timeout-dc 0
+Powercfg /Change standby-timeout-ac 0
+Powercfg /Change standby-timeout-dc 0
+
 # Disable TLS 1.0.s
 Write-Output "Disabling TLS 1.0..."
 New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols" -Name "TLS 1.0" | Out-Null

@@ -9,7 +9,7 @@
   block:
 
     - name: Install NuGet
-      win_shell: Install-PackageProvider -Name Nuget -Force
+      win_shell: Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
     - name: Check for PendingReboot module
       win_psmodule:

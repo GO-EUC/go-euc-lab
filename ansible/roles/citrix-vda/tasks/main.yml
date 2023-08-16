@@ -1,18 +1,4 @@
 ---
-- name: Built the environment dictonary and variables
-  set_fact:
-    branch: "{{ lookup('env', 'environment') | lower }}"
-    environments:
-      default: "pois"
-      cards: "card"
-      flowers: "flow"
-
-- name: Built the environment dictonary and variables
-  set_fact:
-    citrix_username: "{{ lookup('env', 'citrix_username') }}"
-    citrix_password: "{{ lookup('env', 'citrix_password') }}"
-    environment_short: "{{ environments[branch] }}"
-
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
@@ -32,33 +18,10 @@
   win_reboot:
     reboot_timeout: 3600
 
-- name: Create directory structure
-  win_file:
-    path: C:\Download\Citrix
-    state: directory
-
-- name: Copy a single file
-  ansible.windows.win_copy:
-    src: files/Get-CTXBinary.ps1
-    dest: C:\Download\Citrix\Get-CTXBinary.ps1
-
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ citrix_username }}"
-
-- name: Download Citrix VDA
-  win_shell: C:\Download\Citrix\Get-CTXBinary.ps1 -DownloadPath C:\Download\Citrix\ -MyCitrixUsername "{{ citrix_username }}" -MyCitrixPassword "{{ citrix_password }}" -VDAVersion latest -VDAType server
-  register: citrix_download
-
-- name: Debug Citrix download
-  ansible.builtin.debug:
-    msg: "{{ citrix_download }}"
-
 - name: Install Citrix VDA
   win_package:
-    chdir: C:\Download\Citrix
-    path: "{{ citrix_download.stdout | trim }}"
-    arguments: /components VDA /controllers "{{ environment_short }}-cc-1.go.euc, {{ environment_short }}-cc-2.go.euc" /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /enable_remote_assistance /enable_ss_ports /exclude `"Citrix Telemetry Service`",`"Citrix Personalization for App-V - VDA`",`"Citrix Files for Windows`",`"Citrix Files for Outlook`",`"User personalization layer`",`"Citrix WEM Agent`",`"Citrix VDA Upgrade Agent`" /includeadditional `"Citrix MCS IODriver`" /masterimage /noreboot /quiet
+    path: "{{citrix.path}}/{{citrix.version}}/VDAWorkstationSetup_{{citrix.version}}.exe"
+    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]
   register: vda_install
@@ -66,16 +29,3 @@
 - name: Reboot after VDA
   win_reboot:
   when: vda_install.changed
-
-- name: Resume VDA Install
-  win_package:
-    path: "{{ citrix_download.stdout | trim }}"
-    state: present
-    expected_return_code: [0, 3, 3010]
-    creates_service: BrokerAgent
-  when: vda_install.changed
-  register: vda_resume
-
-- name: Reboot after vda install
-  win_reboot:
-  when: vda_resume.changed

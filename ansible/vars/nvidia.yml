@@ -1,0 +1,5 @@
+---
+nvidia:
+  path: http://10.2.0.6:8080/NVIDIA/GRID/
+  version: 528.24
+  license: license.tok

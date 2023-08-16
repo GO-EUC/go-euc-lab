@@ -36,7 +36,7 @@ locals {
   build_by        = "Built by: HashiCorp Packer ${packer.version}"
   build_date      = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
   build_version   = formatdate("YYMM", timestamp())
-  iso_paths       = ["[${var.iso_datastore}] ${var.iso_path}/${var.iso_file}", "[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
+  iso_paths       = ["[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
   iso_checksum    = "${var.iso_checksum_type}:${var.iso_checksum_value}"
   manifest_date   = formatdate("YYYY-MM-DD hh:mm:ss", timestamp())
   manifest_path   = "${path.cwd}/manifests/"
@@ -87,6 +87,7 @@ source "vsphere-iso" "windows-desktop" {
   tools_upgrade_policy = var.common_tools_upgrade_policy
 
   // Removable Media Settings
+  iso_url      = "${var.iso_path}/${var.iso_file}"
   iso_paths    = local.iso_paths
   iso_checksum = local.iso_checksum
 

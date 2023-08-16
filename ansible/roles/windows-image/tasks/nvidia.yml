@@ -1,0 +1,26 @@
+---
+- name: Create Temp Folder
+  win_file:
+    path: C:\Temp
+    state: directory
+
+- name: Download NVIDIA Driver
+  win_get_url:
+    url: "{{nvidia.path}}/NVIDIA.zip"
+    dest: C:\Temp\NVIDIA.zip
+
+- name: Unzip gz log
+  win_unzip:
+    src: C:\Temp\NVIDIA.zip
+    dest: C:\Temp\NVIDIA
+
+- name: Install NVIDIA
+  win_package:
+    path: C:\Temp\NVIDIA\setup.exe
+    expected_return_code: [0, 1, 3010]
+    arguments: -s -noreboot
+
+- name: Download license file
+  win_get_url:
+    url: "{{nvidia.path}}/{{nvidia.license}}"
+    dest: "C:\\Program Files\\NVIDIA Corporation\\vGPU Licensing\\ClientConfigToken\\{{ nvidia.license }}"

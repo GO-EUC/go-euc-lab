@@ -1,16 +1,23 @@
 ---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
+
 - name: Domain join
-  hosts: builds
+  hosts: "build[{{build_id}}]"
   roles:
     - domain-join
   vars_files:
     - ansible.yml
-    - domain.yml
+    - local.yml
   vars:
-    ansible_user: "{{ local_admin_user }}"
+    ou_path: "OU=Builds,OU=Machines,OU=GO"
 
 - name: Installation playbook for base image
-  hosts: builds
+  hosts: "build[{{build_id}}]"
   roles:
     - windows-image
   vars_files:
@@ -18,5 +25,5 @@
     - domain.yml
     - citrix.yml
     - vmware.yml
-  vars:
-    ansible_user: "{{ domain_admin_user }}"
+    - loadgen.yml
+    - nvidia.yml

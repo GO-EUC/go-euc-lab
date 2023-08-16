@@ -1,0 +1,43 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements and collect secrets
+    include_tasks: vault.yml
+
+- name: Install Windows Updates and set timezone
+  hosts: all
+  tasks:
+
+    - name: Set timezone to 'W. Europe Standard Time' (GMT+01:00)
+      win_timezone:
+        timezone: W. Europe Standard Time
+
+    - name: "Reset Windows Update agent cache"
+      win_shell: |
+        Stop-Service -Name BITS,WUAUSERV,WaaSMedicSvc,CryptSvc -Force
+        Remove-Item -Path C:\Windows\SoftwareDistribution -Recurse -Force
+        Remove-Item -Path C:\Windows\System32\catroot2 -Recurse -Force
+        Start-Service -Name BITS,WUAUSERV,WaaSMedicSvc,CryptSvc
+        Usoclient RefreshSettings
+        Usoclient ScanInstallWait
+      register: reset_windows_update_results
+      become: yes
+      become_method: runas
+      become_user: SYSTEM
+
+    - name: Install Windows Updates
+      win_updates:
+        category_names: '*'
+        reboot: no
+        state: installed
+        log_path: C:\Windows\Temp\ansible_updates.txt
+
+    - name: Force reboot after the Windows Updates
+      win_reboot:
+        reboot_timeout: 3600
+
+  vars_files:
+    - ansible.yml
+    - domain.yml
