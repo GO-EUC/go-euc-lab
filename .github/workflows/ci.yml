@@ -32,7 +32,7 @@ jobs:
         continue-on-error: true
         run: |
           pip3 install checkov
-          checkov --directory ./terraform -o junitxml > checkov-results.xml
+          checkov --directory ./terraform -o junitxml > checkov-result.xml
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
