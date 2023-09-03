@@ -3,7 +3,7 @@
 #####
 variable vsphere {
   type = map
-  description = ""
+  description = "[Required] vSphere Configuration Variables"
   default = {
     server       = "192.168.1.4"
     user         = "administrator@vsphere.local"
@@ -16,13 +16,12 @@ variable vsphere {
     resourcepool = "YourEnvironment-tf"
   }
 }
-
 #####
 # ADC VM configuration variables
 #####
 variable vm {
   type = map
-  description = ""
+  description = "[Required] NetScaler VM Variables"
   default = {
     ovf     = "YourOVFFile"
     network = "vSwitch_Internal"
@@ -39,7 +38,7 @@ variable vm {
 #####
 variable adc-base {
   type = map
-  description = ""
+  description = "[Required] NetScaler System Variables"
   default = {
     username        = "nsroot"
     oldpassword     = "nsroot"
@@ -54,7 +53,7 @@ variable adc-base {
 
 variable adc-snip {
   type = map
-  description = ""
+  description = "NetScaler SubnetIP Variables"
   default = {
     ip      = "192.168.1.16"
     netmask = "255.255.255.0"
@@ -64,10 +63,10 @@ variable adc-snip {
 
 variable adc-license {
   type = map
-  description = ""
+  description = "NetScaler license variables | Default Express license: https://docs.netscaler.com/en-us/citrix-adc/current-release/licensing/citrix-adc-licensing-overview.html "
   default = {
     filename     = "your_adc_license.lic"
-    filecontent  = "/Path/To/Your/License/your_adc_license.lic"
+    filecontent  = "sources/license/your_adc_license.lic"
   }
 }
 
@@ -76,7 +75,7 @@ variable adc-license {
 #####
 variable adc-letsencrypt-lb {
   type = map
-  description = ""
+  description = "[Required] LetsEncrypt LoadBalancer configuration variables"
   default = {
     backend-ip  = "192.168.1.25"
     frontend-ip = "192.168.1.17"
@@ -90,7 +89,7 @@ variable adc-letsencrypt-lb {
 #####
 variable adc-letsencrypt-certificate {
   type = map
-  description = ""
+  description = "[Required] LetsEncrypt Configuration variables"
   default = {
     private_key_algorithm      = "RSA"
     private_key_rsa_bits       = "4096"
@@ -106,12 +105,12 @@ variable adc-letsencrypt-certificate-san {
     "citrix.YourEnvironment.YourDomain.YourTLD"
   ]
 }
-
 #####
 # ADC LB variables
 #####
 variable adc-lb-srv {
   type = map
+  description = "[Required] NetScaler Basic LoadBalancing Virtual Server variables"
   default = {
     name = [
     "citrix-ctrl-01",
@@ -170,6 +169,7 @@ variable adc-lb-generic {
 #####
 variable adc-gw {
   type = map
+  description = "[Required] ADC Citrix Gateway variables"
   default = {
     name                 = "citrix"
     staserver            = "citrix-ctrl-01"
@@ -190,6 +190,7 @@ variable adc-gw {
 #####
 variable "adc-gw-authenticationldapaction" {
   type = map
+  description = "[Required] ADC Authentication LDAP Action variables"
   default = {
     type = [
       "ldap"
@@ -232,6 +233,7 @@ variable "adc-gw-authenticationldapaction" {
 #####
 variable "adc-gw-authenticationldappolicy" {
   type = map
+  description = "[Required] ADC Authentication LDAP Policy variables"
   default = {
     rule = [
       "ns_true"
@@ -247,6 +249,7 @@ variable "adc-gw-authenticationldappolicy" {
 #####
 variable "adc-cs" {
   type = map
+  description = "[Required] ADC CS variables]"
   default = {
     vserver_name        = "cs_vs_any.domain.local_ssl_443"
     vserver_ip          = "192.168.1.12"
