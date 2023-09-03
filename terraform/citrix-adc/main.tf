@@ -1,31 +1,31 @@
-# Module terraform-module-citrix-adc-build
-module "adc-01-build" {
-  source = "github.com/jansvensen/terraform-module-citrix-adc-build.git"
+# # Module terraform-module-citrix-adc-build
+# module "adc-01-build" {
+#   source = "modules/vsphere_deploy"
 
-  vsphere = {
-    server       = var.vsphere.server
-    user         = var.vsphere.user
-    password     = var.vsphere.password
-    datacenter   = var.vsphere.datacenter
-    host         = var.vsphere.host
-    datastore    = var.vsphere.datastore
-    timezone     = var.vsphere.timezone
-    resourcepool = var.vsphere.resourcepool
-  }
+#   vsphere = {
+#     server       = var.vsphere.server
+#     user         = var.vsphere.user
+#     password     = var.vsphere.password
+#     datacenter   = var.vsphere.datacenter
+#     host         = var.vsphere.host
+#     datastore    = var.vsphere.datastore
+#     timezone     = var.vsphere.timezone
+#     resourcepool = var.vsphere.resourcepool
+#   }
 
-  vm = {
-    network = var.vm.network
-    mac     = var.vm.mac
-    ip      = var.vm.ip
-    gateway = var.vm.gateway
-    netmask = var.vm.netmask
-    name    = var.vm.name
-    ovf     = var.vm.ovf
-  }  
-}
+#   vm = {
+#     network = var.vm.network
+#     mac     = var.vm.mac
+#     ip      = var.vm.ip
+#     gateway = var.vm.gateway
+#     netmask = var.vm.netmask
+#     name    = var.vm.name
+#     ovf     = var.vm.ovf
+#   }  
+# }
 
-module "adc-02-reset-password" {
-  source = "github.com/jansvensen/terraform-module-citrix-adc-reset-password.git"
+module "netscaler" {
+  source = "./modules/netscaler/"
 
   vm = {
     ip = var.vm.ip
@@ -37,26 +37,26 @@ module "adc-02-reset-password" {
   }
 }
 
-module "adc-03-license" {
-  source = "github.com/jansvensen/terraform-module-citrix-adc-license.git"
+# module "adc-03-license" {
+#   source = "modules/netscaler/netscaler_license"
 
-  vm = {
-    ip = var.vm.ip
-  }  
-  adc-base = {
-    username    = var.adc-base.username
-    password    = var.adc-base.password
-  }
+#   vm = {
+#     ip = var.vm.ip
+#   }  
+#   adc-base = {
+#     username    = var.adc-base.username
+#     password    = var.adc-base.password
+#   }
 
-  adc-license = {
-    filename     = var.adc-license.filename 
-    filecontent  = file(var.adc-license.filecontent)
-  }
+#   adc-license = {
+#     filename     = var.adc-license.filename 
+#     filecontent  = file(var.adc-license.filecontent)
+#   }
   
-}
+# }
 
 module "adc-04-base" {
-  source = "github.com/jansvensen/terraform-module-citrix-adc-base.git"
+  source = "./modules/netscaler/base_configuration"
   
   vm = {
     ip       = var.vm.ip
@@ -78,7 +78,7 @@ module "adc-04-base" {
 }
 
 module "adc-05-ssl" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-ssl.git"
+    source = "./modules/netscaler/ssl_configuration"
   vm = {
     ip = var.vm.ip
   }
@@ -92,7 +92,7 @@ module "adc-05-ssl" {
 }
 
 module "adc-06-letsencrypt-lb" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-letsencrypt-lb.git"
+    source = "./modules/netscaler/letsencrypt_lb"
 
   vm = {
     ip = var.vm.ip
@@ -113,7 +113,7 @@ module "adc-06-letsencrypt-lb" {
 }
 
 module "adc-07-letsencrypt" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-letsencrypt.git"
+    source = "./modules/netscaler/letsencrypt"
 
   vm = {
     ip = var.vm.ip
@@ -139,7 +139,7 @@ module "adc-07-letsencrypt" {
 }
 
 module "adc-09-lb" {
-  source = "github.com/jansvensen/terraform-module-citrix-adc-lb.git"
+  source = "./modules/netscaler/loadbalancers"
 
   vm = {
     ip = var.vm.ip
@@ -173,7 +173,7 @@ module "adc-09-lb" {
 }
 
 module "adc-10-gateway" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-gw.git"
+    source = "./modules/netscaler/gateway"
 
   vm = {
     ip = var.vm.ip
@@ -221,7 +221,7 @@ module "adc-10-gateway" {
 }
 
 module "adc-11-cs" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-cs.git"
+    source = "./modules/netscaler/content_switching"
 
   vm = {
     ip = var.vm.ip
@@ -252,7 +252,7 @@ module "adc-11-cs" {
 }
 
 module "adc-99-finish" {
-    source = "github.com/jansvensen/terraform-module-citrix-adc-finish.git"
+    source = "./modules/netscaler/final_operations"
 
   vm = {
     ip = var.vm.ip

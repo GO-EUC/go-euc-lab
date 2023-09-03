@@ -9,7 +9,7 @@ variable vsphere {
     user         = "administrator@vsphere.local"
     password     = ""
     datacenter   = "YourEnvironment"
-    host         = "192.168.1.3"
+    host         = "192.168.176.110"
     datastore    = "VM"
     network      = "vSwitch_Internal"
     timezone     = 020
@@ -26,7 +26,7 @@ variable vm {
     ovf     = "YourOVFFile"
     network = "vSwitch_Internal"
     mac     = "00:00:00:aa:bb:cc"
-    ip      = "192.168.1.15"
+    ip      = "192.168.176.110"
     gateway = "192.168.1.1"
     netmask = "255.255.255.0"
     name    = "adc-01"
@@ -55,7 +55,7 @@ variable adc-snip {
   type = map
   description = "NetScaler SubnetIP Variables"
   default = {
-    ip      = "192.168.1.16"
+    ip      = "192.168.176.198"
     netmask = "255.255.255.0"
     icmp    = "ENABLED"
   }
