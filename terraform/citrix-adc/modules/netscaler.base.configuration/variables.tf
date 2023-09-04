@@ -1,16 +1,12 @@
 # Login Information for the NetScaler to authenticate API calls
 variable logon_information {
+  description = "The logon information to authenticate the NetScaler API calls with"
     type = object({
       username = string
       password = string
       host = string 
     })
-
 }
-
-##############################
-# Base NetScaler Configuration
-##############################
 
 variable base_configuration {
   description = "uncategorized base_configuration variables"
@@ -31,3 +27,5 @@ variable base_configuration_snip {
     icmp = string
   })
 }
+
+

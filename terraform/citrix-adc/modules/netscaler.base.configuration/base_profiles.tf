@@ -1,3 +1,38 @@
+
+# Add basic http Profile
+resource "citrixadc_nshttpprofile" "base_http_prof" {
+  name = "http_prof_${var.base_configuration.environment_prefix}"
+  dropinvalreqs = "ENABLED"
+  markhttp09inval = "ENABLED"
+  markconnreqinval = "ENABLED"
+  weblog = "DISABLED"
+  http2 = "ENABLED"
+}
+
+
+# Add basic TCP Profile
+resource "citrixadc_nstcpprofile" "base_tcp_prof" {
+  name = "tcp_prof_${var.base_configuration.environment_prefix}"
+  ws = "ENABLED"
+  sack = "ENABLED"
+  wsval = "8"
+  mss = "1460"
+  initialcwnd = "10"
+  oooqsize = "300"
+  buffersize = "131072"
+  flavor = "BIC"
+  sendbuffsize = "131072"
+  rstmaxack = "ENABLED"
+  spoofsyndrop = "DISABLED"
+  frto = "ENABLED"
+  fack = "ENABLED"
+  nagle = "ENABLED"
+  dynamicreceivebuffering = "ENABLED"
+  drophalfclosedconnontimeout = "ENABLED"
+  dropestconnontimeout = "ENABLED"
+}
+
+
 #####
 # Enable SSL Parameter Usage
 #####
@@ -9,7 +44,7 @@ resource "citrixadc_sslparameter" "ssl_enable_sslprofiles" {
 # Add SSL Cipher Group Frontend TLS 12+13
 #####
 resource "citrixadc_sslcipher" "ssl_cg_fe_TLS1213" {
-  ciphergroupname = "ssl_cg_${var.adc-base.environmentname}_fe_TLS1213"
+  ciphergroupname = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS1213"
 
   ciphersuitebinding {
     ciphername     = "TLS1.3-CHACHA20-POLY1305-SHA256"
@@ -49,7 +84,7 @@ resource "citrixadc_sslcipher" "ssl_cg_fe_TLS1213" {
 # Add SSL Cipher Group Frontend TLS 13
 #####
 resource "citrixadc_sslcipher" "ssl_cg_fe_TLS13" {
-  ciphergroupname = "ssl_cg_${var.adc-base.environmentname}_fe_TLS13"
+  ciphergroupname = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS13"
 
   ciphersuitebinding {
     ciphername     = "TLS1.3-CHACHA20-POLY1305-SHA256"
@@ -73,7 +108,7 @@ resource "citrixadc_sslcipher" "ssl_cg_fe_TLS13" {
 # Add SSL Cipher Group Backend TLS 12
 #####
 resource "citrixadc_sslcipher" "ssl_cg_be_TLS12" {
-  ciphergroupname = "ssl_cg_${var.adc-base.environmentname}_be_TLS12"
+  ciphergroupname = "ssl_cg_${var.base_configuration.environment_prefix}_be_TLS12"
 
   ciphersuitebinding {
     ciphername     = "TLS1.2-ECDHE-ECDSA-AES256-GCM-SHA384"
@@ -117,7 +152,7 @@ resource "citrixadc_sslcipher" "ssl_cg_be_TLS12" {
 # Add SSL Profile Frontend TLS 12+13
 #####
 resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
-  name = "ssl_prof_${var.adc-base.environmentname}_fe_TLS1213"
+  name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS1213"
 
   denysslreneg = "NONSECURE"
   ersa         = "DISABLED"
@@ -129,7 +164,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
   tls13        = "ENABLED"
 
   cipherbindings {
-    ciphername     = "ssl_cg_${var.adc-base.environmentname}_fe_TLS1213"
+    ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS1213"
     cipherpriority = 10
   }
 
@@ -149,7 +184,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
 # Add SSL Profile Frontend TLS 12+13 with SNI
 #####
 resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
-  name = "ssl_prof_${var.adc-base.environmentname}_fe_TLS1213_SNI"
+  name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS1213_SNI"
 
   denysslreneg = "NONSECURE"
   ersa         = "DISABLED"
@@ -162,7 +197,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
   snienable    = "ENABLED" 
 
   cipherbindings {
-    ciphername     = "ssl_cg_${var.adc-base.environmentname}_fe_TLS1213"
+    ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS1213"
     cipherpriority = 10
   }
 
@@ -182,7 +217,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
 # Add SSL Profile Frontend TLS 13
 #####
 resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
-  name = "ssl_prof_${var.adc-base.environmentname}_fe_TLS13"
+  name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS13"
 
   denysslreneg = "NONSECURE"
   ersa         = "DISABLED"
@@ -194,7 +229,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
   tls13        = "ENABLED"
 
   cipherbindings {
-    ciphername     = "ssl_cg_${var.adc-base.environmentname}_fe_TLS13"
+    ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS13"
     cipherpriority = 10
   }
 
@@ -214,7 +249,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
 # Add SSL Profile Frontend TLS 13 with SNI
 #####
 resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
-  name = "ssl_prof_${var.adc-base.environmentname}_fe_TLS13_SNI"
+  name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS13_SNI"
 
   denysslreneg = "NONSECURE"
   ersa         = "DISABLED"
@@ -227,7 +262,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
   snienable    = "ENABLED" 
 
   cipherbindings {
-    ciphername     = "ssl_cg_${var.adc-base.environmentname}_fe_TLS13"
+    ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS13"
     cipherpriority = 10
   }
 
@@ -247,7 +282,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
 # Add SSL Profile Backend TLS 12
 #####
 resource "citrixadc_sslprofile" "ssl_prof_be_12" {
-  name = "ssl_prof_${var.adc-base.environmentname}_be_TLS12"
+  name = "ssl_prof_${var.base_configuration.environment_prefix}_be_TLS12"
 
   denysslreneg   = "NONSECURE"
   ersa           = "DISABLED"
@@ -259,7 +294,7 @@ resource "citrixadc_sslprofile" "ssl_prof_be_12" {
   tls12          = "ENABLED"
 
   cipherbindings {
-    ciphername     = "ssl_cg_${var.adc-base.environmentname}_be_TLS12"
+    ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_be_TLS12"
     cipherpriority = 10
   }
 
@@ -292,13 +327,13 @@ resource "citrixadc_nsconfig_save" "ssl_save" {
   ]
 }
 
-#####
-# Wait a few seconds
-#####
-resource "time_sleep" "ssl_wait_a_few_seconds" {
-  create_duration = "15s"
+# #####
+# # Wait a few seconds
+# #####
+# resource "time_sleep" "ssl_wait_a_few_seconds" {
+#   create_duration = "15s"
 
-  depends_on = [
-    citrixadc_nsconfig_save.ssl_save
-  ]
-}
+#   depends_on = [
+#     citrixadc_nsconfig_save.ssl_save
+#   ]
+# }
