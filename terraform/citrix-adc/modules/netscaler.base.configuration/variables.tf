@@ -19,9 +19,9 @@ variable base_configuration {
 }
 
 variable base_configuration_snip {
-  description = "The initial subnet IP information on the NetScaler"
+  description = "The first subnet IP information on the NetScaler"
   type = object({
-    # NetScaler IP
+    # Subnet IP
     ip_address = string
     netmask = string
     icmp = string

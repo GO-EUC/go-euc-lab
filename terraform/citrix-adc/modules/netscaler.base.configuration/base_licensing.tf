@@ -1,44 +1,39 @@
-# locals {
-#   filelocation = "/nsconfig/license"
-# }
+locals {
+  filelocation = "/nsconfig/license"
+}
 
-# #####
-# # Add License
-# #####
-# resource "citrixadc_systemfile" "license_upload" {
-#     filename     = var.adc-license.filename
-#     filelocation = local.filelocation
-#     filecontent  = var.adc-license.filecontent
-# }
 
-# #####
-# # Save Configuration
-# #####
-# resource "citrixadc_nsconfig_save" "license_save" {
-#     all        = true
-#     timestamp  = timestamp()
+# Upload NetScaler License
+resource "citrixadc_systemfile" "license_upload" {
+    filename     = var.adc-license.filename
+    filelocation = local.filelocation
+    filecontent  = var.adc-license.filecontent
+}
 
-#     depends_on = [
-#         citrixadc_systemfile.license_upload
-#     ]
-# }
+# Save Configuration
+resource "citrixadc_nsconfig_save" "license_save" {
+    all        = true
+    timestamp  = timestamp()
 
-# #####
-# # Reboot for license application
-# #####
-# resource "citrixadc_rebooter" "license_reboot" {
-#     timestamp            = timestamp()
-#     warm                 = true
-#     wait_until_reachable = false
+    depends_on = [
+        citrixadc_systemfile.license_upload
+    ]
+}
 
-#     depends_on           = [
-#         citrixadc_nsconfig_save.license_save
-#     ]
-# }
 
-# #####
+# Reboot to activate license
+resource "citrixadc_rebooter" "license_reboot" {
+    timestamp            = timestamp()
+    warm                 = true
+    wait_until_reachable = false
+
+    depends_on           = [
+        citrixadc_nsconfig_save.license_save
+    ]
+}
+
+
 # # Wait a few seconds
-# #####
 # resource "time_sleep" "license_wait_a_few_seconds" {
 
 #   create_duration = "90s"
