@@ -28,4 +28,13 @@ variable base_configuration_snip {
   })
 }
 
+# All backend services to be created
+variable backend_services {
+  description = "All backend services to be created"
+  type        = map(object({
+    hostname = string
+    ip = string
+  }))
+}
+
 

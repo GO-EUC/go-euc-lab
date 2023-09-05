@@ -26,8 +26,40 @@ variable base_configuration_snip {
   description = "The initial subnet IP information on the NetScaler"
   type = object({
     # NetScaler IP
-    ip_address = string
+    subnet_ip = string
     netmask = string
     icmp = string
   })
+}
+
+# All backend services to be created
+variable backend_services {
+  description = "All backend services to be created"
+  type = map(object({
+    hostname = string
+    ip = string
+  }))
+}
+
+# All service groups to be created
+variable service_groups {
+  description = "All service groups to be created"
+  type        = map(object({
+    name = string
+    type = string
+    port = string
+    backend_services = list
+  }))
+}
+
+# All virtual servers to be created
+variable virtual_servers {
+  description = "All virtual servers to be created"
+  type        = map(object({
+    name = string
+    type = string
+    port = string
+    lb_type = string
+    service_groups = list
+  }))
 }
