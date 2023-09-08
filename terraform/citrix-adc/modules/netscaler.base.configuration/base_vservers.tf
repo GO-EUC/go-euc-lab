@@ -48,16 +48,3 @@ resource "citrixadc_lbvserver" "lb_vserver" {
 }
 
 
-
-# # Bind LB Service Groups to LB vServers
-# resource "citrixadc_lbvserver_servicegroup_binding" "lb_vserver_sg_binding" {
-#   count             = length(var.adc-lb.name)
-#   name              = "lb_vs_${local.countvalue}"
-#   servicegroupname  = "lb_sg_${local.countvalue}"
-
-#   depends_on = [
-#     citrixadc_lbvserver.lb_vserver
-#   ]
-# }
-
-

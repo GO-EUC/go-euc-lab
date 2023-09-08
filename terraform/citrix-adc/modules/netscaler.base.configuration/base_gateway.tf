@@ -10,7 +10,8 @@ resource "citrixadc_authenticationvserver" "aaa_vserver" {
 
 # Bind authentication policy to AAA vserver
 resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "aaa_policy_bind" {
-  name      = citrixadc_authenticationvserver.aaa_vserver.name
+  count = var.base_configuration.advanced ? 1 : 0
+  name      = citrixadc_authenticationvserver.aaa_vserver[count.index].name
   policy    = citrixadc_authenticationpolicy.auth_authpolicy.name
   priority  = 90
   bindpoint = "REQUEST"
@@ -20,8 +21,9 @@ resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "aaa
 
 # Create authentication profile
 resource "citrixadc_authenticationauthnprofile" "gw_authentication_profile" {
+  count = var.base_configuration.advanced ? 1 : 0
   name                = "authprof_aaa_ldaps"
-  authnvsname         = citrixadc_authenticationvserver.aaa_vserver.name
+  authnvsname         = citrixadc_authenticationvserver.aaa_vserver[count.index].name
 }
 
 # Create Gateway vServer
@@ -32,7 +34,7 @@ resource "citrixadc_vpnvserver" "gw_vserver" {
     ipv46           = var.gateway.ipv46
     port            = var.gateway.port
     dtls            = var.gateway.dtls
-    authnprofile = citrixadc_authenticationauthnprofile.gw_authentication_profile.name
+    authnprofile = citrixadc_authenticationauthnprofile.gw_authentication_profile[count.index].name
     tcpprofilename  = "tcp_prof_${var.base_configuration.environment_prefix}"
     httpprofilename = "http_prof_${var.base_configuration.environment_prefix}"
     
