@@ -96,18 +96,19 @@ resource "citrixadc_systemparameter" "base_systemparam" {
 }
 
 
-# Save config
-resource "citrixadc_nsconfig_save" "base_save" {  
-  all  = true
-  timestamp  = timestamp()
+# # Save config
+# resource "citrixadc_nsconfig_save" "base_save" {  
+#   all  = true
+#   timestamp  = timestamp()
 
-  depends_on = [
-    citrixadc_nsconfig_save.base_save,
-    citrixadc_nsfeature.advanced_nsfeature,
-    citrixadc_nshostname.base_hostname,
-    citrixadc_nsip.base_snip,
-    citrixadc_nsmode.base_nsmode,
-    citrixadc_nsparam.base_nsparam,
-    citrixadc_systemparameter.base_systemparam
-  ]
-}
+#   depends_on = [
+#     citrixadc_nsconfig_save.base_save,
+#     citrixadc_nsfeature.advanced_nsfeature,
+#     citrixadc_nshostname.base_hostname,
+#     citrixadc_nsip.base_snip,
+#     citrixadc_nsmode.base_nsmode,
+#     citrixadc_nsparam.base_nsparam,
+#     citrixadc_systemparameter.base_systemparam,
+#     citrixadc_sslvserver.gw_vserver_sslprofile
+#   ]
+# }

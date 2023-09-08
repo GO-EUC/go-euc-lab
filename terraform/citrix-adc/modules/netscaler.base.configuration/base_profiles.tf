@@ -296,17 +296,3 @@ resource "citrixadc_sslprofile" "ssl_prof_be_12" {
   ]     
 }
 
-# Save config
-resource "citrixadc_nsconfig_save" "ssl_save" {    
-    all       = true
-    timestamp = timestamp()
-
-  depends_on = [
-    citrixadc_sslcipher.ssl_cg_fe_TLS1213,
-    citrixadc_sslcipher.ssl_cg_fe_TLS13,
-    citrixadc_sslcipher.ssl_cg_be_TLS12,
-    citrixadc_sslprofile.ssl_prof_fe_1213,
-    citrixadc_sslprofile.ssl_prof_fe_13,
-    citrixadc_sslprofile.ssl_prof_be_12
-  ]
-}

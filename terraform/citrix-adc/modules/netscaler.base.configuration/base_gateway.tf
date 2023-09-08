@@ -8,15 +8,25 @@ resource "citrixadc_authenticationvserver" "aaa_vserver" {
     depends_on = [citrixadc_nsfeature.advanced_nsfeature]
 }
 
-# Bind authentication policy to AAA vserver
-resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "aaa_policy_bind" {
-  count = var.base_configuration.advanced ? 1 : 0
-  name      = citrixadc_authenticationvserver.aaa_vserver[count.index].name
-  policy    = citrixadc_authenticationpolicy.auth_authpolicy.name
-  priority  = 90
-  bindpoint = "REQUEST"
+# # Bind authentication policy to AAA vserver
+# resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "aaa_policy_bind" {
+#   count = var.base_configuration.advanced ? 1 : 0
+#   name      = citrixadc_authenticationvserver.aaa_vserver[count.index].name
+#   policy    = citrixadc_authenticationpolicy.auth_authpolicy.name
+#   priority  = 90
+#   #bindpoint = "REQUEST"
 
-  depends_on = [citrixadc_authenticationpolicy.auth_authpolicy]
+#   depends_on = [
+#     citrixadc_vpnvserver.gw_vserver
+#     ]
+# }
+
+resource "citrixadc_authenticationvserver_authenticationpolicy_binding" "tf_bind" {
+  name     = "AAA_LDAPS"
+  policy   = "pol_auth_ldaps"
+  priority = 30
+
+  depends_on = [citrixadc_authenticationvserver.aaa_vserver, citrixadc_authenticationpolicy.auth_authpolicy  ]
 }
 
 # Create authentication profile
@@ -24,6 +34,7 @@ resource "citrixadc_authenticationauthnprofile" "gw_authentication_profile" {
   count = var.base_configuration.advanced ? 1 : 0
   name                = "authprof_aaa_ldaps"
   authnvsname         = citrixadc_authenticationvserver.aaa_vserver[count.index].name
+   depends_on = [citrixadc_authenticationpolicy.auth_authpolicy]
 }
 
 # Create Gateway vServer
@@ -38,7 +49,7 @@ resource "citrixadc_vpnvserver" "gw_vserver" {
     tcpprofilename  = "tcp_prof_${var.base_configuration.environment_prefix}"
     httpprofilename = "http_prof_${var.base_configuration.environment_prefix}"
     
-    depends_on = [citrixadc_authenticationvserver_authenticationldappolicy_binding.aaa_policy_bind]
+    depends_on = [citrixadc_authenticationauthnprofile.gw_authentication_profile]
 }
 
 
@@ -49,7 +60,9 @@ resource "citrixadc_sslvserver" "gw_vserver_sslprofile" {
     sslprofile  = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS1213"
 
     depends_on = [
-    citrixadc_vpnvserver.gw_vserver
+    citrixadc_vpnvserver.gw_vserver, 
+    citrixadc_sslprofile.ssl_prof_fe_1213
+    
     ]
 }
 
