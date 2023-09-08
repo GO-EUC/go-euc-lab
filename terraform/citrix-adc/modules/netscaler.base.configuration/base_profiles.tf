@@ -80,9 +80,7 @@ resource "citrixadc_sslcipher" "ssl_cg_fe_TLS1213" {
   ]
 }
 
-#####
 # Add SSL Cipher Group Frontend TLS 13
-#####
 resource "citrixadc_sslcipher" "ssl_cg_fe_TLS13" {
   ciphergroupname = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS13"
 
@@ -104,9 +102,7 @@ resource "citrixadc_sslcipher" "ssl_cg_fe_TLS13" {
   ]
 }
 
-#####
 # Add SSL Cipher Group Backend TLS 12
-#####
 resource "citrixadc_sslcipher" "ssl_cg_be_TLS12" {
   ciphergroupname = "ssl_cg_${var.base_configuration.environment_prefix}_be_TLS12"
 
@@ -148,9 +144,7 @@ resource "citrixadc_sslcipher" "ssl_cg_be_TLS12" {
   ]
 }
 
-#####
 # Add SSL Profile Frontend TLS 12+13
-#####
 resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
   name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS1213"
 
@@ -180,9 +174,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
   ]
 }
 
-#####
 # Add SSL Profile Frontend TLS 12+13 with SNI
-#####
 resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
   name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS1213_SNI"
 
@@ -213,9 +205,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
   ]
 }
 
-#####
 # Add SSL Profile Frontend TLS 13
-#####
 resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
   name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS13"
 
@@ -245,9 +235,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
   ]
 }
 
-#####
 # Add SSL Profile Frontend TLS 13 with SNI
-#####
 resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
   name = "ssl_prof_${var.base_configuration.environment_prefix}_fe_TLS13_SNI"
 
@@ -278,9 +266,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
   ]
 }
 
-#####
 # Add SSL Profile Backend TLS 12
-#####
 resource "citrixadc_sslprofile" "ssl_prof_be_12" {
   name = "ssl_prof_${var.base_configuration.environment_prefix}_be_TLS12"
 
@@ -288,7 +274,7 @@ resource "citrixadc_sslprofile" "ssl_prof_be_12" {
   ersa           = "DISABLED"
   sessreuse      = "ENABLED"
   sesstimeout    = "300"
-  sslprofiletype = "Backend"
+  sslprofiletype = "BackEnd"
   tls1           = "DISABLED"
   tls11          = "DISABLED"
   tls12          = "ENABLED"
@@ -310,9 +296,7 @@ resource "citrixadc_sslprofile" "ssl_prof_be_12" {
   ]     
 }
 
-#####
 # Save config
-#####
 resource "citrixadc_nsconfig_save" "ssl_save" {    
     all       = true
     timestamp = timestamp()
@@ -326,14 +310,3 @@ resource "citrixadc_nsconfig_save" "ssl_save" {
     citrixadc_sslprofile.ssl_prof_be_12
   ]
 }
-
-# #####
-# # Wait a few seconds
-# #####
-# resource "time_sleep" "ssl_wait_a_few_seconds" {
-#   create_duration = "15s"
-
-#   depends_on = [
-#     citrixadc_nsconfig_save.ssl_save
-#   ]
-# }

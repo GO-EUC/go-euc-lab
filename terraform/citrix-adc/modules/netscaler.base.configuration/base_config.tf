@@ -44,8 +44,8 @@ resource "citrixadc_nsmode" "base_nsmode" {
 
 
 # Configure Features
-resource "citrixadc_nsfeature" "base_nsfeature" {
-  aaa = true
+resource "citrixadc_nsfeature" "advanced_nsfeature" {
+  aaa = var.base_configuration.advanced
   adaptivetcp = false
   apigateway = false
   appflow = false
@@ -83,7 +83,7 @@ resource "citrixadc_nsfeature" "base_nsfeature" {
   sp = false
   ssl = true
   sslinterception = false
-  sslvpn = true
+  sslvpn = var.base_configuration.advanced
   urlfiltering = false
   videooptimization = false
   wl = false
@@ -103,7 +103,7 @@ resource "citrixadc_nsconfig_save" "base_save" {
 
   depends_on = [
     citrixadc_nsconfig_save.base_save,
-    citrixadc_nsfeature.base_nsfeature,
+    citrixadc_nsfeature.advanced_nsfeature,
     citrixadc_nshostname.base_hostname,
     citrixadc_nsip.base_snip,
     citrixadc_nsmode.base_nsmode,
