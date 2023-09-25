@@ -8,19 +8,6 @@ resource "citrixadc_authenticationvserver" "aaa_vserver" {
     depends_on = [citrixadc_nsfeature.advanced_nsfeature]
 }
 
-# # Bind authentication policy to AAA vserver
-# resource "citrixadc_authenticationvserver_authenticationldappolicy_binding" "aaa_policy_bind" {
-#   count = var.base_configuration.advanced ? 1 : 0
-#   name      = citrixadc_authenticationvserver.aaa_vserver[count.index].name
-#   policy    = citrixadc_authenticationpolicy.auth_authpolicy.name
-#   priority  = 90
-#   #bindpoint = "REQUEST"
-
-#   depends_on = [
-#     citrixadc_vpnvserver.gw_vserver
-#     ]
-# }
-
 resource "citrixadc_authenticationvserver_authenticationpolicy_binding" "tf_bind" {
   name     = "AAA_LDAPS"
   policy   = "pol_auth_ldaps"

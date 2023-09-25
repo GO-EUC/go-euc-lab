@@ -44,7 +44,7 @@ resource "citrixadc_lbvserver" "lb_vserver" {
     citrixadc_sslcipher.ssl_cg_fe_TLS13,
     citrixadc_sslprofile.ssl_prof_fe_13,
     citrixadc_sslprofile.ssl_prof_fe_13_SNI,
-  ]
+  ]  
 }
 
 

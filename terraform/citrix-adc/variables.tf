@@ -1,3 +1,45 @@
+# Global settings to determine deployment type
+variable terraform_settings{
+  type = object({
+    # Deploy NetScaler configuration
+    deploy_settings = bool
+    # Deploy NetScaler on vSphere
+    deploy_vsphere = bool
+    # Deploy Lets Encrypt on NetScaler
+    deploy_letsencrypt = bool
+  })
+}
+# Variables for the NetScaler VM deployment in vSphere
+variable vsphere{
+  description = "values for the creation of a NetScaler VM in vSphere"
+  type = object({
+    server       = string
+    user         = string
+    password     = string
+    datacenter   = string
+    host         = string
+    datastore    = string
+    network      = string
+    timezone     = string
+    resourcepool = string
+  })
+}
+
+# NetScaler VM Details
+variable vm{
+  description = "values for the creation of a NetScaler VM"
+  type = object({
+    ovf     = string
+    network = string
+    mac     = string
+    ip      = string
+    gateway = string
+    netmask = string
+    name    = string
+  })
+}
+
+
 # Login Information for the NetScaler to authenticate API calls
 variable logon_information {
   description = "The logon information to authenticate the NetScaler API calls with"
@@ -7,6 +49,8 @@ variable logon_information {
       host = string 
     })
 }
+
+
 
 variable base_configuration {
   description = "uncategorized base_configuration variables"
