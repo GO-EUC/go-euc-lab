@@ -1,42 +1,42 @@
 
 # Add basic http Profile
 resource "citrixadc_nshttpprofile" "base_http_prof" {
-  name = "http_prof_${var.base_configuration.environment_prefix}"
-  dropinvalreqs = "ENABLED"
-  markhttp09inval = "ENABLED"
+  name             = "http_prof_${var.base_configuration.environment_prefix}"
+  dropinvalreqs    = "ENABLED"
+  markhttp09inval  = "ENABLED"
   markconnreqinval = "ENABLED"
-  weblog = "DISABLED"
-  http2 = "ENABLED"
+  weblog           = "DISABLED"
+  http2            = "ENABLED"
 }
 
 
 # Add basic TCP Profile
 resource "citrixadc_nstcpprofile" "base_tcp_prof" {
-  name = "tcp_prof_${var.base_configuration.environment_prefix}"
-  ws = "ENABLED"
-  sack = "ENABLED"
-  wsval = "8"
-  mss = "1460"
-  initialcwnd = "10"
-  oooqsize = "300"
-  buffersize = "131072"
-  flavor = "BIC"
-  sendbuffsize = "131072"
-  rstmaxack = "ENABLED"
-  spoofsyndrop = "DISABLED"
-  frto = "ENABLED"
-  fack = "ENABLED"
-  nagle = "ENABLED"
-  dynamicreceivebuffering = "ENABLED"
+  name                        = "tcp_prof_${var.base_configuration.environment_prefix}"
+  ws                          = "ENABLED"
+  sack                        = "ENABLED"
+  wsval                       = "8"
+  mss                         = "1460"
+  initialcwnd                 = "10"
+  oooqsize                    = "300"
+  buffersize                  = "131072"
+  flavor                      = "BIC"
+  sendbuffsize                = "131072"
+  rstmaxack                   = "ENABLED"
+  spoofsyndrop                = "DISABLED"
+  frto                        = "ENABLED"
+  fack                        = "ENABLED"
+  nagle                       = "ENABLED"
+  dynamicreceivebuffering     = "ENABLED"
   drophalfclosedconnontimeout = "ENABLED"
-  dropestconnontimeout = "ENABLED"
+  dropestconnontimeout        = "ENABLED"
 }
 
 
 #####
 # Enable SSL Parameter Usage
 #####
-resource "citrixadc_sslparameter" "ssl_enable_sslprofiles" {    
+resource "citrixadc_sslparameter" "ssl_enable_sslprofiles" {
   defaultprofile = "ENABLED"
 }
 
@@ -163,10 +163,10 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213" {
   }
 
   ecccurvebindings = [
-      "P_521",
-      "P_384",
-      "P_256",
-      "P_224"
+    "P_521",
+    "P_384",
+    "P_256",
+    "P_224"
   ]
 
   depends_on = [
@@ -186,7 +186,7 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
   tls11        = "DISABLED"
   tls12        = "ENABLED"
   tls13        = "ENABLED"
-  snienable    = "ENABLED" 
+  snienable    = "ENABLED"
 
   cipherbindings {
     ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS1213"
@@ -194,10 +194,10 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_1213_SNI" {
   }
 
   ecccurvebindings = [
-      "P_521",
-      "P_384",
-      "P_256",
-      "P_224"
+    "P_521",
+    "P_384",
+    "P_256",
+    "P_224"
   ]
 
   depends_on = [
@@ -223,11 +223,11 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13" {
     cipherpriority = 10
   }
 
-   ecccurvebindings = [
-      "P_521",
-      "P_384",
-      "P_256",
-      "P_224"
+  ecccurvebindings = [
+    "P_521",
+    "P_384",
+    "P_256",
+    "P_224"
   ]
 
   depends_on = [
@@ -247,18 +247,18 @@ resource "citrixadc_sslprofile" "ssl_prof_fe_13_SNI" {
   tls11        = "DISABLED"
   tls12        = "DISABLED"
   tls13        = "ENABLED"
-  snienable    = "ENABLED" 
+  snienable    = "ENABLED"
 
   cipherbindings {
     ciphername     = "ssl_cg_${var.base_configuration.environment_prefix}_fe_TLS13"
     cipherpriority = 10
   }
 
-   ecccurvebindings = [
-      "P_521",
-      "P_384",
-      "P_256",
-      "P_224"
+  ecccurvebindings = [
+    "P_521",
+    "P_384",
+    "P_256",
+    "P_224"
   ]
 
   depends_on = [
@@ -284,15 +284,15 @@ resource "citrixadc_sslprofile" "ssl_prof_be_12" {
     cipherpriority = 10
   }
 
-   ecccurvebindings = [
-      "P_521",
-      "P_384",
-      "P_256",
-      "P_224"
+  ecccurvebindings = [
+    "P_521",
+    "P_384",
+    "P_256",
+    "P_224"
   ]
 
   depends_on = [
     citrixadc_sslcipher.ssl_cg_be_TLS12
-  ]     
+  ]
 }
 

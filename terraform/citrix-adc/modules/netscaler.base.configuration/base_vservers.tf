@@ -2,8 +2,8 @@
 # Add servers (service object)
 resource "citrixadc_server" "lb_server" {
   # Loop through each server object
-  for_each = var.servers
-  name = each.value.hostname
+  for_each  = var.servers
+  name      = each.value.hostname
   ipaddress = each.value.ip_address
 
 }
@@ -11,11 +11,11 @@ resource "citrixadc_server" "lb_server" {
 # Add Service Groups
 resource "citrixadc_servicegroup" "lb_servicegroup" {
   # Loop through each service group object
-  for_each = var.service_groups
-  servicegroupname  = each.value.name
-  servicetype       = each.value.type
+  for_each                          = var.service_groups
+  servicegroupname                  = each.value.name
+  servicetype                       = each.value.type
   servicegroupmembers_by_servername = each.value.servers_to_bind
-  lbvservers = each.value.virtual_server_bindings
+  lbvservers                        = each.value.virtual_server_bindings
 
   depends_on = [citrixadc_server.lb_server, citrixadc_lbvserver.lb_vserver]
 }
@@ -23,7 +23,7 @@ resource "citrixadc_servicegroup" "lb_servicegroup" {
 
 # Add and configure LB vServer
 resource "citrixadc_lbvserver" "lb_vserver" {
-  
+
   for_each = var.virtual_servers
 
   name            = each.value.name
@@ -44,7 +44,7 @@ resource "citrixadc_lbvserver" "lb_vserver" {
     citrixadc_sslcipher.ssl_cg_fe_TLS13,
     citrixadc_sslprofile.ssl_prof_fe_13,
     citrixadc_sslprofile.ssl_prof_fe_13_SNI,
-  ]  
+  ]
 }
 
 

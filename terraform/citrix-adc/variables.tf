@@ -1,5 +1,5 @@
 # Global settings to determine deployment type
-variable terraform_settings{
+variable "terraform_settings" {
   type = object({
     # Deploy NetScaler configuration
     deploy_settings = bool
@@ -10,7 +10,7 @@ variable terraform_settings{
   })
 }
 # Variables for the NetScaler VM deployment in vSphere
-variable vsphere{
+variable "vsphere" {
   description = "values for the creation of a NetScaler VM in vSphere"
   type = object({
     server       = string
@@ -26,7 +26,7 @@ variable vsphere{
 }
 
 # NetScaler VM Details
-variable vm{
+variable "vm" {
   description = "values for the creation of a NetScaler VM"
   type = object({
     ovf     = string
@@ -41,18 +41,18 @@ variable vm{
 
 
 # Login Information for the NetScaler to authenticate API calls
-variable logon_information {
+variable "logon_information" {
   description = "The logon information to authenticate the NetScaler API calls with"
-    type = object({
-      username = string
-      password = string
-      host = string 
-    })
+  type = object({
+    username = string
+    password = string
+    host     = string
+  })
 }
 
 
 
-variable base_configuration {
+variable "base_configuration" {
   description = "uncategorized base_configuration variables"
   type = object({
     hostname = string
@@ -65,30 +65,30 @@ variable base_configuration {
   })
 }
 
-variable base_configuration_snip {
+variable "base_configuration_snip" {
   description = "The first subnet IP information on the NetScaler"
   type = object({
     # Subnet IP
     ip_address = string
-    netmask = string
-    icmp = string
+    netmask    = string
+    icmp       = string
   })
 }
 
 
 # All backend servers to be created
-variable servers {
+variable "servers" {
   description = "All backend servers to be created"
   type = map(object({
-    hostname = string
+    hostname   = string
     ip_address = string
   }))
 }
 
 # All service groups to be created
-variable service_groups {
+variable "service_groups" {
   description = "All service groups to be created"
-  type        = map(object({
+  type = map(object({
     name = string
     type = string
     port = string
@@ -100,50 +100,50 @@ variable service_groups {
 }
 
 # All virtual servers to be created
-variable virtual_servers {
+variable "virtual_servers" {
   description = "All virtual servers to be created"
-  type        = map(object({
-    name = string
-    ipv46 = string
-    port = string
-    lbmethod = string
+  type = map(object({
+    name            = string
+    ipv46           = string
+    port            = string
+    lbmethod        = string
     persistencetype = string
-    timeout = string
-    servicetype = string
-    sslprofile = optional(string)
+    timeout         = string
+    servicetype     = string
+    sslprofile      = optional(string)
     httpprofilename = optional(string)
-    tcpprofilename = optional(string)
+    tcpprofilename  = optional(string)
   }))
 
 }
 
-variable auth_ldaps {
+variable "auth_ldaps" {
   description = "Values to setup base (advanced) authentication policy / action"
   type = object({
-    policy_name = string
-    action_name = string
-    policy_expression = string
-    serverip = string
-    serverport = string
-    sectype = string
-    authtimeout = string
-    ldaploginname = string
-    ldapbase = optional(string)
-    ldapbinddn = optional(string)
+    policy_name        = string
+    action_name        = string
+    policy_expression  = string
+    serverip           = string
+    serverport         = string
+    sectype            = string
+    authtimeout        = string
+    ldaploginname      = string
+    ldapbase           = optional(string)
+    ldapbinddn         = optional(string)
     ldapbinddnpassword = optional(string)
   })
 }
 
-variable gateway{
+variable "gateway" {
   description = "Values to create default gateway vserver"
   type = object({
-    name = string
-    servicetype     = string
-    ipv46           = string
-    port            = string
-    dtls            = string
-    sta             = string
-    storefronturl   = string
+    name          = string
+    servicetype   = string
+    ipv46         = string
+    port          = string
+    dtls          = string
+    sta           = string
+    storefronturl = string
   })
 }
 

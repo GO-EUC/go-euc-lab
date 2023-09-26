@@ -33,9 +33,9 @@ resource "acme_certificate" "le_certificate" {
 
 # Upload cert files to /nsconfig/ssl on ADC
 resource "citrixadc_systemfile" "le_upload_cert" {
-  filename = "${var.letsencrypt_certificate.common_name}_certificate.cer"
+  filename     = "${var.letsencrypt_certificate.common_name}_certificate.cer"
   filelocation = "/nsconfig/ssl"
-  filecontent = lookup(acme_certificate.le_certificate,"certificate_pem")
+  filecontent  = lookup(acme_certificate.le_certificate, "certificate_pem")
 
   depends_on = [
     acme_certificate.le_certificate
@@ -43,9 +43,9 @@ resource "citrixadc_systemfile" "le_upload_cert" {
 }
 
 resource "citrixadc_systemfile" "le_upload_key" {
-  filename = "${var.letsencrypt_certificate.common_name}_privatekey.cer"
+  filename     = "${var.letsencrypt_certificate.common_name}_privatekey.cer"
   filelocation = "/nsconfig/ssl"
-  filecontent = nonsensitive(lookup(acme_certificate.le_certificate,"private_key_pem"))
+  filecontent  = nonsensitive(lookup(acme_certificate.le_certificate, "private_key_pem"))
 
   depends_on = [
     acme_certificate.le_certificate
@@ -53,9 +53,9 @@ resource "citrixadc_systemfile" "le_upload_key" {
 }
 
 resource "citrixadc_systemfile" "le_upload_root" {
-  filename = "${var.letsencrypt_certificate.common_name}_rootca.cer"
+  filename     = "${var.letsencrypt_certificate.common_name}_rootca.cer"
   filelocation = "/nsconfig/ssl"
-  filecontent = lookup(acme_certificate.le_certificate,"issuer_pem")
+  filecontent  = lookup(acme_certificate.le_certificate, "issuer_pem")
 
   depends_on = [
     acme_certificate.le_certificate
@@ -64,11 +64,11 @@ resource "citrixadc_systemfile" "le_upload_root" {
 
 # Implement root certificate
 resource "citrixadc_sslcertkey" "le_implement_rootca" {
-  certkey = "ssl_cert_${var.letsencrypt_certificate.common_name}_RootCA"
-  cert = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_rootca.cer"
+  certkey       = "ssl_cert_${var.letsencrypt_certificate.common_name}_RootCA"
+  cert          = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_rootca.cer"
   expirymonitor = "DISABLED"
 
-depends_on = [
+  depends_on = [
     citrixadc_systemfile.le_upload_cert,
     citrixadc_systemfile.le_upload_key
   ]
@@ -76,10 +76,10 @@ depends_on = [
 
 # Implement server certificate
 resource "citrixadc_sslcertkey" "le_implement_certkeypair" {
-  certkey = "ssl_cert_${var.letsencrypt_certificate.common_name}_Server"
-  cert = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_certificate.cer"
-  key = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_privatekey.cer"
-  expirymonitor = "DISABLED"
+  certkey         = "ssl_cert_${var.letsencrypt_certificate.common_name}_Server"
+  cert            = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_certificate.cer"
+  key             = "/nsconfig/ssl/${var.letsencrypt_certificate.common_name}_privatekey.cer"
+  expirymonitor   = "DISABLED"
   linkcertkeyname = "ssl_cert_${var.letsencrypt_certificate.common_name}_RootCA"
 
   depends_on = [
@@ -88,12 +88,12 @@ resource "citrixadc_sslcertkey" "le_implement_certkeypair" {
 }
 
 # Save config
-resource "citrixadc_nsconfig_save" "le_save" {  
-    all        = true
-    timestamp  = timestamp()
+resource "citrixadc_nsconfig_save" "le_save" {
+  all       = true
+  timestamp = timestamp()
 
-    depends_on = [
-        citrixadc_sslcertkey.le_implement_certkeypair,
-        citrixadc_sslcertkey.le_implement_rootca
-    ]
+  depends_on = [
+    citrixadc_sslcertkey.le_implement_certkeypair,
+    citrixadc_sslcertkey.le_implement_rootca
+  ]
 }

@@ -1,4 +1,4 @@
-variable vsphere{
+variable "vsphere" {
   description = "values for the creation of a NetScaler VM"
   type = object({
     # Subnet IP
@@ -14,7 +14,7 @@ variable vsphere{
   })
 }
 
-variable vm{
+variable "vm" {
   description = "values for the creation of a NetScaler VM"
   type = object({
     # Subnet IP

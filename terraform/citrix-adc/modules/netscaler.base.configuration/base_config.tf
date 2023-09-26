@@ -1,7 +1,7 @@
 
 # Set NS Hostname
 resource "citrixadc_nshostname" "base_hostname" {
-   hostname = var.base_configuration.hostname
+  hostname = var.base_configuration.hostname
 }
 
 
@@ -22,77 +22,77 @@ resource "citrixadc_nsparam" "base_nsparam" {
 
 # Configure Modes
 resource "citrixadc_nsmode" "base_nsmode" {
-  bridgebpdus = false
-  cka = false
-  dradv = false
-  dradv6 = false
-  edge = true
-  fr = true
-  iradv = false
-  l2 = false
-  l3 = false
-  mbf = false
+  bridgebpdus         = false
+  cka                 = false
+  dradv               = false
+  dradv6              = false
+  edge                = true
+  fr                  = true
+  iradv               = false
+  l2                  = false
+  l3                  = false
+  mbf                 = false
   mediaclassification = false
-  pmtud = true
-  sradv = false
-  sradv6 = false
-  tcpb = false
-  ulfd = false
-  usnip = true
-  usip = false
+  pmtud               = true
+  sradv               = false
+  sradv6              = false
+  tcpb                = false
+  ulfd                = false
+  usnip               = true
+  usip                = false
 }
 
 
 # Configure Features
 resource "citrixadc_nsfeature" "advanced_nsfeature" {
-  aaa = var.base_configuration.advanced
-  adaptivetcp = false
-  apigateway = false
-  appflow = false
-  appfw = false
-  appqoe = false
-  bgp = false
-  bot = false
-  cf = false
-  ch = false
-  ci = false
-  cloudbridge = false
-  cmp = false
+  aaa                = var.base_configuration.advanced
+  adaptivetcp        = false
+  apigateway         = false
+  appflow            = false
+  appfw              = false
+  appqoe             = false
+  bgp                = false
+  bot                = false
+  cf                 = false
+  ch                 = false
+  ci                 = false
+  cloudbridge        = false
+  cmp                = false
   contentaccelerator = false
-  cqa = false
-  cr = false
-  cs = true
-  feo = false
-  forwardproxy = false
-  gslb = false
-  hdosp = false
-  ic = false
-  ipv6pt = false
-  isis = false
-  lb = true
-  lsn = false
-  ospf = false
-  pq = false
-  push = false
-  rdpproxy = false
-  rep = false
-  responder = true
-  rewrite = true
-  rip = false
-  rise = false
-  sp = false
-  ssl = true
-  sslinterception = false
-  sslvpn = var.base_configuration.advanced
-  urlfiltering = false
-  videooptimization = false
-  wl = false
+  cqa                = false
+  cr                 = false
+  cs                 = true
+  feo                = false
+  forwardproxy       = false
+  gslb               = false
+  hdosp              = false
+  ic                 = false
+  ipv6pt             = false
+  isis               = false
+  lb                 = true
+  lsn                = false
+  ospf               = false
+  pq                 = false
+  push               = false
+  rdpproxy           = false
+  rep                = false
+  responder          = true
+  rewrite            = true
+  rip                = false
+  rise               = false
+  sp                 = false
+  ssl                = true
+  sslinterception    = false
+  sslvpn             = var.base_configuration.advanced
+  urlfiltering       = false
+  videooptimization  = false
+  wl                 = false
 }
 
 
 
 resource "citrixadc_systemparameter" "base_systemparam" {
-    strongpassword = "enableall"
+  strongpassword = "enableall"
 }
 
 

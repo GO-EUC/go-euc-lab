@@ -7,9 +7,9 @@ resource "citrixadc_server" "le_lb_install_server" {
 # Add LB Service Groups
 resource "citrixadc_servicegroup" "le_lb_install_servicegroup" {
 
-  servicegroupname  = var.letsencrypt_lb.lb_sg_name
-  servicetype       = var.letsencrypt_lb.servicetype
-  healthmonitor     = var.letsencrypt_lb.lb_sg_healthmonitor
+  servicegroupname = var.letsencrypt_lb.lb_sg_name
+  servicetype      = var.letsencrypt_lb.servicetype
+  healthmonitor    = var.letsencrypt_lb.lb_sg_healthmonitor
 
   depends_on = [
     citrixadc_server.le_lb_install_server
@@ -18,9 +18,9 @@ resource "citrixadc_servicegroup" "le_lb_install_servicegroup" {
 
 # Bind LB Server to Service Groups
 resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_install_sg_server_binding" {
-  servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
-  servername        = citrixadc_server.le_lb_install_server.name
-  port              = var.letsencrypt_lb.port
+  servicegroupname = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
+  servername       = citrixadc_server.le_lb_install_server.name
+  port             = var.letsencrypt_lb.port
 
   depends_on = [
     citrixadc_servicegroup.le_lb_install_servicegroup
@@ -46,8 +46,8 @@ resource "citrixadc_lbvserver" "le_lb_install_vserver_http" {
 
 # Bind LB Service Groups to LB vServers
 resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_binding" {
-  name              = citrixadc_lbvserver.le_lb_install_vserver_http.name
-  servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
+  name             = citrixadc_lbvserver.le_lb_install_vserver_http.name
+  servicegroupname = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
 
   depends_on = [
     citrixadc_lbvserver.le_lb_install_vserver_http
@@ -56,8 +56,8 @@ resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_bi
 
 # Save config
 resource "citrixadc_nsconfig_save" "le_lb_install_save" {
-  all        = true
-  timestamp  = timestamp()
+  all       = true
+  timestamp = timestamp()
 
   depends_on = [
     citrixadc_lbvserver_servicegroup_binding.le_lb_install_vserver_sg_binding

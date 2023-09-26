@@ -1,10 +1,10 @@
 terraform {
   required_providers {
     # ACME provider for LetsEncrypt
-      acme = {
+    acme = {
       source = "vancluever/acme"
     }
-      citrixadc = {
+    citrixadc = {
       source = "citrix/citrixadc"
     }
   }

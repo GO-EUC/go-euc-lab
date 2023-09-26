@@ -2,14 +2,14 @@
 # Don't forget to add basedn etc, in example it's omitted to prevent errors
 # https://registry.terraform.io/providers/citrix/citrixadc/latest/docs/resources/authenticationldapaction
 resource "citrixadc_authenticationldapaction" "auth_authentication_ldapaction" {
-  name          = var.auth_ldaps.action_name
-  serverip      = var.virtual_servers.lb_ldaps.ipv46
-  serverport    = 636
-  sectype = var.auth_ldaps.sectype
-  authtimeout   = 1
-  ldaploginname = var.auth_ldaps.ldaploginname
-  ldapbase = var.auth_ldaps.ldapbase
-  ldapbinddn = var.auth_ldaps.ldapbinddn
+  name               = var.auth_ldaps.action_name
+  serverip           = var.virtual_servers.lb_ldaps.ipv46
+  serverport         = 636
+  sectype            = var.auth_ldaps.sectype
+  authtimeout        = 1
+  ldaploginname      = var.auth_ldaps.ldaploginname
+  ldapbase           = var.auth_ldaps.ldapbase
+  ldapbinddn         = var.auth_ldaps.ldapbinddn
   ldapbinddnpassword = var.auth_ldaps.ldapbinddnpassword
 }
 

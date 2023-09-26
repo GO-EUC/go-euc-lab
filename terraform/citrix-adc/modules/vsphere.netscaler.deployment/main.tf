@@ -68,13 +68,13 @@ resource "vsphere_virtual_machine" "build_citrix-adc" {
   guest_id             = data.vsphere_ovf_vm_template.ovfLocal.guest_id
   scsi_type            = data.vsphere_ovf_vm_template.ovfLocal.scsi_type
   nested_hv_enabled    = data.vsphere_ovf_vm_template.ovfLocal.nested_hv_enabled
-  
+
   network_interface {
     network_id     = values(data.vsphere_ovf_vm_template.ovfLocal.ovf_network_map)[0]
     use_static_mac = true
     mac_address    = var.vm.mac
   }
-  
+
   wait_for_guest_net_timeout = -1
   wait_for_guest_ip_timeout  = 5
 
