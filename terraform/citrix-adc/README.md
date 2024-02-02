@@ -18,7 +18,7 @@ You need to edit the following information to make this work in your environment
 - ADC License: A valid ADC license needs to be put into the "./sources/license" folder
 - ADC OVF: your ADC image sources need to be put into "./sources/image"
 - provider.tf: review the required versions
-- provider.tf: select either ACME staging or production certificates
+- provider.tf: select either ACME [staging or production](https://letsencrypt.org/docs/staging-environment/) certificates
 - variables.tf: adjust all variables to represent your environment. Required ones are marked with a "# Comment".
 
 ## HowTo Deploy
