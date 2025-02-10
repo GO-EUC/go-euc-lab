@@ -257,7 +257,7 @@ $vaultCommand = "docker run -d --restart unless-stopped "
 $vaultCommand += "-v /etc/vault:/vault "
 $vaultCommand += "--cap-add=IPC_LOCK "
 $vaultCommand += "-p $($dockerIp):8200:8200 "
-$vaultCommand += "--name vault vault:latest server"
+$vaultCommand += "--name vault hashicorp/vault:latest server"
 
 Write-Output "$(Get-Date): Starting Docker vault container"
 # Start Hashicorp Vault container

@@ -36,7 +36,7 @@ source "vmware-iso" "docker" {
     ssh_username = var.build_username
     ssh_password = var.build_password
     ssh_port     = 22
-    ssh_timeout  = "30m"
+    ssh_timeout  = "60m"
     
     remote_type         = "esx5"
     remote_host         = var.esx_host
