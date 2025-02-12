@@ -14,7 +14,7 @@
         source  = "github.com/hashicorp/vsphere"
       }
     }
-    
+
     required_plugins {
       windows-update = {
         version = ">= 0.14.0"
@@ -38,7 +38,6 @@
     build_date      = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
     build_version   = formatdate("YYMM", timestamp())
     iso_paths       = ["[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
-    iso_checksum    = "${var.iso_checksum_type}:${var.iso_checksum_value}"
     manifest_date   = formatdate("YYYY-MM-DD hh:mm:ss", timestamp())
     manifest_path   = "${path.cwd}/manifests/"
     manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition_standard}.json"
@@ -87,7 +86,6 @@
 
     // Removable Media Settings
     iso_url      = "${var.iso_path}/${var.iso_file}"
-    iso_checksum = local.iso_checksum
     iso_paths    = local.iso_paths
 
     cd_files = [
