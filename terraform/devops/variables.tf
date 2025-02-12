@@ -10,11 +10,12 @@ variable "ado_pat" {
 }
 
 variable "ado_variables" {
-    type = list(object({
-        name      = string
-        value     = string
-        is_secret =  bool
-    }))
+  description = "List of variables for Azure DevOps"
+  type = list(object({
+    name         = string
+    value        = optional(string)
+    secret_value = optional(string)
+    is_secret    = optional(bool)
+  }))
     default = []
-    description = "Any variable that needs to be added to the Azure Devops variable group"
 }
