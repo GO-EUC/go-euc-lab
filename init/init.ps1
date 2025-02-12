@@ -214,7 +214,7 @@ while ((Test-NetConnection -ComputerName $dockerIp -Port $dockerPort -ErrorActio
 
 Write-Output "$(Get-Date): Connecting to Docker host"
 # Restore the ProgressPreference
-$ProgressPreference = $currentProgressPreference
+$ProgressPreference = $ProgressPreference
 
 # Create docker credentials
 $dockerCredentials = New-Object System.Management.Automation.PSCredential($($settings.docker.user), (ConvertTo-SecureString $randomPassword -AsPlainText -Force))
@@ -257,7 +257,7 @@ $vaultCommand = "docker run -d --restart unless-stopped "
 $vaultCommand += "-v /etc/vault:/vault "
 $vaultCommand += "--cap-add=IPC_LOCK "
 $vaultCommand += "-p $($dockerIp):8200:8200 "
-$vaultCommand += "--name vault vault:latest server"
+$vaultCommand += "--name vault hashicorp/vault:latest server"
 
 Write-Output "$(Get-Date): Starting Docker vault container"
 # Start Hashicorp Vault container
@@ -271,7 +271,15 @@ $env:VAULT_FORMAT = "json"
 $env:VAULT_ADDR="http://$($dockerIp):8200"
 
 # Collect the vault start
-$vaultStatus = & "$env:TEMP\Hashicorp\vault.exe" status | ConvertFrom-Json
+ $vaultStatus = & "$env:TEMP\Hashicorp\vault.exe" status | ConvertFrom-Json
+if ($null -eq $vaultStatus) {
+    Write-Output "$(Get-Date): Vault not ready yet"
+    Do {
+        Write-Output "$(Get-Date): Waiting for the vault to start"
+        Start-Sleep -Seconds 1
+        $vaultStatus = & "$env:TEMP\Hashicorp\vault.exe" status | ConvertFrom-Json
+    } Until (!($null -eq $vaultStatus))
+}
 
 # Initialize the vault
 if ($vaultStatus.initialized -eq $false) {
@@ -337,8 +345,7 @@ $tfAdoVars += [PSCustomObject]@{
 
 $tfAdoVars += [PSCustomObject]@{
     name = "postgress_password"
-    value = $postgressPassword
-    is_secret = $true
+    secret_value = $postgressPassword
 }
 
 $tfAdoVars += [PSCustomObject]@{
@@ -357,8 +364,7 @@ $vaultCounter = 1
 foreach ($vaultKey in $vaultInit.unseal_keys_b64) {
     $tfAdoVars += [PSCustomObject]@{
         name = "vault_unseal_$($vaultCounter)"
-        value = $($vaultKey)
-        is_secret = $true
+        secret_value = $($vaultKey)
     }
 
     $vaultCounter++
@@ -366,8 +372,7 @@ foreach ($vaultKey in $vaultInit.unseal_keys_b64) {
 
 $tfAdoVars += [PSCustomObject]@{
     name = "vault_token"
-    value = "$($vaultInit.root_token)"
-    is_secret = $true
+    secret_value = "$($vaultInit.root_token)"
 }
 
 $tfAdoVars += [PSCustomObject]@{

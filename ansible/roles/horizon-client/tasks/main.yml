@@ -1,0 +1,23 @@
+---
+- name: Update fact to VMwareHorizonClient
+  set_fact:
+    app_name: VMwareHorizonClient
+
+- name: "Collect Evergreen info for {{ app_name }}"
+  win_uri:
+    url: "https://evergreen-api.stealthpuppy.com/app/{{ app_name }}"
+    method: GET
+    content_type: application/json
+    return_content: true
+  register: app
+
+- name: "Set Evergreen object for {{ app_name }}"
+  set_fact:
+    app_details: "{{ app.json | json_query('[?Type == `exe`]') | first }}"
+
+- name: "Install {{ app_name }}"
+  win_package:
+    path: "{{ app_details.URI }}"
+    arguments: /install /silent /norestart
+    expected_return_code: [0, 3, 3010]
+    state: present

@@ -29,8 +29,11 @@
 - name: Install and configure the LoadGen bots
   hosts: bots
   roles:
-    - citrix-receiver
+    - telegraf
+    - horizon-client
+    # - citrix-receiver
   vars_files:
+    - accounts.yml
     - ansible.yml
     - domain.yml
     - loadgen.yml

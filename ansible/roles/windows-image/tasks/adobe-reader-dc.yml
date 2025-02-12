@@ -15,7 +15,7 @@
   set_fact:
     app_details: "{{ app.json | json_query('[?Architecture == `x64` && Language == `MUI`]') | first }}"
 
-- name: "Install {{ app_details.Title }} {{ app_details.Version }}"
+- name: "Install {{ app_name }}"
   win_package:
     path: "{{ app_details.URI }}"
     arguments: /sAll /rs /msi EULA_ACCEPT=YES

@@ -1,0 +1,153 @@
+---
+telegraf_monitor_vsphere: false
+telegraf_enabled: True
+# defaults file for ansible-telegraf
+
+telegraf_agent_version: 1.30.1
+telegraf_agent_package: telegraf
+telegraf_agent_package_file_deb: telegraf_{{ telegraf_agent_version }}_{{ telegraf_agent_package_arch }}.deb
+telegraf_agent_package_file_rpm: telegraf-{{ telegraf_agent_version }}.{{ ansible_architecture }}.rpm
+telegraf_agent_package_path: /tmp
+telegraf_agent_package_method: repo
+telegraf_agent_package_state: present
+telegraf_agent_hostname: "{{ ansible_fqdn }}"
+telegraf_agent_interval: 10
+telegraf_agent_debug: False
+telegraf_agent_round_interval: True
+telegraf_agent_flush_interval: 10
+telegraf_agent_flush_jitter: 0
+telegraf_agent_aws_tags: False
+telegraf_agent_aws_tags_prefix: ""
+telegraf_agent_config_path: /etc/telegraf
+telegraf_win_logfile_rotation_max_archives: 3
+telegraf_win_logfile_rotation_interval: 0
+telegraf_win_logfile_rotation_max_size: 0
+
+# Docker specific settings
+telegraf_uid_docker: 998
+telegraf_gid_docker: 995
+telegraf_agent_docker: False
+telegraf_agent_docker_name: telegraf
+telegraf_agent_docker_network_mode: bridge
+telegraf_agent_docker_restart_policy: unless-stopped
+telegraf_agent_docker_image_version: "{{ telegraf_agent_version }}"
+
+# v0.13 settings (not sure if supported in older version):
+telegraf_agent_collection_jitter: 0
+telegraf_agent_metric_batch_size: 1000
+telegraf_agent_metric_buffer_limit: 10000
+telegraf_agent_quiet: False
+
+# v1.1 settings:
+telegraf_agent_logfile: ""
+telegraf_agent_omit_hostname: False
+
+telegraf_global_tags: []
+
+telegraf_agent_output:
+  - type: influxdb_v2
+    config:
+      - urls = ["https://influx.logitblog.com"]
+      - organization = "GO"
+      - bucket = "Performance"
+      - token = "{{ influx_token }}"
+
+# defaults - /etc/telegraf/telegraf.conf
+telegraf_plugins_default:
+  - plugin: cpu
+    config:
+      - percpu = true
+  - plugin: disk
+  - plugin: diskio
+  - plugin: mem
+  - plugin: nstat
+  - plugin: system
+  - plugin: swap
+  - plugin: netstat
+  - plugin: processes
+  - plugin: kernel
+  - plugin: win_perf_counters
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "Processor Information"
+      - Instances = ["*"]
+      - Counters = [ "% Idle Time", "% Interrupt Time", "% Privileged Time", "% User Time", "% Processor Time" ]
+      - Measurement = "cpu"
+      - IncludeTotal = true
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "Memory"
+      - Instances = ["*"]
+      - Counters = [ "Available Bytes", "Committed Bytes", "Cache Faults/sec", "Demand Zero Faults/sec", "Page Faults/sec", "Pages/sec", "Transition Faults/sec", "Pool Nonpaged Bytes", "Pool Paged Bytes"]
+      - Measurement = "mem"
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "LogicalDisk"
+      - Instances = ["*"]
+      - Counters = [ "% Idle Time", "% Disk Time", "% Disk Read Time", "% Disk Write Time", "% User Time", "% Free Space", "Current Disk Queue Length", "Free Megabytes", "Disk Read Bytes/sec", "Disk Write Bytes/sec", "Disk Reads/sec", "Disk Writes/sec" ]
+      - Measurement = "disk"
+      - IncludeTotal = true
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "Network Interface"
+      - Instances = ["*"]
+      - Counters = [ "Bytes Received/sec", "Bytes Sent/sec", "Packets Received/sec", "Packets Sent/sec" ]
+      - Measurement = "nic"
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "System"
+      - Instances = ["------"]
+      - Counters = [ "Context Switches/sec", "System Calls/sec", "Processor Queue Length", "Threads", "System Up Time", "Processes" ]
+      - Measurement = "system"
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "Process"
+      - Instances = ["*"]
+      - Counters = [ "% Processor Time", "Handle Count", "Private Bytes", "Thread Count", "Virtual Bytes", "Working Set" ]
+      - Measurement = "process"
+      - IncludeTotal = true
+  - plugin: win_perf_counters.object
+    config:
+      - ObjectName = "Terminal Services"
+      - Instances = ["------"]
+      - Counters = [ "Active Sessions", "Inactive Sessions" ]
+      - Measurement = "sessions"
+  - plugin: vsphere
+    config:
+      - vcenters =  [ "https://{{ vsphere_host }}.{{ dns_domain_name }}/sdk" ]
+      - username = "{{ vsphere_username }}"
+      - password = "{{ vsphere_password }}"
+      - insecure_skip_verify = true
+      - timeout = "60s"
+
+
+# extra configuration - /etc/telegraf/telegraf.d/*
+telegraf_plugins_extra: {}
+telegraf_plugins_extra_exclusive: False
+
+# RedHat specific settings for convenience
+telegraf_redhat_releasever: "$releasever"
+
+telegraf_yum_baseurl:
+  amazon: "https://repos.influxdata.com/centos/6/$basearch/stable"
+  centos: "https://repos.influxdata.com/rhel/{{ telegraf_redhat_releasever }}/$basearch/stable"
+  default: "https://repos.influxdata.com/{{ ansible_distribution|lower }}/{{ telegraf_redhat_releasever }}/$basearch/stable"
+  redhat: "https://repos.influxdata.com/rhel/{{ telegraf_redhat_releasever }}/$basearch/stable"
+  rocky: "https://repos.influxdata.com/rhel/{{ telegraf_redhat_releasever }}/$basearch/stable"
+telegraf_yum_gpgkey: "https://repos.influxdata.com/influxdata-archive_compat.key"
+
+telegraf_zypper_repos:
+  "opensuse tumbleweed": "http://download.opensuse.org/repositories/devel:/languages:/go/openSUSE_Factory/"
+  "default": "http://download.opensuse.org/repositories/devel:/languages:/go/openSUSE_Factory/"
+  "sles": "http://download.opensuse.org/repositories/devel:/languages:/go/SLE_{{ ansible_distribution_major_version }}_SP{{ ansible_distribution_release }}/"
+  "opensuse leap": "http://download.opensuse.org/repositories/devel:/languages:/go/openSUSE_Leap_{{ ansible_distribution_version }}/"
+
+telegraf_win_install_dir: 'C:\Program Files\Telegraf'
+telegraf_win_logfile: 'C:\\Program Files\\Telegraf\\telegraf.log'
+telegraf_win_include: 'C:\Program Files\Telegraf\telegraf_agent.d'
+telegraf_win_service_args:
+  - -service install
+  - '-config "{{ telegraf_win_install_dir }}\telegraf.conf"'
+  - '--config-directory "{{ telegraf_win_include }}"'
+telegraf_mac_user: user
+telegraf_mac_group: admin
