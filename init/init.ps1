@@ -9,6 +9,11 @@ param (
     [string]
     $AdoPat,
 
+    # GitHub PAT Token
+    [Parameter(Mandatory = $true)]
+    [string]
+    $GitHubPat,
+
     # ESXi host password in string format
     [Parameter(Mandatory = $true)]
     [securestring]
@@ -403,6 +408,7 @@ $tfInit = "init -backend-config=`"$($terraformBackend)`""
 
 $env:TF_VAR_ado_pat=$($AdoPat)
 $env:TF_VAR_ado_url=$($settings.ado_url)
+$env:TF_VAR_github_pat=$($GitHubPat)
 
 # Create plan command
 $tfPlan = "plan "
