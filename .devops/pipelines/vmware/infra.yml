@@ -102,7 +102,7 @@ stages:
               $esxData = vault kv get -format json -mount=go vmware/esx/$($esxHost) | ConvertFrom-Json
               $inventory += "$($esxData.data.name) ansible_host=$($networkRange[$esxData.data.ip -1])"
             }
-            
+
             $inventory += ""
             $inventory += "[all:vars]"
             $inventory += "dns_domain_name=$($domain.data.name)"
@@ -146,12 +146,12 @@ stages:
 
             $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
             $esx = vault kv list go/vmware/esx/ | ConvertFrom-Json
-            
+
             $infra = vault kv get -format json -mount=go vmware/esx/$($esx[0]) | ConvertFrom-Json
 
             $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
             $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
-            
+
             $tfVars = @()
             $tfVars += "esx_host=$($infra.data.ip)"
             $tfVars += "esx_username=`"$($infra.data.user)`""
@@ -220,7 +220,7 @@ stages:
       steps:
       - task: PowerShell@2
         env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken) 
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         inputs:
           filePath: '$(Build.Repository.LocalPath)/.devops/pipelines/scripts/trigger.ps1'
           arguments: '-Address "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$env:SYSTEM_TEAMPROJECTID/" -PipelineId $(pipeline_id) -Branch $(build.sourceBranch) -Token $(System.AccessToken)'
@@ -244,7 +244,7 @@ stages:
           downloadPath: '$(Build.Repository.LocalPath)'
 
       - task: PowerShell@2
-        displayName: Set variables 
+        displayName: Set variables
         inputs:
           targetType: 'inline'
           script: |
@@ -282,7 +282,7 @@ stages:
           workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
 
 - stage: DomainController
-  dependsOn: 
+  dependsOn:
     - infra
   displayName: Domain Controller
   jobs:
@@ -296,7 +296,7 @@ stages:
       terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
 
 - stage: Management
-  dependsOn: 
+  dependsOn:
     - DomainController
   displayName: Management Server
   jobs:
@@ -310,7 +310,7 @@ stages:
       terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
 
 - stage: SQL
-  dependsOn: 
+  dependsOn:
     - DomainController
   displayName: SQL Server
   jobs:
@@ -318,6 +318,105 @@ stages:
     parameters:
       ansible_path: $(Build.Repository.LocalPath)/ansible
       ansible_playbook: mssql.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: RDGW
+  dependsOn:
+    - DomainController
+  displayName: RD Gateway
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: rdgateway.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+
+- stage: LoadGen
+  dependsOn:
+    - DomainController
+  displayName: LoadGen Bots
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: loadgen.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: Horizon
+  dependsOn:
+    - DomainController
+  displayName: VMware Horizon Connection Server
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: horizon-connection-server.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: CVAD_DDC
+  dependsOn:
+    - SQL
+  displayName: Citrix Delivery Controller
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-delivery-controller.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: CVAD_LIC
+  dependsOn:
+    - CVAD_DDC
+  displayName: Citrix License Server
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-license-server.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: CVAD_SF
+  dependsOn:
+    - CVAD_DDC
+  displayName: Citrix Storefront
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-storefront.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+
+- stage: updates
+  dependsOn:
+    - DomainController
+  displayName: Windows Updates
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: updates.yml
       vault_addr: $(vault_addr)
       vault_token: $(vault_token)
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)

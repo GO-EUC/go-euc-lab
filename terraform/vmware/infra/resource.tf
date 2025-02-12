@@ -1,6 +1,10 @@
 locals {
+  template_windows_2019 = jsondecode(file("${var.root_path}/manifests/windows-server-2019-standard.json"))
   template_windows_2022 = jsondecode(file("${var.root_path}/manifests/windows-server-2022-standard.json"))
+  template_windows_2025 = jsondecode(file("${var.root_path}/manifests/windows-server-2025-standard.json"))
+
   template_windows_11 = jsondecode(file("${var.root_path}/manifests/windows-desktop-11.json"))
+  template_windows_10 = jsondecode(file("${var.root_path}/manifests/windows-desktop-10.json"))
 
 
   vsphere_server = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr ,jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
@@ -110,6 +114,39 @@ module "sql_server" {
   domain_admin_password = random_password.password.result
 
   network_address                = cidrhost(local.nic_cidr, var.network_list[2])
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter = var.vsphere_datacenter
+  vsphere_datastore  = local.vsphere_datastore
+  vsphere_cluster    = var.vsphere_cluster
+
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+}
+
+module "rd_gateway" {
+  source    = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name   = "rdgw"
+  vm_cpu    = 4
+  vm_memory = 4096
+  vm_disks = [{
+    unit_number = 0
+    label       = "os"
+    size        = 100
+    }]
+
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  network_address                = cidrhost(local.nic_cidr, var.network_list[15])
   network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
   network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
   virtual_network_portgroup_name = local.vsphere_nic
@@ -252,7 +289,7 @@ module "bots" {
   vm_count              = 10
   vm_name               = "bot"
   vm_cpu                = 4
-  vm_memory             = 4096
+  vm_memory             = 16384
   local_admin_password  = local.build_password
   domain                = local.domain
   domain_admin          = var.domain_admin
@@ -266,6 +303,76 @@ module "bots" {
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
 }
 
+
+module "build-2019" {
+  source = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name               = "build-2019"
+  vm_cpu                = 4
+  vm_memory             = 16384
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_2019.builds[0].artifact_id
+}
+
+module "build-2022" {
+  source = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name               = "build-2022"
+  vm_cpu                = 4
+  vm_memory             = 16384
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+}
+
+module "build-2025" {
+  source = "./modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name               = "build-2025"
+  vm_cpu                = 4
+  vm_memory             = 16384
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
+}
+
 module "build" {
   source = "./modules/vmware.vsphere.vm.windows"
 
@@ -273,10 +380,10 @@ module "build" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_count              = 4
+  vm_count              = 1
   vm_name               = "build"
-  vm_cpu                = 2
-  vm_memory             = 4096
+  vm_cpu                = 4
+  vm_memory             = 8192
   vm_guest_id           = "windows9_64Guest"
   local_admin_password  = local.build_password
   domain                = local.domain

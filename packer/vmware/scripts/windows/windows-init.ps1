@@ -25,22 +25,36 @@ try {
 
 # Set the Windows Remote Management configuration.
 Write-Output "Setting the Windows Remote Management configuration..."
-Enable-PSRemoting -Force
-winrm quickconfig -q
-winrm quickconfig -transport:http
-winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="800"}'
-winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-winrm set winrm/config/service/auth '@{Basic="true"}'
-winrm set winrm/config/client/auth '@{Basic="true"}'
-winrm set winrm/config/listener?Address=*+Transport=HTTP '@{Port="5985"}'
+try {
+    Enable-PSRemoting -Force
+    winrm quickconfig -q
+    winrm quickconfig -transport:http
+    winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+    winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="800"}'
+    winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+    winrm set winrm/config/service/auth '@{Basic="true"}'
+    winrm set winrm/config/client/auth '@{Basic="true"}'
+    winrm set winrm/config/listener?Address=*+Transport=HTTP '@{Port="5985"}'
+} catch {
+    Write-Output "Error setting Windows Remote Management Config..."
+}
+
 
 # Allow Windows Remote Management in the Windows Firewall.
 Write-Output "Allowing Windows Remote Management in the Windows Firewall..."
-netsh advfirewall firewall set rule group="Windows Remote Administration" new enable=yes
-netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes action=allow
+try {
+    netsh advfirewall firewall set rule group="Windows Remote Administration" new enable=yes
+    netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes action=allow
+} catch {
+    Write-Output "Error configuring the Firewall"
+}
+
 
 # Restart Windows Remote Management service.
 Write-Output "Restarting Windows Remote Management service..."
-Set-Service winrm -startuptype "auto"
-Restart-Service winrm
+try {
+    Set-Service winrm -startuptype "auto"
+    Restart-Service winrm
+} catch {
+    Write-Output "Failed to restart service"
+}

@@ -18,6 +18,14 @@ parameters:
 - name: ansible_playbook
   type: string
 
+- name: build
+  type: string
+  default: 'none'
+
+- name: delivery
+  type: string
+  default: 'none'
+
 jobs:
 - job: ansible
   displayName: Ansible deployment
@@ -36,7 +44,7 @@ jobs:
       workingDirectory: '${{ parameters.terraform_path }}'
 
   - task: PowerShell@2
-    displayName: Generate Ansible inventory file 
+    displayName: Generate Ansible inventory file
     inputs:
       filePath: '$(Build.Repository.LocalPath)/.devops/pipelines/scripts/inventory.ps1'
       arguments: '-StateFile "${{ parameters.terraform_path }}/download.tfstate" -InventoryFile "${{ parameters.terraform_path }}/inventory"'
@@ -45,4 +53,16 @@ jobs:
     displayName: Run playbook
     inputs:
       targetType: 'inline'
-      script: ansible-playbook ${{ parameters.ansible_path }}/${{ parameters.ansible_playbook }} -i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }}
+      script: |
+        $env:delivery="${{ parameters.delivery }}"
+        $env:build="${{ parameters.build }}"
+
+        $ansible_param = "-i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }}"
+        if ($env:build -ne "none") {
+          Write-Output "Build select"
+          [int]$build_id = $env:build -replace "[^0-9]" , ''
+          Write-Output "Build id: $($build_id -1)"
+          $ansible_param += " -e build_id=$($build_id -1)"
+        }
+
+        Start-Process ansible-playbook -ArgumentList "${{ parameters.ansible_path }}/${{ parameters.ansible_playbook }} $ansible_param"

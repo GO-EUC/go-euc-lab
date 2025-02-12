@@ -1,9 +1,9 @@
 ---
-- name: Install hvac 
+- name: Install hvac
   ansible.builtin.pip:
     name: hvac
 
-- name: Install netaddr 
+- name: Install netaddr
   ansible.builtin.pip:
     name: netaddr
 
@@ -42,7 +42,14 @@
     token : '{{ vault_token }}'
   register: vcsa
 
-- name: Set variables 
+- name: Read influx info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/influx
+    token : '{{ vault_token }}'
+  register: influx
+
+- name: Set variables
   set_fact:
     ansible_local_user: "{{ build.data.data.user }}"
     ansible_local_password: "{{ build.data.data.password }}"
@@ -59,3 +66,7 @@
     loadgen_bot: "{{ accounts.data.data.loadgen_bot }}"
     sql_agt: "{{ accounts.data.data.sql_agt }}"
     sql_svc: "{{ accounts.data.data.sql_svc }}"
+    vsphere_username: "{{ vcsa.data.data.user }}"
+    vsphere_password: "{{ vcsa.data.data.password }}"
+    vsphere_host: "{{ vcsa.data.data.name }}"
+    influx_token: "{{ influx.data.data.token }}"

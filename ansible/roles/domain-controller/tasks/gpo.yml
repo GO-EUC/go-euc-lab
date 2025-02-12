@@ -77,8 +77,8 @@
     - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: AllowCortanaAboveLock, type: DWORD, value: 0}
     - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: DisableWebSearch, type: DWORD, value: 1}
     - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: HideUNCTab, type: DWORD, value: 1}
-    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: ConnectedSearchUseWeb, type: DWORD, value: 0}
-    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: PreventIndexingOfflineFiles, type: DWORD, value: 1}
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: ConnectedSearchUseWeb, type: DWORD, value: 0}    
+    - { key: HKLM\Software\Policies\Microsoft\Windows\Windows Search, name: PreventIndexingOfflineFiles, type: DWORD, value: 1}    
     - { key: HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate, name: SetDisableUXWUAccess, type: DWORD, value: 1}
     - { key: HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate\AU, name: AutoInstallMinorUpdates, type: DWORD, value: 1}
     - { key: HKLM\Software\Policies\Microsoft\WindowsMediaPlayer, name: GroupPrivacyAcceptance, type: DWORD, value: 1}
@@ -88,13 +88,6 @@
     - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: ClearRecentProgForNewUserInStartMenu, type: DWORD, value: 1}
     - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoInstrumentation, type: DWORD, value: 1}
     - { key: HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer, name: NoThumbnailCache, type: DWORD, value: 1}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\common, name: sendcustomerdata, type: DWORD, value: 0}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\common\general, name: shownfirstrunoptin, type: DWORD, value: 1}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\common\privacy, name: controllerconnectedservicesenabled, type: DWORD, value: 2}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\firstrun, name: bootedrtm, type: DWORD, value: 1}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\firstrun, name: disablemovie, type: DWORD, value: 1}
-    - { key: HKCU\Software\Policies\Microsoft\office\16.0\teams, name: preventfirstlaunchafterinstall, type: DWORD, value: 1}
-    - { key: HKCU\Software\Policies\Microsoft\office\common\clienttelemetry, name: sendtelemetry, type: DWORD, value: 3}
     - { key: HKCU\Software\Policies\Microsoft\Windows\CloudContent, name: DisableWindowsSpotlightFeatures, type: DWORD, value: 1}
     - { key: HKCU\Software\Policies\Microsoft\Windows\CurrentVersion\PushNotifications, name: NoToastApplicationNotification, type: DWORD, value: 1}
     - { key: HKCU\Software\Policies\Microsoft\Windows\Directory UI, name: QueryLimit, type: DWORD, value: 1388}

@@ -1,26 +1,48 @@
 ---
-- name: Create Temp Folder
-  win_file:
-    path: C:\Temp
-    state: directory
+- name: Detect GPU
+  win_shell: |
+    if (Get-CimInstance -ClassName Win32_PnPEntity | Where-Object {$_.PNPClass -eq "Display" -and  $_.DeviceID -like "*VEN_10DE*"}) {
+      return $true } else {
+        return $false
+      }
+  register: detect
 
-- name: Download NVIDIA Driver
-  win_get_url:
-    url: "{{nvidia.path}}/NVIDIA.zip"
-    dest: C:\Temp\NVIDIA.zip
+- name: Set fact
+  set_fact:
+    gpu: "{{ detect.stdout | trim | lower }}"
 
-- name: Unzip gz log
-  win_unzip:
-    src: C:\Temp\NVIDIA.zip
-    dest: C:\Temp\NVIDIA
+- name: Block for NVIDIA installation
+  block:
 
-- name: Install NVIDIA
-  win_package:
-    path: C:\Temp\NVIDIA\setup.exe
-    expected_return_code: [0, 1, 3010]
-    arguments: -s -noreboot
+  - name: Create Temp Folder
+    win_file:
+      path: C:\Temp
+      state: directory
 
-- name: Download license file
-  win_get_url:
-    url: "{{nvidia.path}}/{{nvidia.license}}"
-    dest: "C:\\Program Files\\NVIDIA Corporation\\vGPU Licensing\\ClientConfigToken\\{{ nvidia.license }}"
+  - name: Download NVIDIA Driver
+    win_get_url:
+      url: "{{nvidia.path}}/NVIDIA.zip"
+      dest: C:\Temp\NVIDIA.zip
+
+  - name: Unzip gz log
+    win_unzip:
+      src: C:\Temp\NVIDIA.zip
+      dest: C:\Temp\NVIDIA
+
+  - name: Install NVIDIA
+    win_package:
+      path: C:\Temp\NVIDIA\setup.exe
+      expected_return_code: [0, 1, 3010]
+      arguments: -s -noreboot
+
+  - name: Create ClientConfigToken Folder
+    win_file:
+      path: C:\Program Files\NVIDIA Corporation\vGPU Licensing\ClientConfigToken
+      state: directory
+
+  - name: Download license file
+    win_get_url:
+      url: "{{nvidia.path}}/{{nvidia.license}}"
+      dest: "C:\\Program Files\\NVIDIA Corporation\\vGPU Licensing\\ClientConfigToken\\{{ nvidia.license }}"
+
+  when: gpu == true

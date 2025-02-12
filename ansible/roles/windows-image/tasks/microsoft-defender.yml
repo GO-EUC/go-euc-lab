@@ -1,0 +1,8 @@
+---
+- name: Microsoft Defender disable ScanOnlyIfIdle
+  win_shell: Set-MpPreference -ScanOnlyIfIdleEnabled $false
+  when: ansible_facts.os_installation_type == 'Client'
+
+- name: Microsoft Defender full scan
+  win_shell: Start-MpScan -ScanType FullScan
+  when: ansible_facts.os_installation_type == 'Client'

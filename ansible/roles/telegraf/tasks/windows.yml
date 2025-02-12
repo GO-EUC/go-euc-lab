@@ -1,0 +1,120 @@
+---
+
+- name: "Create directory structure"
+  win_file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ telegraf_win_install_dir }}"
+    - "{{ telegraf_win_include }}"
+
+- name: "Check if file is already downloaded"
+  win_stat:
+    path: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}_windows_amd64.zip'
+  register: file_info
+
+- name: "Download Telegraf Agent Zip file"
+  win_get_url:
+    url: https://dl.influxdata.com/telegraf/releases/telegraf-{{ telegraf_agent_version }}_windows_amd64.zip
+    dest: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}_windows_amd64.zip'
+  when:
+    - not file_info.stat.exists
+
+- name: "Unzip file (newer than 1.15)"
+  win_unzip:
+    src: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}_windows_amd64.zip'
+    dest: "{{ telegraf_win_install_dir }}"
+    creates: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}\telegraf.exe'
+  when: telegraf_agent_version is version('1.15', '>=')
+
+- name: "Move extracted directory (newer than 1.15)"
+  win_copy:
+    src: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}\telegraf.exe'
+    dest: '{{ telegraf_win_install_dir }}\telegraf.exe'
+    remote_src: true
+  when: telegraf_agent_version is version('1.15', '>=')
+
+- name: "Unzip file"
+  win_unzip:
+    src: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}_windows_amd64.zip'
+    dest: '{{ telegraf_win_install_dir }}'
+    creates: '{{ telegraf_win_install_dir }}\telegraf.exe'
+    delete_archive: true
+  when: telegraf_agent_version is version('1.15', '<')
+
+- name: "Move extracted executable"
+  win_copy:
+    src: '{{ telegraf_win_install_dir }}\telegraf\telegraf.exe'
+    dest: '{{ telegraf_win_install_dir }}\telegraf.exe'
+    remote_src: true
+  when: telegraf_agent_version is version('1.15', '<')
+
+- name: "Configure Telegraf"
+  win_template:
+    src: telegraf.conf.j2
+    dest: '{{ telegraf_win_install_dir }}\telegraf.conf'
+  notify: "Restart Windows Telegraf"
+
+- name: "Copy telegraf extra plugins"
+  win_template:
+    src: "telegraf-extra-plugin.conf.j2"
+    dest: '{{ telegraf_win_include }}\{{ item.key }}.conf'
+  with_dict: "{{ telegraf_plugins_extra }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - telegraf_plugins_extra is defined
+    - telegraf_plugins_extra is iterable
+    - item.value.state|default('present') != 'absent'
+  notify: "Restart Windows Telegraf"
+
+- name: "Remove telegraf extra plugins"
+  win_file:
+    path: '{{ telegraf_win_include }}\{{ item.key }}.conf'
+    state: absent
+  with_dict: "{{ telegraf_plugins_extra }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - telegraf_plugins_extra is defined
+    - telegraf_plugins_extra is iterable
+    - item.value.state|default('present') == 'absent'
+  notify: "Restart Windows Telegraf"
+
+- name: "Check if Telegraf service is already in place"
+  win_service:
+    name: telegraf
+  register: service_result
+  failed_when: service_result is not defined
+
+- debug: msg={{ service_result }}
+
+- name: "Set service startup mode to auto and ensure it is started"
+  win_service:
+    name: Telegraf
+    start_mode: auto
+    state: stopped
+  when:
+    - service_result.exists
+
+- name: "Unregister Service"
+  win_command: '"{{ telegraf_win_install_dir }}\telegraf.exe" --service uninstall'
+  register: telegraf_windows_uninstall
+  when:
+    - service_result.exists
+
+- name: "Register Service"
+  win_command: '"{{ telegraf_win_install_dir }}\telegraf.exe" {{ telegraf_win_service_args | join(" ") }}'
+  register: telegraf_windows_install
+
+- name: "Set service startup mode to auto and ensure it is started"
+  win_service:
+    name: Telegraf
+    start_mode: auto
+    state: started
+
+- name: "Cleanup"
+  win_file:
+    path: '{{ telegraf_win_install_dir }}\telegraf-{{ telegraf_agent_version }}'
+    state: absent
+  when: telegraf_agent_version is version('1.15', '>=')

@@ -1,21 +1,27 @@
 ---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
+
 - name: Domain join the VMware Horizon Connection Server
-  hosts: vmw_vcs
+  hosts: vmware_hcs
   roles:
     - domain-join
   vars_files:
     - ansible.yml
-    - domain.yml
+    - local.yml
   vars:
-    ansible_user: "{{ local_admin_user }}"
+    ou_path: "OU=Infra,OU=Machines,OU=GO"
 
 - name: Install and configure VMware Horizon Connection Server
-  hosts: vmw_vcs
+  hosts: vmware_hcs
   roles:
     - horizon-connection-server
   vars_files:
     - ansible.yml
+    - accounts.yml
     - vmware.yml
     - domain.yml
-  vars:
-    ansible_user: "{{ domain_admin_user }}"

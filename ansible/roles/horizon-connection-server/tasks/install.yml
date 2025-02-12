@@ -7,10 +7,14 @@
 
 - name: Block for VMware Horizon installation
   block:
+    - name: Install NuGet
+      win_shell: Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
     - name: Install VMware PowerCLI
       win_psmodule:
         name: Vmware.PowerCLI
+        accept_license: true
+        skip_publisher_check: true
         state: present
 
     - name: Create VMware Download Folder
@@ -37,27 +41,10 @@
         Set-PowerCLIConfiguration -Scope User -ParticipateInCeip:$false -Confirm:$false
         Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false
 
-    - name: Check for VMware installation file
-      win_stat:
-        path: "C:\\Download\\VMware\\{{vmware.source}}"
-      register: vmware_exe
-
-    - name: Copy file from UNC path
-      win_copy:
-        src: "{{vmware.path}}\\{{vmware.version}}\\{{vmware.source}}"
-        dest: "C:\\Download\\vmware\\{{vmware.source}}"
-        remote_src: true
-      vars:
-        ansible_become: true
-        ansible_become_user: "{{ ansible_user }}"
-        ansible_become_password: "{{ ansible_password }}"
-        ansible_become_method: runas
-      when: vmware_exe.stat.exists == false
-
     - name: Install VMware Horizon Connection Server
       win_package:
-        path: "C:\\Download\\vmware\\{{vmware.source}}"
-        arguments: /s /v"/qn VDM_SERVER_INSTANCE_TYPE=1 VDM_INITIAL_ADMIN_SID=S-1-5-32-544 VDM_SERVER_RECOVERY_PWD={{ansible_password}} VDM_SERVER_RECOVERY_PWD_REMINDER=""Default"""
+        path: "{{vmware.path}}/{{vmware.version}}/{{vmware.source}}"
+        arguments: /s /v"/qn VDM_SERVER_INSTANCE_TYPE=Standard VDM_INITIAL_ADMIN_SID=S-1-5-32-544 VDM_SERVER_RECOVERY_PWD={{ansible_password}} VDM_SERVER_RECOVERY_PWD_REMINDER=""Default"""
         state: present
         expected_return_code: [0, 3010]
       vars:

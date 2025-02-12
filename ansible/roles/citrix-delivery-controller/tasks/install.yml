@@ -128,7 +128,7 @@
     - name: Install Citrix Delivery Controller role
       win_package:
         path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
-        arguments: /components controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        arguments: /components webstudio,controller,desktopstudio,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
         state: present
         expected_return_code: [0, 3, 3010]
       register: citrix_installation

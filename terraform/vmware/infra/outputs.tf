@@ -10,6 +10,10 @@ output "sql" {
   value = module.sql_server.vm_info
 }
 
+output "rd_gateway" {
+  value = module.rd_gateway[*].vm_info
+}
+
 output "citrix_cc" {
   value = module.citrix_cloud_connectors[*].vm_info
 }
