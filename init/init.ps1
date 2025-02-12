@@ -89,13 +89,13 @@ try {
 }
 
 # Get VMware ESX version
-$esxVersion = Invoke-SSHCommand -SSHSession $esxSession -Command "vmware -v" 
+$esxVersion = Invoke-SSHCommand -SSHSession $esxSession -Command "vmware -v"
 
 # Set required Packer setting
 Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" | Out-Null
 
 # Copy over firewall template for VNC and apply
-Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/" -Force 
+Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/" -Force
 Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli network firewall refresh" | Out-Null
 
 # Close SFTP session
@@ -431,7 +431,7 @@ $agentCommandStatic += "-e AZP_POOL=`"GO Pipelines`" "
 Write-Output "$(Get-Date): Starting Azure DevOps Agent containers"
 # Start DevOps agents containers with timeout as the download requires some time
 for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
-    
+
     # Create the docker command line
     $agentCommand = $agentCommandStatic
     $agentCommand += "-e AZP_AGENT_NAME=agent-$($i + 1) "
