@@ -454,6 +454,18 @@ foreach ($file in $files) {
     Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
 }
 
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /etc/nginx" | Out-Null
+Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($RepoRoot)\init\data\nginx\config.hcl" -Destination "/etc/nginx/" -Force
+
+# NGINX command static
+$nginxCommandStatic = "docker run -d --restart unless-stopped "
+$nginxCommandStatic += "-v /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf "
+$nginxCommandStatic += "-v /go:/usr/share/nginx/html "
+$nginxCommandStatic += "-p $($dockerIp):8080:80 "
+$nginxCommandStatic += "--name nginx nginx:latest"
+
+Invoke-SSHCommand -SSHSession $dockerSession -Command $nginxCommandStatic -TimeOut 300 | Out-Null
+
 # Disconnect the sessions
 $dockerSession.Disconnect()
 $dockerSftpSession.Disconnect()
