@@ -185,7 +185,7 @@ variable "vm_vtpm" {
 variable "vm_disk_size" {
   type        = number
   description = "The size for the virtual disk in MB. (e.g. '40960')"
-  default     = 102400
+  default     = 61440
 }
 
 variable "vm_disk_controller_type" {
@@ -420,8 +420,7 @@ variable "scripts" {
   type        = list(string)
   description = "A list of scripts and their relative paths to transfer and run."
   default     = [
-    "packer/vmware/scripts/windows/windows-ansible.ps1",
-    "packer/vmware/scripts/windows/windows-prepare.ps1"
+    "packer/vmware/scripts/windows/windows-ansible.ps1"
     ]
 }
 

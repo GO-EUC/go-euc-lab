@@ -75,37 +75,37 @@ variable "vm_inst_os_keyboard" {
 variable "vm_inst_os_image_standard_core" {
   type        = string
   description = "The installation operating system image input for Microsoft Windwows Standard Core."
-  default     = "Windows Server 2022 SERVERSTANDARDCORE"
+  default     = "Windows Server 2019 SERVERSTANDARDCORE"
 }
 
 variable "vm_inst_os_image_standard_desktop" {
   type        = string
   description = "The installation operating system image input for Microsoft Windwows Standard."
-  default     = "Windows Server 2022 SERVERSTANDARD"
+  default     = "Windows Server 2019 SERVERSTANDARD"
 }
 
 variable "vm_inst_os_kms_key_standard" {
   type        = string
   description = "The installation operating system KMS key input for Microsoft Windwows Standard edition."
-  default     = "VDYBN-27WPP-V4HQT-9VMD4-VMK7H"
+  default     = "N69G4-B89J2-4G8F4-WWYCC-J464C"
 }
 
 variable "vm_inst_os_image_datacenter_core" {
   type        = string
   description = "The installation operating system image input for Microsoft Windwows Datacenter Core."
-  default     = "Windows Server 2022 SERVERDATACENTERCORE"
+  default     = "Windows Server 2019 SERVERDATACENTERCORE"
 }
 
 variable "vm_inst_os_image_datacenter_desktop" {
   type        = string
   description = "The installation operating system image input for Microsoft Windwows Datacenter."
-  default     = "Windows Server 2022 SERVERDATACENTER"
+  default     = "Windows Server 2019 SERVERDATACENTER"
 }
 
 variable "vm_inst_os_kms_key_datacenter" {
   type        = string
   description = "The installation operating system KMS key input for Microsoft Windwows Datacenter edition."
-  default     = "WX4NM-KYWYW-QJJR4-XV3QB-6VM33"
+  default     = "WMDGN-G9PQG-XVVXX-R3X43-63DFG"
 }
 
 // Virtual Machine Settings
@@ -143,7 +143,7 @@ variable "vm_guest_os_name" {
 variable "vm_guest_os_version" {
   type        = string
   description = "The guest operating system version. Used for naming. (e.g. '2022')"
-  default     = "2022"
+  default     = "2019"
 }
 
 variable "vm_guest_os_edition_standard" {
