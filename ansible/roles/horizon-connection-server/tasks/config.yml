@@ -48,15 +48,15 @@
     - name: Convert password to byte array
       win_shell: |
         $enc = [System.Text.Encoding]::UTF8
-        $password = "{{ vsphere_password }}"
+        $password = "{{ ansible_password }}"
         $encKey = $enc.GetBytes($password)
         $encKey
       register: enc_password
 
-    - name: Set fact InstantCloneEngineDomainAdministrator post body 
+    - name: Set fact InstantCloneEngineDomainAdministrator post body
       set_fact:
-        post_body: 
-          base: 
+        post_body:
+          base:
             domain: "{{ domain_list.json[0] }}"
             userName: "{{ login_body.name }}"
             password:
@@ -94,7 +94,7 @@
 
     - name: Get certificate from the vCenter server
       win_cert_export:
-        host: "{{ vmware.vsphere.host }}"
+        host: "{{ vsphere_host }}.{{ dns_domain_name }}"
         port: 443
       register: public_cert
 
@@ -106,9 +106,9 @@
         $encKey
       register: enc_password
 
-    - name: Set fact VirtualCenter post body 
+    - name: Set fact VirtualCenter post body
       set_fact:
-        post_body: 
+        post_body:
           certificateOverride:
             sslCertThumbprint: "{{ public_cert.cert }}"
             sslCertThumbprintAlgorithm: DER_BASE64_PEM
@@ -121,10 +121,10 @@
           seSparseReclamationEnabled: true
           serverSpec:
             port: 443
-            serverName: "{{ vmware.vsphere.host }}"
+            serverName: "{{ vsphere_host }}.{{ dns_domain_name }}"
             serverType: VIRTUAL_CENTER
             useSSL: true
-            userName: "{{ vmware.vsphere.username }}"
+            userName: "{{ vsphere_username }}"
             password:
               utf8String: "{{ enc_password.stdout_lines | map('int') | list }}"
           storageAcceleratorData:
@@ -145,7 +145,7 @@
         return_content: true
       register: vcenter
 
-  when: (virtual_center.json is not defined) or (vmware.vsphere.host not in (virtual_center | json_query('json[*].serverSpec.serverName') | list ))
+  when: (virtual_center.json is not defined) or (vsphere_host not in (virtual_center | json_query('json[*].serverSpec.serverName') | list ))
 
 - name: Get License
   win_uri:

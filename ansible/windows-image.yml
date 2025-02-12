@@ -7,7 +7,8 @@
     include_tasks: vault.yml
 
 - name: Domain join
-  hosts: "build[{{build_id}}]"
+  hosts: build
+  gather_facts: true
   roles:
     - domain-join
   vars_files:
@@ -17,10 +18,13 @@
     ou_path: "OU=Builds,OU=Machines,OU=GO"
 
 - name: Installation playbook for base image
-  hosts: "build[{{build_id}}]"
+  hosts: build
+  gather_facts: yes
   roles:
+    # - telegraf
     - windows-image
   vars_files:
+    - accounts.yml
     - ansible.yml
     - domain.yml
     - citrix.yml

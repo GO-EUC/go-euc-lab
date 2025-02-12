@@ -1,30 +1,8 @@
 ---
-- name: Create VMware Download Folder
-  win_file:
-    path: C:\Download\VMware
-    state: directory
-
-- name: Check for VMware installation file
-  win_stat:
-    path: "C:\\Download\\VMware\\{{vmware.agent.source}}"
-  register: vmware_exe
-
-- name: Copy file from UNC path
-  win_copy:
-    src: "{{vmware.path}}\\{{vmware.version}}\\{{vmware.agent.source}}"
-    dest: "C:\\Download\\vmware\\{{vmware.agent.source}}"
-    remote_src: true
-  vars:
-    ansible_become: true
-    ansible_become_user: "{{ ansible_user }}"
-    ansible_become_password: "{{ ansible_password }}"
-    ansible_become_method: runas
-  when: vmware_exe.stat.exists == false
-
 - name: Install VMware Horizon Agent
   win_package:
-    path: "C:\\Download\\vmware\\{{vmware.agent.source}}"
-    arguments: /s /v"/qn REBOOT=Reallysuppress VDM_VC_MANAGED_AGENT=1 ADDLOCAL=Core,USB,RTAV"
+    path: "{{vmware.path}}/{{vmware.version}}/{{vmware.agent.source}}"
+    arguments: /s /v"/qn REBOOT=Reallysuppress VDM_VC_MANAGED_AGENT=1 ADDLOCAL=Core,USB,RTAV,NGVC,VmwVaudio"
     state: present
     creates_path: C:\Program Files\VMware\VMware View\Agent
     expected_return_code: [0, 3010]
@@ -38,8 +16,3 @@
 - name: Reboot
   win_reboot:
   when: install.reboot_required
-
-- name: Remove VMware Download Folder
-  win_file:
-    path: C:\Download\VMware
-    state: absent

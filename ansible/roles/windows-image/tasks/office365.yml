@@ -14,7 +14,7 @@
 
 - name: Extract "Office Deployment Tool"
   win_package:
-    path: https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_16626-20148.exe
+    path: https://download.microsoft.com/download/2/7/A/27AF1BE6-DD20-4CB4-B154-EBAB8A7D4A7E/officedeploymenttool_17328-20162.exe
     creates_path: C:\ODTSetup
     arguments: /extract:C:\ODTSetup /quiet
 

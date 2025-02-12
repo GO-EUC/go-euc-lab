@@ -1,10 +1,10 @@
 ---
 vmware:
-  version: '2106'
-  source: VMware-Horizon-Connection-Server-x86_64-8.3.0-18294467.exe
-  path: "\\\\{{ groups['mngt'][0] }}\\Software\\VMware\\Horizon"
+  version: '2312'
+  source: VMware-Horizon-Connection-Server-x86_64-8.12.1-23574797.exe
+  path: "http://10.2.0.6:8080/VMware/Horizon"
   agent:
-    source: VMware-Horizon-Agent-x86_64-2106-8.3.0-18287218.exe
+    source: VMware-Horizon-Agent-x86_64-2312.1-8.12.1-23507832.exe
   vsphere:
     host: 10.2.0.5
     username: administrator@vsphere.local

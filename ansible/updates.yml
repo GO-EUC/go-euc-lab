@@ -14,18 +14,8 @@
       win_timezone:
         timezone: W. Europe Standard Time
 
-    - name: "Reset Windows Update agent cache"
-      win_shell: |
-        Stop-Service -Name BITS,WUAUSERV,WaaSMedicSvc,CryptSvc -Force
-        Remove-Item -Path C:\Windows\SoftwareDistribution -Recurse -Force
-        Remove-Item -Path C:\Windows\System32\catroot2 -Recurse -Force
-        Start-Service -Name BITS,WUAUSERV,WaaSMedicSvc,CryptSvc
-        Usoclient RefreshSettings
-        Usoclient ScanInstallWait
-      register: reset_windows_update_results
-      become: yes
-      become_method: runas
-      become_user: SYSTEM
+    - name: Force reboot before
+      win_reboot:
 
     - name: Install Windows Updates
       win_updates:

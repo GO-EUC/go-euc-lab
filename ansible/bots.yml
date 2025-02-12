@@ -1,0 +1,51 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
+
+- name: Domain join
+  hosts: bots
+  gather_facts: true
+  roles:
+    - domain-join
+  vars_files:
+    - ansible.yml
+    - local.yml
+  vars:
+    ou_path: "OU=Bots,OU=Machines,OU=GO"
+
+- name: Bots
+  hosts: bots
+  vars_files:
+    - accounts.yml
+    - ansible.yml
+    - domain.yml
+    - citrix.yml
+  roles:
+    - citrix-receiver
+  tasks:
+  - name: Update fact to MicrosoftWvdRemoteDesktop
+    set_fact:
+      app_name: MicrosoftWvdRemoteDesktop
+
+  - name: "Collect Evergreen info for {{ app_name }}"
+    win_uri:
+      url: "https://evergreen-api.stealthpuppy.com/app/{{ app_name }}"
+      method: GET
+      content_type: application/json
+      return_content: true
+    register: app
+
+  - name: "Set Evergreen object for {{ app_name }}"
+    set_fact:
+      app_details: "{{ app.json | json_query('[?Architecture == `x64`]') | first }}"
+
+  - name: "Install MicrosoftWvdRemoteDesktop"
+    win_package:
+      path: "{{ app_details.URI }}"
+      arguments: ALLUSERS=1
+      expected_return_code: [0, 3, 3010]
+      state: present

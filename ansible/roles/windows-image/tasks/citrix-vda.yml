@@ -24,13 +24,26 @@
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
 
-- name: Install Citrix VDA
+- name: Install Citrix {{citrix_type}} VDA
   win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDAWorkstationSetup_{{citrix.version}}.exe"
+    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
     arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]
   register: install
+
+- name: Reboot VDA during install
+  win_reboot:
+  when: install.rc == 3
+
+- name: Second install Citrix {{citrix_type}} VDA
+  win_package:
+    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
+    state: present
+    expected_return_code: [0, 3, 3010]
+  register: install
+  when: install.rc == 3
 
 - name: Reboot after VDA
   win_reboot:

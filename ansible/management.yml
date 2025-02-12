@@ -19,16 +19,14 @@
 - name: Install and configure the Management Server
   hosts: mgmt
   roles:
-    - file-share
-    - management
-    - mssql-studio
-    - visual-studio-code
     - loadgen
   vars_files:
     - ansible.yml
-    - domain.yml
     - loadgen.yml
+    - domain.yml
+    - accounts.yml
   vars:
+    telegraf_monitor_vsphere: true
     sql_admin: "GO\\sql_svc"
     sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
     sql_server: "{{ groups['sql'][0] }}"

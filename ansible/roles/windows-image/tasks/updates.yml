@@ -7,3 +7,4 @@
       - UpdateRollups
     reboot: yes
     reboot_timeout: 3600
+    ignore_errors: yes
