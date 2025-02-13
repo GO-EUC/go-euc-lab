@@ -369,7 +369,8 @@ $vaultCounter = 1
 foreach ($vaultKey in $vaultInit.unseal_keys_b64) {
     $tfAdoVars += [PSCustomObject]@{
         name = "vault_unseal_$($vaultCounter)"
-        secret_value = $($vaultKey)
+        value = $($vaultKey)
+        is_secret = $true
     }
 
     $vaultCounter++
