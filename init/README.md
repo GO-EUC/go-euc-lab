@@ -94,6 +94,11 @@ The init script will create a new project in your Azure DevOps environment and w
 
 For more information about the PAT, please refer to the [Microsoft documentation](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows).
 
+### GitHub
+In order to access GitHub a PAT token is required to get read access to the GO-EUC repository.
+
+For more information about the PAT, please refer to the [GitHub docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+
 ### Software Store
 Unfortunately, many vendors hide their software behind a login page, making it impossible to automate the download process. Therefore, in order to deploy all components, the following software needs to be downloaded and structured as shown below.
 

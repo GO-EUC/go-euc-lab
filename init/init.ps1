@@ -9,6 +9,11 @@ param (
     [string]
     $AdoPat,
 
+    # GitHub PAT Token
+    [Parameter(Mandatory = $true)]
+    [string]
+    $GitHubPat,
+
     # ESXi host password in string format
     [Parameter(Mandatory = $true)]
     [securestring]
@@ -89,13 +94,13 @@ try {
 }
 
 # Get VMware ESX version
-$esxVersion = Invoke-SSHCommand -SSHSession $esxSession -Command "vmware -v" 
+$esxVersion = Invoke-SSHCommand -SSHSession $esxSession -Command "vmware -v"
 
 # Set required Packer setting
 Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" | Out-Null
 
 # Copy over firewall template for VNC and apply
-Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/" -Force 
+Set-SFTPItem -SFTPSession $esxSftpSession -Path "$($RepoRoot)\init\data\esx\packer.xml" -Destination "/etc/vmware/firewall/" -Force
 Invoke-SSHCommand -SSHSession $esxSession -Command "esxcli network firewall refresh" | Out-Null
 
 # Close SFTP session
@@ -364,7 +369,8 @@ $vaultCounter = 1
 foreach ($vaultKey in $vaultInit.unseal_keys_b64) {
     $tfAdoVars += [PSCustomObject]@{
         name = "vault_unseal_$($vaultCounter)"
-        secret_value = $($vaultKey)
+        value = $($vaultKey)
+        is_secret = $true
     }
 
     $vaultCounter++
@@ -403,6 +409,7 @@ $tfInit = "init -backend-config=`"$($terraformBackend)`""
 
 $env:TF_VAR_ado_pat=$($AdoPat)
 $env:TF_VAR_ado_url=$($settings.ado_url)
+$env:TF_VAR_github_pat=$($GitHubPat)
 
 # Create plan command
 $tfPlan = "plan "
@@ -436,7 +443,7 @@ $agentCommandStatic += "-e AZP_POOL=`"GO Pipelines`" "
 Write-Output "$(Get-Date): Starting Azure DevOps Agent containers"
 # Start DevOps agents containers with timeout as the download requires some time
 for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
-    
+
     # Create the docker command line
     $agentCommand = $agentCommandStatic
     $agentCommand += "-e AZP_AGENT_NAME=agent-$($i + 1) "
@@ -458,6 +465,18 @@ foreach ($file in $files) {
     New-SFTPItem -SFTPSession $dockerSftpSession -Path "/go$dest" -ItemType Directory -Recurse | Out-Null
     Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
 }
+
+Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /etc/nginx" | Out-Null
+Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($RepoRoot)\init\data\nginx\config.hcl" -Destination "/etc/nginx/" -Force
+
+# NGINX command static
+$nginxCommandStatic = "docker run -d --restart unless-stopped "
+$nginxCommandStatic += "-v /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf "
+$nginxCommandStatic += "-v /go:/usr/share/nginx/html "
+$nginxCommandStatic += "-p $($dockerIp):8080:80 "
+$nginxCommandStatic += "--name nginx nginx:latest"
+
+Invoke-SSHCommand -SSHSession $dockerSession -Command $nginxCommandStatic -TimeOut 300 | Out-Null
 
 # Disconnect the sessions
 $dockerSession.Disconnect()
