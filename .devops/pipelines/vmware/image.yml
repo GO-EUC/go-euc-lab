@@ -14,7 +14,8 @@ stages:
   dependsOn:
   jobs:
   - job: win_10
-    displayName: Packer Build Windows 10  
+    timeoutInMinutes: 0
+    displayName: Packer Build Windows 10
     steps:
     - task: PowerShell@2
       displayName: Set the Packer variables
@@ -87,6 +88,7 @@ stages:
   displayName: Image creation Windows 11
   dependsOn:
   jobs:
+    timeoutInMinutes: 0
   - job: win_11
     displayName: Packer Build Windows 11
     steps:
@@ -162,7 +164,8 @@ stages:
   displayName: Image creation Server 2019
   dependsOn:
   jobs:
-  - job: server_2022
+  - job: server_2019
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2019
     steps:
 
@@ -238,6 +241,7 @@ stages:
   dependsOn:
   jobs:
   - job: server_2022
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2022
     steps:
 
@@ -312,7 +316,8 @@ stages:
   displayName: Image creation Server 2025
   dependsOn:
   jobs:
-  - job: server_2022
+  - job: server_2025
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2025
     steps:
 
