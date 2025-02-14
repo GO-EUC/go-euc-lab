@@ -26,11 +26,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_10')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -47,8 +43,6 @@ stages:
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
           $packerVars += "network_address = `"$($build.data.ip)`""
@@ -102,11 +96,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_11')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -123,8 +113,6 @@ stages:
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
           $packerVars += "network_address = `"$($build.data.ip)`""
@@ -178,11 +166,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2019')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -199,8 +183,6 @@ stages:
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
           $packerVars += "network_address = `"$($build.data.ip)`""
@@ -254,11 +236,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2022')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -275,8 +253,6 @@ stages:
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
           $packerVars += "network_address = `"$($build.data.ip)`""
@@ -330,11 +306,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2025')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -351,8 +323,6 @@ stages:
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
           $packerVars += "network_address = `"$($build.data.ip)`""
