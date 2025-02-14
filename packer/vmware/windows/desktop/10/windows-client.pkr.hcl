@@ -87,6 +87,7 @@ source "vsphere-iso" "windows-desktop" {
   // Removable Media Settings
   iso_url      = "${var.iso_path}/${var.iso_file}"
   iso_paths    = local.iso_paths
+  iso_checksum = "none"
 
   cd_files = [
     "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
