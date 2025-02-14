@@ -88,8 +88,8 @@ stages:
   displayName: Image creation Windows 11
   dependsOn:
   jobs:
-    timeoutInMinutes: 0
   - job: win_11
+    timeoutInMinutes: 0
     displayName: Packer Build Windows 11
     steps:
 
