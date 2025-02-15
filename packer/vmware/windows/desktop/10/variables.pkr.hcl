@@ -346,7 +346,7 @@ variable "common_ip_wait_timeout" {
 variable "common_shutdown_timeout" {
   type        = string
   description = "Time to wait for guest operating system shutdown."
-  default     = "15m"
+  default     = "30m"
 }
 
 // Communicator Settings and Credentials
