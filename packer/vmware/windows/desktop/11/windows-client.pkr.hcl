@@ -119,8 +119,8 @@ source "vsphere-iso" "windows-desktop" {
   boot_wait        = var.vm_boot_wait
   boot_command     = var.vm_boot_command
   ip_wait_timeout  = var.common_ip_wait_timeout
-  # shutdown_command = var.vm_shutdown_command
-  # shutdown_timeout = var.common_shutdown_timeout
+  shutdown_command = var.vm_shutdown_command
+  shutdown_timeout = var.common_shutdown_timeout
 
   // Communicator Settings and Credentials
   communicator   = "winrm"
