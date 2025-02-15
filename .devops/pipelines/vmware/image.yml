@@ -335,7 +335,7 @@ stages:
           $packerVars += "iso_file = `"$($isoFile)`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$ip""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
