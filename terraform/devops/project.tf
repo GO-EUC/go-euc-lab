@@ -5,8 +5,9 @@ resource "azuredevops_project" "project" {
   work_item_template = "Agile"
   description        = "Managed by GO-EUC"
   features = {
-    "testplans" = "disabled"
-    "artifacts" = "disabled"
-    "boards"    = "disabled"
+    "testplans"    = "disabled"
+    "artifacts"    = "disabled"
+    "boards"       = "disabled"
+    "repositories" = "disabled"
   }
 }
