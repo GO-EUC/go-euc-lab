@@ -7,22 +7,22 @@ locals {
   template_windows_10 = jsondecode(file("${var.root_path}/manifests/windows-desktop-10.json"))
 
 
-  vsphere_server = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr ,jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
-  vsphere_user = jsondecode(data.vault_kv_secret.vcsa.data_json).user
+  vsphere_server   = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr, jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
+  vsphere_user     = jsondecode(data.vault_kv_secret.vcsa.data_json).user
   vsphere_password = jsondecode(data.vault_kv_secret.vcsa.data_json).password
 
   # Note, the first host will be used to the primary deployments
-  vsphere_nic = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[0]].data_json).network
+  vsphere_nic       = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[0]].data_json).network
   vsphere_datastore = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[0]].data_json).datastore
 
   vsphere_datastore_build = jsondecode(data.vault_kv_secret.esxs[data.vault_kv_secrets_list.esx.names[1]].data_json).datastore
 
-  domain = jsondecode(data.vault_kv_secret.domain.data_json).name
+  domain         = jsondecode(data.vault_kv_secret.domain.data_json).name
   build_password = jsondecode(data.vault_kv_secret.build.data_json).password
 
-  nic_cidr = jsondecode(data.vault_kv_secret.network.data_json).cidr
-  nic_gateway = jsondecode(data.vault_kv_secret.network.data_json).gateway
-  nic_main_dns = jsondecode(data.vault_kv_secret.network.data_json).dns
+  nic_cidr       = jsondecode(data.vault_kv_secret.network.data_json).cidr
+  nic_gateway    = jsondecode(data.vault_kv_secret.network.data_json).gateway
+  nic_main_dns   = jsondecode(data.vault_kv_secret.network.data_json).dns
   nic_custom_dns = jsondecode(data.vault_kv_secret.vcsa.data_json).dns
 }
 
@@ -79,7 +79,7 @@ module "management_server" {
 
   network_address                = cidrhost(local.nic_cidr, var.network_list[1])
   network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  network_dns_list               = [cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter
@@ -89,7 +89,7 @@ module "management_server" {
 }
 
 module "sql_server" {
-  source    = "./modules/vmware.vsphere.vm.windows"
+  source = "./modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -115,7 +115,7 @@ module "sql_server" {
 
   network_address                = cidrhost(local.nic_cidr, var.network_list[2])
   network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  network_dns_list               = [cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter = var.vsphere_datacenter
@@ -126,7 +126,7 @@ module "sql_server" {
 }
 
 module "rd_gateway" {
-  source    = "./modules/vmware.vsphere.vm.windows"
+  source = "./modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -139,7 +139,7 @@ module "rd_gateway" {
     unit_number = 0
     label       = "os"
     size        = 100
-    }]
+  }]
 
   local_admin_password  = local.build_password
   domain                = local.domain
@@ -148,7 +148,7 @@ module "rd_gateway" {
 
   network_address                = cidrhost(local.nic_cidr, var.network_list[15])
   network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
-  network_dns_list               = [ cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns) ]
+  network_dns_list               = [cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter = var.vsphere_datacenter
