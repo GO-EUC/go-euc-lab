@@ -27,7 +27,7 @@ locals {
 }
 
 module "domain_controller" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -53,7 +53,7 @@ module "domain_controller" {
 }
 
 module "management_server" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -89,7 +89,7 @@ module "management_server" {
 }
 
 module "sql_server" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -126,7 +126,7 @@ module "sql_server" {
 }
 
 module "rd_gateway" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -160,7 +160,7 @@ module "rd_gateway" {
 
 module "citrix_cloud_connectors" {
   count  = var.citrix_cloud ? 1 : 0
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -185,7 +185,7 @@ module "citrix_cloud_connectors" {
 
 module "citrix_storefront" {
   count  = var.citrix_vad ? 1 : 0
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -209,7 +209,7 @@ module "citrix_storefront" {
 
 module "citrix_delivery_controller" {
   count  = var.citrix_vad ? 1 : 0
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -233,7 +233,7 @@ module "citrix_delivery_controller" {
 
 module "citrix_license_server" {
   count  = var.citrix_vad ? 1 : 0
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -257,7 +257,7 @@ module "citrix_license_server" {
 
 module "vmware_horizon" {
   count  = var.vmware_horizon ? 1 : 0
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -280,7 +280,7 @@ module "vmware_horizon" {
 }
 
 module "bots" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -301,99 +301,4 @@ module "bots" {
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
   vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-}
-
-
-module "build-2019" {
-  source = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = local.vsphere_server
-  vsphere_user     = local.vsphere_user
-  vsphere_password = local.vsphere_password
-
-  vm_name               = "build-2019"
-  vm_cpu                = 4
-  vm_memory             = 16384
-  local_admin_password  = local.build_password
-  domain                = local.domain
-  domain_admin          = var.domain_admin
-  domain_admin_password = random_password.password.result
-
-  virtual_network_portgroup_name = local.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = local.vsphere_datastore
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2019.builds[0].artifact_id
-}
-
-module "build-2022" {
-  source = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = local.vsphere_server
-  vsphere_user     = local.vsphere_user
-  vsphere_password = local.vsphere_password
-
-  vm_name               = "build-2022"
-  vm_cpu                = 4
-  vm_memory             = 16384
-  local_admin_password  = local.build_password
-  domain                = local.domain
-  domain_admin          = var.domain_admin
-  domain_admin_password = random_password.password.result
-
-  virtual_network_portgroup_name = local.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = local.vsphere_datastore
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
-}
-
-module "build-2025" {
-  source = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = local.vsphere_server
-  vsphere_user     = local.vsphere_user
-  vsphere_password = local.vsphere_password
-
-  vm_name               = "build-2025"
-  vm_cpu                = 4
-  vm_memory             = 16384
-  local_admin_password  = local.build_password
-  domain                = local.domain
-  domain_admin          = var.domain_admin
-  domain_admin_password = random_password.password.result
-
-  virtual_network_portgroup_name = local.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = local.vsphere_datastore
-  vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
-}
-
-module "build" {
-  source = "./modules/vmware.vsphere.vm.windows"
-
-  vsphere_server   = local.vsphere_server
-  vsphere_user     = local.vsphere_user
-  vsphere_password = local.vsphere_password
-
-  vm_count              = 1
-  vm_name               = "build"
-  vm_cpu                = 4
-  vm_memory             = 8192
-  vm_guest_id           = "windows9_64Guest"
-  local_admin_password  = local.build_password
-  domain                = local.domain
-  domain_admin          = var.domain_admin
-  domain_admin_password = random_password.password.result
-
-  virtual_network_portgroup_name = local.vsphere_nic
-
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = local.vsphere_datastore_build
-  vsphere_cluster         = "Target" #var.vsphere_cluster
-  vsphere_source_template = local.template_windows_11.builds[0].artifact_id
 }
