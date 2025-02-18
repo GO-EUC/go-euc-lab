@@ -3,9 +3,9 @@ variable "root_path" {
   type        = string
 }
 
-variable "network_list" {
-  description = "List of available CIDR based network address"
-  type        = list(number)
+variable "build_name" {
+  description = "The name of the build machine."
+  type        = string
 }
 
 variable "vsphere_datacenter" {
@@ -35,4 +35,9 @@ variable "vault_token" {
   description = "The vault token that will be used for authtentication"
   type        = string
   sensitive   = true
+}
+
+variable "ansible_playbook" {
+  description = "The playbook that needs to be executed, make sure to use the relative path."
+  type = string
 }

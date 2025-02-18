@@ -1,9 +1,4 @@
 parameters:
-- name: redeploy
-  displayName: Redeploy Build Machines
-  type: boolean
-  default: false
-
 - name: build
   displayName: Build Machine
   type: string
@@ -35,14 +30,15 @@ pool: GO Pipelines
 variables:
 - group: Lab
 
-stages:
 
-- stage: redeploy
-  displayName: Redeploy build machines
+stages:
+- stage: deploy
+  displayName: Deploy build machines
   jobs:
-    - job: infra
-      condition: eq('${{ parameters.redeploy }}', true)
+    - job: deploy
       displayName: Build deployment
+      workspace:
+        clean: all
       steps:
 
       - task: DownloadBuildArtifacts@1
@@ -64,30 +60,25 @@ stages:
             $env:VAULT_FORMAT="json"
             $env:VAULT_ADDR="$(vault_addr)"
             $env:VAULT_TOKEN="$(vault_token)"
-            $env:build="${{ parameters.build }}"
-            [int]$build_id = $env:build -replace "[^0-9]" , ''
-            $build_id = $build_id -1
-
-            $range = .devops/pipelines/scripts/network-plan.ps1
 
             $tfVars = @()
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
-            $tfVars += "network_list = $($range | ConvertTo-Json)"
+            $tfVars += "build_name = `"${{ parameters.redeploy }}`""
+            $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
 
-            $tfVars | Set-Content -Path terraform/vmware/infra/terraform.tfvars -Force
+            $tfVars | Set-Content -Path terraform/vmware/build/terraform.tfvars -Force
 
-            Write-Host "##vso[task.setvariable variable=build_id;]$build_id"
 
       - task: CmdLine@2
         displayName: Terraform init
         inputs:
-          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
+          script: 'terraform init'
           workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
 
       - task: CmdLine@2
         displayName: Terraform plan
         inputs:
-          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -replace="module.build.vsphere_virtual_machine.vm[$(build_id)]" -target="module.build" -out=plan.tfplan'
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -out=plan.tfplan'
           workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
 
       - task: CmdLine@2
@@ -95,17 +86,3 @@ stages:
         inputs:
           script: 'terraform apply "plan.tfplan"'
           workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
-
-- stage: Build
-  displayName: Build
-  jobs:
-  - template: ../templates/ansible-playbook.yml
-    parameters:
-      ansible_path: $(Build.Repository.LocalPath)/ansible
-      build: ${{lower(parameters.build)}}
-      delivery: ${{lower(parameters.delivery)}}
-      ansible_playbook: windows-image.yml
-      vault_addr: $(vault_addr)
-      vault_token: $(vault_token)
-      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
-      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra

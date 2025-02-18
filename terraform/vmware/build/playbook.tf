@@ -1,10 +1,11 @@
 resource "ansible_playbook" "playbook" {
-  playbook   = "playbook.yml"
-  name       = "host-1.example.com"
+  playbook   = "${var.root_path}/${var.ansible_playbook}"
+  name       = module.build.vm_info
   replayable = true
 
   extra_vars = {
-    var_a = "Some variable"
-    var_b = "Another variable"
+    vault_addr = var.vault_address
+    vault_token = var.vault_token
+    delivery = "citrix"
   }
 }
