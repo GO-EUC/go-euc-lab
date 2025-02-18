@@ -3,6 +3,12 @@ variable "root_path" {
   type        = string
 }
 
+variable "windows_template" {
+  description = "The name of the template, such as windows-11 or server-2025."
+  type        = string
+  default     = "windows-11"
+}
+
 variable "build_name" {
   description = "The name of the build machine."
   type        = string

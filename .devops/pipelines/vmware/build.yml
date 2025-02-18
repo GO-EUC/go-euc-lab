@@ -11,6 +11,17 @@ parameters:
   - build-5
   - build-6
 
+- name: os
+  displayName: Operating System
+  type: string
+  default: windows-11
+  values:
+  - windows-11
+  - windows-10
+  - server-2025
+  - server-2022
+  - server-2019
+
 - name: delivery
   displayName: Delivery Model
   type: string
@@ -65,6 +76,7 @@ stages:
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
             $tfVars += "build_name = `"${{ parameters.build }}`""
             $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
+            $tfVars += "windows_template = `""${{ parameters.os }}`""
 
             $tfVars | Set-Content -Path terraform/vmware/build/terraform.tfvars -Force
 
