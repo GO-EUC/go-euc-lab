@@ -28,7 +28,7 @@ module "build" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "${var.build_name}-${count.index + 1}"
+  vm_name               = var.build_name
   vm_cpu                = 4
   vm_memory             = 16384
   vm_guest_id           = "windows9_64Guest"
