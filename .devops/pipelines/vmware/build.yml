@@ -73,16 +73,16 @@ stages:
         displayName: Terraform init
         inputs:
           script: 'terraform init'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'
 
       - task: CmdLine@2
         displayName: Terraform plan
         inputs:
           script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -out=plan.tfplan'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'
 
       - task: CmdLine@2
         displayName: Terraform apply
         inputs:
           script: 'terraform apply "plan.tfplan"'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'
