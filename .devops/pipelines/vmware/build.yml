@@ -76,7 +76,7 @@ stages:
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
             $tfVars += "build_name = `"${{ parameters.build }}`""
             $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
-            $tfVars += "windows_template = `""${{ parameters.os }}`""
+            $tfVars += "windows_template = `"${{ parameters.os }}`""
 
             $tfVars | Set-Content -Path terraform/vmware/build/terraform.tfvars -Force
 
