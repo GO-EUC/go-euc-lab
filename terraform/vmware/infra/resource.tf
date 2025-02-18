@@ -29,11 +29,13 @@ locals {
 module "domain_controller" {
   source = "../modules/vmware.vsphere.vm.windows"
 
+  count = 1
+
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "dc"
+  vm_name               = "dc-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -54,12 +56,12 @@ module "domain_controller" {
 
 module "management_server" {
   source = "../modules/vmware.vsphere.vm.windows"
-
+  count = 1
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name   = "mngt"
+  vm_name   = "mngt-${count.index + 1}"
   vm_cpu    = 4
   vm_memory = 4096
   vm_disks = [{
@@ -90,12 +92,13 @@ module "management_server" {
 
 module "sql_server" {
   source = "../modules/vmware.vsphere.vm.windows"
+  count = 10
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name   = "sql"
+  vm_name   = "sql-${count.index + 1}"
   vm_cpu    = 4
   vm_memory = 4096
   vm_disks = [{
@@ -127,12 +130,13 @@ module "sql_server" {
 
 module "rd_gateway" {
   source = "../modules/vmware.vsphere.vm.windows"
+  count = 1
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name   = "rdgw"
+  vm_name   = "rdgw-${count.index + 1}"
   vm_cpu    = 4
   vm_memory = 4096
   vm_disks = [{
@@ -159,15 +163,14 @@ module "rd_gateway" {
 }
 
 module "citrix_cloud_connectors" {
-  count  = var.citrix_cloud ? 1 : 0
+  count  = var.citrix_cloud ? 2 : 0
   source = "../modules/vmware.vsphere.vm.windows"
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_count              = 2
-  vm_name               = "ctx-cc"
+  vm_name               = "ctx-cc-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -191,7 +194,7 @@ module "citrix_storefront" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "ctx-sf"
+  vm_name               = "ctx-sf-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -215,7 +218,7 @@ module "citrix_delivery_controller" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "ctx-ddc"
+  vm_name               = "ctx-ddc-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -239,7 +242,7 @@ module "citrix_license_server" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "ctx-lic"
+  vm_name               = "ctx-lic-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -263,7 +266,7 @@ module "vmware_horizon" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = "vmw-hcs"
+  vm_name               = "vmw-hcs-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 4096
   local_admin_password  = local.build_password
@@ -281,13 +284,13 @@ module "vmware_horizon" {
 
 module "bots" {
   source = "../modules/vmware.vsphere.vm.windows"
+  count  = 10
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_count              = 10
-  vm_name               = "bot"
+  vm_name               = "bot-${count.index + 1}"
   vm_cpu                = 4
   vm_memory             = 16384
   local_admin_password  = local.build_password
