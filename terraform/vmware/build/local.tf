@@ -3,12 +3,12 @@ locals {
     {
       name  = "windows-11"
       json  = "${var.root_path}/manifests/windows-desktop-11.json"
-      guest = ""
+      guest = "windows9_64Guest"
     },
     {
       name  = "windows-10"
       json  = "${var.root_path}/manifests/windows-desktop-10.json"
-      guest = ""
+      guest = "windows9_64Guest"
     },
     {
       name  = "server-2025"
