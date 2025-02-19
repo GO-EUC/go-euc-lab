@@ -9,11 +9,28 @@ variable "windows_template" {
   default     = "windows-11"
 }
 
+variable "delivery" {
+  description = "The delivery method, citrix, omnissa, rdsh, parallels."
+  type        = string
+  default     = "citrix"
+}
+
 variable "build_name" {
   description = "The name of the build machine."
   type        = string
 }
 
+variable "build_vcpu" {
+  description = "The amount of vCPU, default 4"
+  type        = number
+  default     = 4
+}
+
+variable "build_memory" {
+  description = "The amount of memory, default 8GB"
+  type        = number
+  default     = 8192
+}
 variable "vsphere_datacenter" {
   description = "VMware vSphere datacenter"
   default     = "GO"
@@ -45,5 +62,5 @@ variable "vault_token" {
 
 variable "ansible_playbook" {
   description = "The playbook that needs to be executed, make sure to use the relative path."
-  type = string
+  type        = string
 }

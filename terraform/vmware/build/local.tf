@@ -1,24 +1,29 @@
 locals {
   images = [
     {
-      name = "windows-11"
-      json = "${var.root_path}/manifests/windows-desktop-11.json"
+      name  = "windows-11"
+      json  = "${var.root_path}/manifests/windows-desktop-11.json"
+      guest = ""
     },
     {
-      name = "windows-10"
-      json = "${var.root_path}/manifests/windows-desktop-10.json"
+      name  = "windows-10"
+      json  = "${var.root_path}/manifests/windows-desktop-10.json"
+      guest = ""
     },
     {
-      name = "server-2025"
-      json = "${var.root_path}/manifests/windows-server-2025-standard.json"
+      name  = "server-2025"
+      json  = "${var.root_path}/manifests/windows-server-2025-standard.json"
+      guest = "windows2019srv_64Guest"
     },
     {
-      name = "server-2022"
-      json = "${var.root_path}/manifests/windows-server-2022-standard.json"
+      name  = "server-2022"
+      json  = "${var.root_path}/manifests/windows-server-2022-standard.json"
+      guest = "windows2019srv_64Guest"
     },
     {
-      name = "server-2019"
-      json = "${var.root_path}/manifests/windows-server-2019-standard.json"
+      name  = "server-2019"
+      json  = "${var.root_path}/manifests/windows-server-2019-standard.json"
+      guest = "windows2019srv_64Guest"
     }
   ]
 

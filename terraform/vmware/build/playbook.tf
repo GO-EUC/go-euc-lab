@@ -4,8 +4,8 @@ resource "ansible_playbook" "playbook" {
   replayable = true
 
   extra_vars = {
-    vault_addr = var.vault_address
+    vault_addr  = var.vault_address
     vault_token = var.vault_token
-    delivery = "citrix"
+    delivery    = var.delivery
   }
 }

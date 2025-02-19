@@ -11,6 +11,27 @@ parameters:
   - build-5
   - build-6
 
+- name: build_vcpu
+  displayName: Build vCPUs
+  type: string
+  default: 4
+  values:
+  - 2
+  - 4
+  - 6
+  - 8
+
+- name: build_memory
+  displayName: Build memory
+  type: string
+  default: 4096
+  values:
+  - 2048
+  - 4096
+  - 8192
+  - 16384
+  - 32768
+
 - name: os
   displayName: Operating System
   type: string
@@ -75,9 +96,14 @@ stages:
 
             $tfVars = @()
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
+
             $tfVars += "build_name = `"${{ parameters.build }}`""
-            $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
+            $tfVars += "build_vcpu = `"${{ parameters.build_vcpu }}`""
+            $tfVars += "build_memory = `"${{ parameters.build_memory }}`""
+
             $tfVars += "windows_template = `"${{ parameters.os }}`""
+            $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
+            $tfVars += "delivery = `"${{ parameters.delivery }}`""
 
             $tfVars | Set-Content -Path terraform/vmware/build/terraform.tfvars -Force
 

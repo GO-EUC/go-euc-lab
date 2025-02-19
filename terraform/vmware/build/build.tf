@@ -5,11 +5,11 @@ module "build" {
   vsphere_user     = local.vsphere_user
   vsphere_password = local.vsphere_password
 
-  vm_name               = var.build_name
-  vm_cpu                = 4
-  vm_memory             = 16384
-  vm_guest_id           = "windows9_64Guest"
-  local_admin_password  = local.build_password
+  vm_name              = var.build_name
+  vm_cpu               = var.build_vcpu
+  vm_memory            = var.build_memory
+  vm_guest_id          = local.guest_id
+  local_admin_password = local.build_password
 
   domain                = local.domain
   domain_admin          = var.domain_admin
