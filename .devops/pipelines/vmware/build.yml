@@ -25,11 +25,12 @@ parameters:
 - name: delivery
   displayName: Delivery Model
   type: string
-  default: Citrix
+  default: citrix
   values:
-  - Citrix
-  - VMware
-  - RDSH
+  - citrix
+  - omnissa
+  - rdsh
+  - parallels
 
 trigger:
 - none
