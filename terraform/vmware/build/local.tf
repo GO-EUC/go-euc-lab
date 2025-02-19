@@ -28,6 +28,7 @@ locals {
   ]
 
   template = jsondecode(file(local.images[index(local.images[*].name, var.windows_template)].json))
+  guest_id = local.images[index(local.images[*].name, var.windows_template)].guest
 
   vsphere_server   = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr, jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
   vsphere_user     = jsondecode(data.vault_kv_secret.vcsa.data_json).user
