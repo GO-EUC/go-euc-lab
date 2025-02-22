@@ -79,7 +79,7 @@
 - name: Copy a folder to correct location
   ansible.windows.win_copy:
     src: C:\Program Files\LoadGen\LoadGen Agent
-    dest: C:\Program Files (x86)\LoadGen\LoadGen Agent
+    dest: C:\Program Files (x86)\LoadGen
     remote_src: true
 
 - name: Register Add-In services for Citrix
