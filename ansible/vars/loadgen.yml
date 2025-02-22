@@ -1,6 +1,6 @@
 ---
 loadgen:
-  version: 10055
+  version: 10182
   profile:
     name: GO-Admin
     workgroup: false
