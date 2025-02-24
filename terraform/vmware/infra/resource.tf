@@ -207,7 +207,7 @@ module "citrix_storefront" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "citrix_delivery_controller" {
@@ -231,7 +231,7 @@ module "citrix_delivery_controller" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "citrix_license_server" {
@@ -255,7 +255,7 @@ module "citrix_license_server" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "vmware_horizon" {
