@@ -34,7 +34,7 @@ resource "vsphere_virtual_machine" "vm" {
         timeout = 30
 
         windows_options {
-          computer_name  = "${var.vm_name}-${count.index + 1}"
+          computer_name  = var.vm_name
           admin_password = var.local_admin_password
         }
 
