@@ -64,7 +64,7 @@
 
 - name: Download LoadGen Director
   win_get_url:
-    url: "https://download.loadgen.cloud/loadgen/9411/LoadGenDirector.txt"
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen.version }}/LoadGenDirector.txt"
     dest: C:\ProgramData\LoadGen\Download\Director\AutoUpdate.dat
   when: loadgen_director.stat.exists == False
 
@@ -85,7 +85,7 @@
 
 - name: Download LoadGen Studio
   win_get_url:
-    url: "https://download.loadgen.cloud/loadgen/9411/LoadGenStudio.txt"
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen.version }}/LoadGenStudio.txt"
     dest: C:\ProgramData\LoadGen\Download\Studio\AutoUpdate.dat
   when: loadgen_studio.stat.exists == False
 
@@ -106,7 +106,7 @@
 
 - name: Download LoadGen Analyzer
   win_get_url:
-    url: "https://download.loadgen.cloud/loadgen/9411/LoadGenAnalyzer.txt"
+    url: "https://download.loadgen.cloud/loadgen/{{ loadgen.version }}/LoadGenAnalyzer.txt"
     dest: C:\ProgramData\LoadGen\Download\Analyzer\AutoUpdate.dat
   when: loadgen_analyzer.stat.exists == False
 
