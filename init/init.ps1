@@ -351,6 +351,8 @@ $tfAdoVars += [PSCustomObject]@{
 $tfAdoVars += [PSCustomObject]@{
     name = "postgress_password"
     secret_value = $postgressPassword
+    is_secret = $true
+    value = $postgressPassword
 }
 
 $tfAdoVars += [PSCustomObject]@{
@@ -379,6 +381,8 @@ foreach ($vaultKey in $vaultInit.unseal_keys_b64) {
 $tfAdoVars += [PSCustomObject]@{
     name = "vault_token"
     secret_value = "$($vaultInit.root_token)"
+    value = "$($vaultInit.root_token)"
+    is_secret = $true
 }
 
 $tfAdoVars += [PSCustomObject]@{
@@ -453,30 +457,43 @@ for ($i = 0; $i -lt $($settings.ado_agents); $i++) {
     Invoke-SSHCommand -SSHSession $dockerSession -Command $agentCommand -TimeOut 300 | Out-Null
 }
 
-Write-Output "$(Get-Date): Copy the software library"
-# Copy over the software sources
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go" | Out-Null
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | Out-Null
+try {
+    Write-Output "$(Get-Date): Copy the software library"
+    # Copy over the software sources
+    Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /go" | Out-Null
+    Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /go" | Out-Null
 
-# Copy over the software repo
-$files = Get-ChildItem -Path $($settings.software_store) -Recurse | Where-Object {$_.Attributes -ne "Directory"}
-foreach ($file in $files) {
-    $dest = $file.DirectoryName.Replace("$($settings.software_store)", "").Replace("\", "/")
-    New-SFTPItem -SFTPSession $dockerSftpSession -Path "/go$dest" -ItemType Directory -Recurse | Out-Null
-    Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
+    # Copy over the software repo
+    $files = Get-ChildItem -Path $($settings.software_store) -Recurse | Where-Object {$_.Attributes -ne "Directory"}
+    foreach ($file in $files) {
+        $dest = $file.DirectoryName.Replace("$($settings.software_store)", "").Replace("\", "/")
+        New-SFTPItem -SFTPSession $dockerSftpSession -Path "/go$dest" -ItemType Directory -Recurse | Out-Null
+        Set-SFTPItem -SFTPSession $dockerSftpSession -Path $file.FullName -Destination "/go$($dest)" -Force
+    }
+} catch {
+    Write-Output "$_"
+    Write-Output "$(Get-Date): Copying software library files failed - further manual intervention is required to configure this component"
 }
 
-Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /etc/nginx" | Out-Null
-Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($RepoRoot)\init\data\nginx\config.hcl" -Destination "/etc/nginx/" -Force
+#Setup Nginx to host Install Media
+try {
+    Write-Output "$(Get-Date): Done!"
+    Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo mkdir -p /etc/nginx" | Out-Null
+    Invoke-SSHCommand -SSHSession $dockerSession -Command "sudo chmod a+rwx /etc/nginx" | Out-Null
+    Set-SFTPItem -SFTPSession $dockerSftpSession -Path "$($RepoRoot)\init\data\nginx\default.conf" -Destination "/etc/nginx/" -Force
 
-# NGINX command static
-$nginxCommandStatic = "docker run -d --restart unless-stopped "
-$nginxCommandStatic += "-v /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf "
-$nginxCommandStatic += "-v /go:/usr/share/nginx/html "
-$nginxCommandStatic += "-p $($dockerIp):8080:80 "
-$nginxCommandStatic += "--name nginx nginx:latest"
+    # NGINX command static
+    $nginxCommandStatic = "docker run -d --restart unless-stopped "
+    $nginxCommandStatic += "-v /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf "
+    $nginxCommandStatic += "-v /go:/usr/share/nginx/html "
+    $nginxCommandStatic += "-p $($dockerIp):8080:80 "
+    $nginxCommandStatic += "--name nginx nginx:latest"
 
-Invoke-SSHCommand -SSHSession $dockerSession -Command $nginxCommandStatic -TimeOut 300 | Out-Null
+    Invoke-SSHCommand -SSHSession $dockerSession -Command $nginxCommandStatic -TimeOut 300 | Out-Null
+} catch {
+    Write-Output "$_"
+    Write-Output "$(Get-Date): Nginx setup failed - further manual intervention is required to configure this component"
+}
 
 # Disconnect the sessions
 $dockerSession.Disconnect()
@@ -485,3 +502,5 @@ $dockerSftpSession.Disconnect()
 Write-Output "$(Get-Date): Done!"
 Write-Output "$(Get-Date): Vault token: $($vaultInit.root_token)"
 Write-Output "$(Get-Date): Ensure to save the vault token in a safe place!"
+"$(Get-Date): Vault token: $($vaultInit.root_token)" | Out-File .\Vault_Token.txt -Force
+
