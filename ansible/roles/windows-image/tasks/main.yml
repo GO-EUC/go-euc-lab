@@ -40,8 +40,8 @@
 #   hardening_kitty:
 #     state: present
 
-# - name: Apply Citrix Optimizer
-#   import_tasks: citrix-optimizer.yml
+- name: Apply Citrix Optimizer
+  import_tasks: citrix-optimizer.yml
 
 # - name: Microsoft Defender
 #   import_tasks: microsoft-defender.yml
