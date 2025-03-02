@@ -38,9 +38,9 @@ output "vmware_hcs" {
   value = module.vmware_horizon[*].vm_info
 }
 
-output "build" {
-  value = module.build[*].vm_info
-}
+# output "build" {
+#   value = module.build[*].vm_info
+# }
 
 output "vcsa" {
   value = nonsensitive(formatlist("%s ansible_host=%s", jsondecode(data.vault_kv_secret.vcsa.data_json).name, cidrhost(local.nic_cidr, jsondecode(data.vault_kv_secret.vcsa.data_json).ip)))

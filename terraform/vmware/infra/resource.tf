@@ -204,7 +204,7 @@ module "citrix_storefront" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "citrix_delivery_controller" {
@@ -228,7 +228,7 @@ module "citrix_delivery_controller" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "citrix_license_server" {
@@ -252,7 +252,7 @@ module "citrix_license_server" {
   vsphere_datacenter      = var.vsphere_datacenter
   vsphere_datastore       = local.vsphere_datastore
   vsphere_cluster         = var.vsphere_cluster
-  vsphere_source_template = local.template_windows_2022.builds[0].artifact_id
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
 module "vmware_horizon" {
@@ -373,27 +373,27 @@ module "build-2025" {
   vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
 }
 
-module "build" {
-  source = "./modules/vmware.vsphere.vm.windows"
+# module "build" {
+#   source = "./modules/vmware.vsphere.vm.windows"
 
-  vsphere_server   = local.vsphere_server
-  vsphere_user     = local.vsphere_user
-  vsphere_password = local.vsphere_password
+#   vsphere_server   = local.vsphere_server
+#   vsphere_user     = local.vsphere_user
+#   vsphere_password = local.vsphere_password
 
-  vm_count              = 1
-  vm_name               = "build"
-  vm_cpu                = 4
-  vm_memory             = 8192
-  vm_guest_id           = "windows9_64Guest"
-  local_admin_password  = local.build_password
-  domain                = local.domain
-  domain_admin          = var.domain_admin
-  domain_admin_password = random_password.password.result
+#   vm_count              = 1
+#   vm_name               = "build"
+#   vm_cpu                = 4
+#   vm_memory             = 8192
+#   vm_guest_id           = "windows9_64Guest"
+#   local_admin_password  = local.build_password
+#   domain                = local.domain
+#   domain_admin          = var.domain_admin
+#   domain_admin_password = random_password.password.result
 
-  virtual_network_portgroup_name = local.vsphere_nic
+#   virtual_network_portgroup_name = local.vsphere_nic
 
-  vsphere_datacenter      = var.vsphere_datacenter
-  vsphere_datastore       = local.vsphere_datastore_build
-  vsphere_cluster         = "Target" #var.vsphere_cluster
-  vsphere_source_template = local.template_windows_11.builds[0].artifact_id
-}
+#   vsphere_datacenter      = var.vsphere_datacenter
+#   vsphere_datastore       = local.vsphere_datastore_build
+#   vsphere_cluster         = "Target" #var.vsphere_cluster
+#   vsphere_source_template = local.template_windows_11.builds[0].artifact_id
+# }
