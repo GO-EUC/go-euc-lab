@@ -73,6 +73,11 @@ stages:
       workspace:
         clean: all
       steps:
+      - task: Bash@3
+        displayName: Install Python PowerShell Remoting Protocol Client
+        inputs:
+          targetType: 'inline'
+          script: 'pip install pypsrp'
 
       - task: DownloadBuildArtifacts@1
         displayName: Download Packer manifests
@@ -93,8 +98,6 @@ stages:
             $env:VAULT_FORMAT="json"
             $env:VAULT_ADDR="$(vault_addr)"
             $env:VAULT_TOKEN="$(vault_token)"
-
-            pip install psrp
 
             $tfVars = @()
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
