@@ -1,5 +1,9 @@
 ---
-- name: Wait for system to become reachable over WinRM
+- name: Install PowerShell Remoting Protocol for Python
+  ansible.builtin.pip:
+    name: pypsrp
+
+- name: Wait for system to become reachable
   wait_for_connection:
     sleep: 5
     delay: 30
