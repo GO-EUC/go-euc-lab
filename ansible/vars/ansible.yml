@@ -1,6 +1,13 @@
 ---
-ansible_connection: winrm
-ansible_winrm_transport: ntlm
-ansible_winrm_server_cert_validation: ignore
+ansible_connection: psrp
+ansible_psrp_auth: ntlm
+ansible_psrp_cert_validation: ignore
+ansible_psrp_connection_timeout: 600
+ansible_psrp_read_timeout: 120
+ansible_psrp_operation_timeout: 60
+ansible_psrp_reconnection_backoff: 10
+ansible_psrp_reconnection_retries: 30
+# ansible_winrm_transport: ntlm
+# ansible_winrm_server_cert_validation: ignore
 ansible_port: 5985
 ansible_winrm_read_timeout_sec: 300
