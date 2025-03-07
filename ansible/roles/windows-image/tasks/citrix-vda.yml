@@ -27,10 +27,10 @@
       path: https://aka.ms/vs/17/release/vc_redist.x64.exe
       arguments: /q /norestart
 
-  - name: Install Microsoft .NET Framework 4.8 - Offline installer
-    win_package:
-      path: https://go.microsoft.com/fwlink/?linkid=2088631
-      arguments: /q /norestart
+  # - name: Install Microsoft .NET Framework 4.8 - Offline installer
+  #   win_package:
+  #     path: https://go.microsoft.com/fwlink/?linkid=2088631
+  #     arguments: /q /norestart
 
   - name: Install Citrix {{citrix_type}} VDA
     win_package:
