@@ -17,15 +17,15 @@
       citrix_type: Server
     when: ansible_facts.os_installation_type == 'Server'
 
-  - name: Install Microsoft Visual C++ Redistributable Latest - X86"
-    win_package:
-      path: https://aka.ms/vs/17/release/vc_redist.x86.exe
-      arguments: /q /norestart
+  # - name: Install Microsoft Visual C++ Redistributable Latest - X86"
+  #   win_package:
+  #     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
+  #     arguments: /q /norestart
 
-  - name: Install Microsoft Visual C++ Redistributable Latest - X64"
-    win_package:
-      path: https://aka.ms/vs/17/release/vc_redist.x64.exe
-      arguments: /q /norestart
+  # - name: Install Microsoft Visual C++ Redistributable Latest - X64"
+  #   win_package:
+  #     path: https://aka.ms/vs/17/release/vc_redist.x64.exe
+  #     arguments: /q /norestart
 
   # - name: Install Microsoft .NET Framework 4.8 - Offline installer
   #   win_package:
