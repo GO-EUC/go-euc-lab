@@ -1,9 +1,4 @@
 parameters:
-- name: redeploy
-  displayName: Redeploy Build Machines
-  type: boolean
-  default: false
-
 - name: build
   displayName: Build Machine
   type: string
@@ -16,14 +11,47 @@ parameters:
   - build-5
   - build-6
 
+- name: build_vcpu
+  displayName: Build vCPUs
+  type: string
+  default: 4
+  values:
+  - 2
+  - 4
+  - 6
+  - 8
+
+- name: build_memory
+  displayName: Build memory
+  type: string
+  default: 4096
+  values:
+  - 2048
+  - 4096
+  - 8192
+  - 16384
+  - 32768
+
+- name: os
+  displayName: Operating System
+  type: string
+  default: windows-11
+  values:
+  - windows-11
+  - windows-10
+  - server-2025
+  - server-2022
+  - server-2019
+
 - name: delivery
   displayName: Delivery Model
   type: string
-  default: Citrix
+  default: citrix
   values:
-  - Citrix
-  - VMware
-  - RDSH
+  - citrix
+  - omnissa
+  - rdsh
+  - parallels
 
 trigger:
 - none
@@ -35,15 +63,21 @@ pool: GO Pipelines
 variables:
 - group: Lab
 
-stages:
 
-- stage: redeploy
-  displayName: Redeploy build machines
+stages:
+- stage: deploy
+  displayName: Deploy build machines
   jobs:
-    - job: infra
-      condition: eq('${{ parameters.redeploy }}', true)
+    - job: deploy
       displayName: Build deployment
+      workspace:
+        clean: all
       steps:
+      - task: Bash@3
+        displayName: Install Python PowerShell Remoting Protocol Client
+        inputs:
+          targetType: 'inline'
+          script: 'pip install pypsrp'
 
       - task: DownloadBuildArtifacts@1
         displayName: Download Packer manifests
@@ -64,48 +98,35 @@ stages:
             $env:VAULT_FORMAT="json"
             $env:VAULT_ADDR="$(vault_addr)"
             $env:VAULT_TOKEN="$(vault_token)"
-            $env:build="${{ parameters.build }}"
-            [int]$build_id = $env:build -replace "[^0-9]" , ''
-            $build_id = $build_id -1
-
-            $range = .devops/pipelines/scripts/network-plan.ps1
 
             $tfVars = @()
             $tfVars += "root_path = `"$(Build.Repository.LocalPath)`""
-            $tfVars += "network_list = $($range | ConvertTo-Json)"
 
-            $tfVars | Set-Content -Path terraform/vmware/infra/terraform.tfvars -Force
+            $tfVars += "build_name = `"${{ parameters.build }}`""
+            $tfVars += "build_vcpu = `"${{ parameters.build_vcpu }}`""
+            $tfVars += "build_memory = `"${{ parameters.build_memory }}`""
 
-            Write-Host "##vso[task.setvariable variable=build_id;]$build_id"
+            $tfVars += "windows_template = `"${{ parameters.os }}`""
+            $tfVars += "ansible_playbook = `"ansible/windows-image.yml`""
+            $tfVars += "delivery = `"${{ parameters.delivery }}`""
+
+            $tfVars | Set-Content -Path terraform/vmware/build/terraform.tfvars -Force
+
 
       - task: CmdLine@2
         displayName: Terraform init
         inputs:
-          script: 'terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+          script: 'terraform init'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'
 
       - task: CmdLine@2
         displayName: Terraform plan
         inputs:
-          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -replace="module.build.vsphere_virtual_machine.vm[$(build_id)]" -target="module.build" -out=plan.tfplan'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
+          script: 'terraform plan -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)" -out=plan.tfplan'
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'
 
       - task: CmdLine@2
         displayName: Terraform apply
         inputs:
           script: 'terraform apply "plan.tfplan"'
-          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/infra'
-
-- stage: Build
-  displayName: Build
-  jobs:
-  - template: ../templates/ansible-playbook.yml
-    parameters:
-      ansible_path: $(Build.Repository.LocalPath)/ansible
-      build: ${{lower(parameters.build)}}
-      delivery: ${{lower(parameters.delivery)}}
-      ansible_playbook: windows-image.yml
-      vault_addr: $(vault_addr)
-      vault_token: $(vault_token)
-      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
-      terraform_path: $(Build.Repository.LocalPath)/terraform/vmware/infra
+          workingDirectory: '$(Build.Repository.LocalPath)/terraform/vmware/build'

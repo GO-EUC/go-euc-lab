@@ -14,7 +14,8 @@ stages:
   dependsOn:
   jobs:
   - job: win_10
-    displayName: Packer Build Windows 10  
+    timeoutInMinutes: 0
+    displayName: Packer Build Windows 10
     steps:
     - task: PowerShell@2
       displayName: Set the Packer variables
@@ -25,11 +26,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_10')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -41,16 +38,16 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
+          $ip = [int]$($build.data.ip)
+
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$($build.data.ip)`""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
@@ -88,6 +85,7 @@ stages:
   dependsOn:
   jobs:
   - job: win_11
+    timeoutInMinutes: 0
     displayName: Packer Build Windows 11
     steps:
 
@@ -100,11 +98,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_11')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -116,16 +110,16 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
+          $ip = [int]$($build.data.ip) + 1
+
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$($build.data.ip)`""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
@@ -164,7 +158,8 @@ stages:
   displayName: Image creation Server 2019
   dependsOn:
   jobs:
-  - job: server_2022
+  - job: server_2019
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2019
     steps:
 
@@ -177,11 +172,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2019')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -193,16 +184,16 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
+          $ip = [int]$($build.data.ip) + 2
+
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$($build.data.ip)`""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
@@ -240,6 +231,7 @@ stages:
   dependsOn:
   jobs:
   - job: server_2022
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2022
     steps:
 
@@ -252,11 +244,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2022')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -268,16 +256,16 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
+          $ip = [int]$($build.data.ip) + 3
+
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$($build.data.ip)`""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
@@ -314,7 +302,8 @@ stages:
   displayName: Image creation Server 2025
   dependsOn:
   jobs:
-  - job: server_2022
+  - job: server_2025
+    timeoutInMinutes: 0
     displayName: Packer Build Windows Server 2025
     steps:
 
@@ -327,11 +316,7 @@ stages:
           $html = Invoke-WebRequest -Uri $msPath
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('windows_server_2025')}).href
 
-          $checksum = $iso | Where-Object {$_.Contains('checksum')}
           $isoFile =  $($iso | Where-Object {$_.Contains('iso')})
-
-          Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
-          $checksumContent = Get-Content -Path "checksum"
 
           $env:VAULT_FORMAT="json"
           $env:VAULT_ADDR="$(vault_addr)"
@@ -343,16 +328,16 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
+          $ip = [int]$($build.data.ip) + 4
+
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
           $packerVars += "vsphere_endpoint = `"$($vcsa.data.name).$($domain.data.name)`""
           $packerVars += "iso_path = `"$($msPath.Trim('/'))`""
           $packerVars += "iso_file = `"$($isoFile)`""
-          $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
-          $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
           $packerVars += "build_username = `"$($build.data.user)`""
           $packerVars += "build_organization = `"GO-EUC`""
-          $packerVars += "network_address = `"$($build.data.ip)`""
+          $packerVars += "network_address = `"$ip`""
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"

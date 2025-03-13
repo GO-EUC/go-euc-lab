@@ -6,8 +6,18 @@
   - name: Install requirements
     include_tasks: vault.yml
 
+- name: Wait for host
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - ansible.yml
+    - local.yml
+  tasks:
+  - name: Wait for host
+    include_tasks: winrm.yml
+
 - name: Domain join
-  hosts: build
+  hosts: all
   gather_facts: true
   roles:
     - domain-join
@@ -18,10 +28,10 @@
     ou_path: "OU=Builds,OU=Machines,OU=GO"
 
 - name: Installation playbook for base image
-  hosts: build
+  hosts: all
   gather_facts: yes
   roles:
-    # - telegraf
+    - telegraf
     - windows-image
   vars_files:
     - accounts.yml

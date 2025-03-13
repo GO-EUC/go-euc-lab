@@ -1,13 +1,13 @@
 output "dc" {
-  value = module.domain_controller.vm_info
+  value = module.domain_controller[*].vm_info
 }
 
 output "mgmt" {
-  value = module.management_server.vm_info
+  value = module.management_server[*].vm_info
 }
 
 output "sql" {
-  value = module.sql_server.vm_info
+  value = module.sql_server[*].vm_info
 }
 
 output "rd_gateway" {
@@ -36,10 +36,6 @@ output "bots" {
 
 output "vmware_hcs" {
   value = module.vmware_horizon[*].vm_info
-}
-
-output "build" {
-  value = module.build[*].vm_info
 }
 
 output "vcsa" {

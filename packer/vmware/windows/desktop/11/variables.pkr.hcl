@@ -352,7 +352,7 @@ variable "common_ip_wait_timeout" {
 variable "common_shutdown_timeout" {
   type        = string
   description = "Time to wait for guest operating system shutdown."
-  default     = "15m"
+  default     = "30m"
 }
 
 // Communicator Settings and Credentials
@@ -409,7 +409,8 @@ variable "scripts" {
   type        = list(string)
   description = "A list of scripts and their relative paths to transfer and run."
   default     = [
-    "packer/vmware/scripts/windows/windows-ansible.ps1"
+    "packer/vmware/scripts/windows/windows-ansible.ps1",
+    "packer/vmware/scripts/windows/windows-cleanup.ps1"
     ]
 }
 

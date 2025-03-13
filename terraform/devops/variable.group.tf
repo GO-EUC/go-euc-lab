@@ -5,7 +5,7 @@ resource "azuredevops_variable_group" "lab" {
   allow_access = true
 
   dynamic "variable" {
-    for_each = [for var in var.ado_variables : var if var.is_secret == true]
+    for_each = [for variable in var.ado_variables : variable if variable.is_secret == true]
     content {
       name         = variable.value.name
       secret_value = variable.value.value
@@ -14,7 +14,7 @@ resource "azuredevops_variable_group" "lab" {
   }
 
   dynamic "variable" {
-    for_each = [for var in var.ado_variables : var if var.is_secret == false]
+    for_each = [for variable in var.ado_variables : variable if variable.is_secret == false]
     content {
       name  = variable.value.name
       value = variable.value.value
