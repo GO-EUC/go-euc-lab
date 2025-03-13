@@ -138,6 +138,8 @@ stages:
           $packerVars | Set-Content -Path packer/vmware/windows_11.pkvars.hcl -Force
           echo "##vso[task.setvariable variable=vcsa_password]$($vcsa.data.password)"
           echo "##vso[task.setvariable variable=build_password]$($build.data.password)"
+          
+          Get-Content packer/vmware/windows_11.pkvars.hcl
 
     - task: CmdLine@2
       displayName: Packer init
