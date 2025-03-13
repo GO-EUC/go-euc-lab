@@ -37,6 +37,8 @@ locals {
   build_date      = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
   build_version   = formatdate("YYMM", timestamp())
   iso_paths       = ["[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
+  iso_checksum_type	  = var.iso_checksum_type
+  iso_checksum	  = var.iso_checksum
   manifest_date   = formatdate("YYYY-MM-DD hh:mm:ss", timestamp())
   manifest_path   = "${path.cwd}/manifests/"
   manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}.json"
