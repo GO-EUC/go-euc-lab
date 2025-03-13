@@ -35,7 +35,7 @@ stages:
           $domain = vault kv get -format json -mount=go domain | ConvertFrom-Json
           $network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
           $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
-          $esx = vault kv get -format json -mount=go vmware/esx/infra-1 | ConvertFrom-Json
+          $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
           $ip = [int]$($build.data.ip)
