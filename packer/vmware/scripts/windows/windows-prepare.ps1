@@ -116,10 +116,11 @@ try {
 
 
 Write-Output "Removing AppX packages..."
-$packages = Get-AppxPackage
+$packages = Get-AppxPackage -All
+
 foreach ($package in $packages) {
     try {
-        $package | Remove-AppxPackage -Force
+        $package | Remove-AppxPackage -AllUsers -Force
     } catch {
         Write-Output "Cannot remove: $($package.PackageFamilyName)"
     }
