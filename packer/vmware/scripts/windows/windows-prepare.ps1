@@ -121,6 +121,7 @@ $packages = Get-AppxPackage -All
 foreach ($package in $packages) {
     try {
         $package | Remove-AppxPackage -AllUsers -Force
+        Write-Output "Removed: $($package.PackageFamilyName)"
     } catch {
         Write-Output "Cannot remove: $($package.PackageFamilyName)"
     }
