@@ -55,6 +55,7 @@ resource "vsphere_virtual_machine" "vm" {
       template_uuid = data.vsphere_virtual_machine.template.id
 
       customize {
+        timeout = 30
         windows_options {
           computer_name  = var.vm_name
           organization_name = "GO-EUC"
