@@ -115,7 +115,15 @@ try {
 }
 
 
-
+Write-Output "Removing AppX packages..."
+$packages = Get-AppxPackage
+foreach ($package in $packages) {
+    try {
+        $package | Remove-AppxPackage -Force
+    } catch {
+        Write-Output "Cannot remove: $($package.PackageFamilyName)"
+    }
+}
 
 # Disable Password Expiration for the Administrator Accounts - (Administrator and Build)
 Write-Output "Disabling password expiration for the local Administrator accounts..."
