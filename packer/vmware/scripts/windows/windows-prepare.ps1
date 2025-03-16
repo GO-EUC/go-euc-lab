@@ -114,18 +114,21 @@ try {
     Write-Output "Skip"
 }
 
+Write-Output "Removing AppX packages..."
+$packages = @(
+    "Microsoft.Copilot"
+)
 
-# Write-Output "Removing AppX packages..."
-# $packages = Get-AppxPackage -All
+foreach ($package in $packages) {
+    $pkg = Get-AppxPackage -AllUsers -Name "$($package)*"
 
-# foreach ($package in $packages) {
-#     try {
-#         $package | Remove-AppxPackage -AllUsers
-#         Write-Output "Removed: $($package.PackageFamilyName)"
-#     } catch {
-#         Write-Output "Cannot remove: $($package.PackageFamilyName)"
-#     }
-# }
+    try {
+        $pkg | Remove-AppxPackage -AllUsers
+        Write-Output "Removed: $($pkg.PackageFamilyName)"
+    } catch {
+        Write-Output "Cannot remove: $($pkg.PackageFamilyName)"
+    }
+}
 
 # Disable Password Expiration for the Administrator Accounts - (Administrator and Build)
 Write-Output "Disabling password expiration for the local Administrator accounts..."
