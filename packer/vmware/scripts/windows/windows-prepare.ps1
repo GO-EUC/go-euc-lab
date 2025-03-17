@@ -116,15 +116,18 @@ try {
 
 Write-Output "Removing AppX packages..."
 $packages = @(
-    "Microsoft.Copilot"
+    "Microsoft.Copilot",
+    "Microsoft.WigetsPlatformRuntime"
 )
 
 foreach ($package in $packages) {
     $pkg = Get-AppxPackage -AllUsers -Name "$($package)*"
 
     try {
-        $pkg | Remove-AppxPackage -AllUsers
-        Write-Output "Removed: $($pkg.PackageFamilyName)"
+        if ($pkg) {
+            $pkg | Remove-AppxPackage -AllUsers
+            Write-Output "Removed: $($pkg.PackageFamilyName)"
+        }
     } catch {
         Write-Output "Cannot remove: $($pkg.PackageFamilyName)"
     }
