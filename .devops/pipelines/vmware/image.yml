@@ -38,7 +38,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip)
+          $ip = [int]$($build.data.ip1)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -110,7 +110,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip)
+          $ip = [int]$($build.data.ip2)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -184,7 +184,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip)
+          $ip = [int]$($build.data.ip3)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -256,7 +256,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip)
+          $ip = [int]$($build.data.ip4)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -328,7 +328,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip)
+          $ip = [int]$($build.data.ip5)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
