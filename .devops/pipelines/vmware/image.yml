@@ -110,7 +110,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip) + 1
+          $ip = [int]$($build.data.ip)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -184,7 +184,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip) + 2
+          $ip = [int]$($build.data.ip)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -197,8 +197,8 @@ stages:
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
-          $packerVars += "vsphere_datacenter = `"GO`""
-          $packerVars += "vsphere_cluster = `"Infra`""
+          $packerVars += "vsphere_datacenter = `"Lab`""
+          $packerVars += "vsphere_cluster = `"SM`""
           $packerVars += "vsphere_folder = `"Templates`""
           $packerVars += "vsphere_datastore = `"$($esx.data.datastore)`""
           $packerVars += "vsphere_network = `"$($esx.data.network)`""
@@ -256,7 +256,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip) + 3
+          $ip = [int]$($build.data.ip)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -269,8 +269,8 @@ stages:
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
-          $packerVars += "vsphere_datacenter = `"GO`""
-          $packerVars += "vsphere_cluster = `"Infra`""
+          $packerVars += "vsphere_datacenter = `"Lab`""
+          $packerVars += "vsphere_cluster = `"SM`""
           $packerVars += "vsphere_folder = `"Templates`""
           $packerVars += "vsphere_datastore = `"$($esx.data.datastore)`""
           $packerVars += "vsphere_network = `"$($esx.data.network)`""
@@ -328,7 +328,7 @@ stages:
           $esx = vault kv get -format json -mount=go vmware/esx/ESX3 | ConvertFrom-Json
           $build = vault kv get -format json -mount=go build | ConvertFrom-Json
 
-          $ip = [int]$($build.data.ip) + 4
+          $ip = [int]$($build.data.ip)
 
           $packerVars = @()
           $packerVars += "vsphere_username = `"$($vcsa.data.user)`""
@@ -341,8 +341,8 @@ stages:
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
-          $packerVars += "vsphere_datacenter = `"GO`""
-          $packerVars += "vsphere_cluster = `"Infra`""
+          $packerVars += "vsphere_datacenter = `"Lab`""
+          $packerVars += "vsphere_cluster = `"SM`""
           $packerVars += "vsphere_folder = `"Templates`""
           $packerVars += "vsphere_datastore = `"$($esx.data.datastore)`""
           $packerVars += "vsphere_network = `"$($esx.data.network)`""
