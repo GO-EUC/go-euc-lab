@@ -4,16 +4,16 @@ terraform {
     required_providers {
         vault = {
             source = "hashicorp/vault"
-            version = ">= 3.12.0"
+            version = ">= 4.6.0"
         }
 
         vsphere = {
             source = "hashicorp/vsphere"
-            version = "~>2.2"
+            version = "~>2.11.0"
         }
     }
 
-    backend "pg" { 
+    backend "pg" {
         schema_name = "datacenter"
     }
 }

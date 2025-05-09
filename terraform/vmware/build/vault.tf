@@ -22,8 +22,3 @@ data "vault_kv_secret" "esxs" {
   for_each = nonsensitive(toset(data.vault_kv_secrets_list.esx.names))
   path     = "go/vmware/esx/${each.value}"
 }
-
-resource "vault_kv_secret" "secret" {
-  path      = data.vault_kv_secret.domain.path
-  data_json = jsonencode(merge(jsondecode(data.vault_kv_secret.domain.data_json), { password = random_password.password.result, user = var.domain_admin }))
-}

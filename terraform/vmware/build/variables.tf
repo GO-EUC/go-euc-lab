@@ -3,26 +3,34 @@ variable "root_path" {
   type        = string
 }
 
-variable "citrix_cloud" {
-  type    = bool
-  default = false
+variable "windows_template" {
+  description = "The name of the template, such as windows-11 or server-2025."
+  type        = string
+  default     = "windows-11"
 }
 
-variable "citrix_vad" {
-  type    = bool
-  default = false
+variable "delivery" {
+  description = "The delivery method, citrix, omnissa, rdsh, parallels."
+  type        = string
+  default     = "citrix"
 }
 
-variable "vmware_horizon" {
-  type    = bool
-  default = false
+variable "build_name" {
+  description = "The name of the build machine."
+  type        = string
 }
 
-variable "network_list" {
-  description = "List of available CIDR based network address"
-  type        = list(number)
+variable "build_vcpu" {
+  description = "The amount of vCPU, default 4"
+  type        = number
+  default     = 4
 }
 
+variable "build_memory" {
+  description = "The amount of memory, default 8GB"
+  type        = number
+  default     = 8192
+}
 variable "vsphere_datacenter" {
   description = "VMware vSphere datacenter"
   default     = "GO"
@@ -50,4 +58,9 @@ variable "vault_token" {
   description = "The vault token that will be used for authtentication"
   type        = string
   sensitive   = true
+}
+
+variable "ansible_playbook" {
+  description = "The playbook that needs to be executed, make sure to use the relative path."
+  type        = string
 }

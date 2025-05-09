@@ -84,6 +84,8 @@
 - name: "Check if Telegraf service is already in place"
   win_service:
     name: telegraf
+  retries: 3
+  delay: 5
   register: service_result
   failed_when: service_result is not defined
 

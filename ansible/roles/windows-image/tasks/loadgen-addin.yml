@@ -76,12 +76,18 @@
   win_command: '"C:\Program Files\LoadGen\AutoUpdater.exe" -i "C:\ProgramData\LoadGen\Download\Agent\AutoUpdate.dat"'
   when: loadgen_agent.stat.exists == False
 
+- name: Copy a folder to correct location
+  ansible.windows.win_copy:
+    src: C:\Program Files\LoadGen\LoadGen Agent
+    dest: C:\Program Files (x86)\LoadGen
+    remote_src: true
+
 - name: Register Add-In services for Citrix
-  win_shell: '& "C:\Program Files\LoadGen\LoadGen Agent\LoadGenUAICitrix\LoadGenUAI.ServerAddinLauncherSrvc.exe" -i'
+  win_shell: '& "C:\Program Files (x86)\LoadGen\LoadGen Agent\LoadGenUAICitrix\LoadGenUAI.ServerAddinLauncherSrvc.exe" -i'
   when: delivery == 'citrix'
 
 - name: Register Add-In services
-  win_shell: '& "C:\Program Files\LoadGen\LoadGen Agent\LoadGenUAI\LoadGenUAI.ServerAddinLauncherSrvc.exe" -i'
+  win_shell: '& "C:\Program Files (x86)\LoadGen\LoadGen Agent\LoadGenUAI\LoadGenUAI.ServerAddinLauncherSrvc.exe" -i'
   when: delivery != 'citrix'
 
 - name: Uninstall LoadGen
@@ -92,6 +98,11 @@
 - name: Remove ProgramData download directory structure
   win_file:
     path: C:\ProgramData\LoadGen\Download
+    state: absent
+
+- name: Remove Program Files directory structure
+  win_file:
+    path: C:\Program Files\LoadGen
     state: absent
 
 - name: Remove download directory structure
