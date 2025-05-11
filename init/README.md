@@ -10,6 +10,7 @@ In order to deploy this project, there are a couple of prerequisites.
   * SSH access enabled on the VMware host.
   * Azure DevOps environment.
   * Azure DevOps Personal Access Token (PAT).
+  * GitHub Personal Access Token.
 
 The initialization script requires a JSON-based settings file with the following structure:
 
@@ -116,10 +117,8 @@ Unfortunately, many vendors hide their software behind a login page, making it i
 │   |   |   ├── exe
 │   |   |   ├── exe
 ├── Microsoft
-|   ├── Server
-|   |   ├── iso
-|   ├── Desktop
-|   |   ├── iso
+|   ├── iso
+
 ```
 
 During execution, all files will be uploaded to the Docker host and served via NGINX.
@@ -144,7 +143,7 @@ $securePassword = ConvertTo-SecureString -String "Myl33tP@ssw0rd!" -AsPlainText
 
 Start the init script as followed:
 ```powershell
-.\init.ps1 -AdoPat "00112233445566778899" -ESXPassword $securePassword
+.\init.ps1 -AdoPat "00112233445566778899" -GitHubPat "00112233445566778899" -ESXPassword $securePassword
 ```
 
 ## Flow
