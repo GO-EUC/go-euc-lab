@@ -4,9 +4,11 @@ resource "azurerm_container_group" "docker" {
   location            = azurerm_resource_group.Docker.location
   resource_group_name = azurerm_resource_group.Docker.name
 
-  ip_address_type    = "private"
-  network_profile_id = azurerm_network_profile.docker.id
+  ip_address_type    = "Private"
+  subnet_ids         = [azurerm_subnet.docker.id]
   os_type            = "Linux"
+
+  depends_on = [azurerm_subnet.docker]
 
   
   dynamic "container" {

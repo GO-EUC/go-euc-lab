@@ -1,12 +1,12 @@
 data "azurerm_client_config" "current" {}
 
 resource "random_integer" "vault" {
-  min = 10000
-  max = 99999
+  min = 100000
+  max = 999999
 }
 
 resource "azurerm_key_vault" "vault" {
-  name                = "kv-infra-${local.environment_abbreviations[terraform.workspace]}-${random_integer.vault.result}"
+  name                = "kv-${local.environment_abbreviations[terraform.workspace]}-${random_integer.vault.result}"
   location            = azurerm_resource_group.Vault.location
   resource_group_name = azurerm_resource_group.Vault.name
 

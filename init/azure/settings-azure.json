@@ -1,0 +1,19 @@
+{
+    "repo_root": "/Users/leeejeffries/Source/GO-EUC-LAB",
+    "azure": {
+        "subscription_id": "YOUR_SUBSCRIPTION_ID",
+        "tenant_id": "YOUR_TENANT_ID",
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET",
+        "region": "UK South"
+    },
+    "devops": {
+        "org_name": "YOUR_ORG_NAME",
+        "project_name": "YOUR_PROJECT_NAME",
+        "token": "YOUR_PAT_TOKEN",
+        "pool_name": "Azure Pipelines",
+        "agents": 3
+    },
+    "delivery": "cvads",
+    "environment": "default"
+} 

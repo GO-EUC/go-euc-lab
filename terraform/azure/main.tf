@@ -5,21 +5,26 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>2.9"
+      version = "~>3.117"
     }
 
     azuredevops = {
       source  = "microsoft/azuredevops"
-      version = ">=0.1.0"
+      version = ">=1.11"
     }
 
     random = {
       source = "hashicorp/random"
-      version = "~>3.4"
+      version = "~>3.7"
     }
   }
 
-  backend "azurerm" {
+      backend "azurerm" {
+    resource_group_name  = "rg-golab-default-tfstate"
+    storage_account_name = "golabtfstatedefault518"
+    container_name       = "terraform-state"
+    key                  = "terraform.tfstate"
+    use_azuread_auth     = true
   }
 }
 
@@ -40,3 +45,14 @@ provider "azurerm" {
   client_secret   = var.azure_client_secret
   tenant_id       = var.azure_tenant_id
 }
+
+
+
+
+
+
+
+
+
+
+
