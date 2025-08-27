@@ -1,8 +1,25 @@
 param (
+    # Settings Json
     [Parameter(Mandatory = $false)]
     [string]
-    $SettingsFile = "settings-azure.json",
-    
+    $SettingsFile = "settings.json",
+
+    # Azure DevOps PAT Token
+    [Parameter(Mandatory = $true)]
+    [string]
+    $AdoPat,
+
+    # GitHub PAT Token
+    [Parameter(Mandatory = $true)]
+    [string]
+    $GitHubPat,
+
+    # Azure client secret in string format
+    [Parameter(Mandatory = $true)]
+    [string]
+    $ClientSecret,
+
+    # External IP address for NSG rules (optional)
     [Parameter(Mandatory = $false)]
     [string]
     $ExternalIP
@@ -40,7 +57,7 @@ $settings = Get-Content -Path $SettingsFile -Raw | ConvertFrom-Json
 # Validate required settings
 $requiredSettings = @(
     "azure.subscription_id",
-    "azure.tenant_id", 
+    "azure.tenant_id",
     "azure.client_id",
     "azure.client_secret",
     "azure.region",
@@ -132,29 +149,29 @@ Write-Output "$(Get-Date): Terraform variables written to $tfVarsPath"
 $terraformCommand = if ($IsWindows) { "terraform.exe" } else { "terraform" }
 if (!(Get-Command $terraformCommand -ErrorAction SilentlyContinue)) {
     Write-Output "$(Get-Date): Downloading Terraform"
-    
+
     $os = if ($IsWindows) { "windows" } elseif ($IsMacOS) { "darwin" } else { "linux" }
     $arch = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
-    
+
     $terraformVersion = "1.5.7"
     $downloadUrl = "https://releases.hashicorp.com/terraform/$terraformVersion/terraform_${terraformVersion}_${os}_${arch}.zip"
     $tempDir = Join-Path $env:TEMP "terraform"
     $zipPath = Join-Path $tempDir "terraform.zip"
-    
+
     if (!(Test-Path $tempDir)) {
         New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
     }
-    
+
     try {
         Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
         Expand-Archive -Path $zipPath -DestinationPath $tempDir -Force
         $terraformPath = Join-Path $tempDir "terraform"
         if ($IsWindows) { $terraformPath += ".exe" }
-        
+
         # Add to PATH for current session
         $env:PATH = "$tempDir;$env:PATH"
         $terraformCommand = if ($IsWindows) { "terraform.exe" } else { "terraform" }
-        
+
         Write-Output "$(Get-Date): Terraform downloaded and available as '$terraformCommand'"
     } catch {
         Write-Error "Failed to download Terraform: $_"
@@ -168,44 +185,44 @@ function Setup-TerraformBackend {
         [Parameter(Mandatory = $true)]
         [object]$settings
     )
-    
+
     Write-Output "$(Get-Date): Setting up Terraform backend storage"
-    
+
     # Create a storage account for Terraform state
     $storageAccountName = "golabtfstate$($settings.environment)$(Get-Random -Minimum 100 -Maximum 999)"
     $resourceGroupName = "rg-golab-$($settings.environment)-tfstate"
     $containerName = "terraform-state"
-    
+
     Write-Output "$(Get-Date): Creating resource group: $resourceGroupName"
     az group create --name $resourceGroupName --location $settings.azure.region
-    
+
     Write-Output "$(Get-Date): Creating storage account: $storageAccountName"
     Write-Output "$(Get-Date): Storage account will be created in resource group: $resourceGroupName"
     az storage account create --name $storageAccountName --resource-group $resourceGroupName --location $settings.azure.region --sku Standard_LRS --encryption-services blob
-    
+
     Write-Output "$(Get-Date): Creating blob container"
     az storage container create --name $containerName --account-name $storageAccountName
-    
+
     # Get storage account key
     $storageKey = az storage account keys list --resource-group $resourceGroupName --account-name $storageAccountName --query '[0].value' -o tsv
-    
+
     # Assign Storage Blob Data Contributor role to the Service Principal
     Write-Output "$(Get-Date): Assigning storage permissions to Service Principal"
     $scope = "/subscriptions/$($settings.azure.subscription_id)/resourceGroups/$resourceGroupName/providers/Microsoft.Storage/storageAccounts/$storageAccountName"
     az role assignment create --assignee $settings.azure.client_id --role "Storage Blob Data Contributor" --scope $scope
-    
+
     # Update backend configuration in main.tf
     $mainTfPath = Join-Path $TerraformDir "main.tf"
     $backendTfPath = Join-Path $TerraformDir "backend.tf"
-    
+
     # Remove any existing backend.tf file to avoid conflicts
     if (Test-Path $backendTfPath) {
         Remove-Item $backendTfPath -Force
         Write-Output "$(Get-Date): Removed existing backend.tf to avoid conflicts"
     }
-    
+
     $mainTfContent = Get-Content -Path $mainTfPath -Raw
-    
+
     # Replace the empty backend block with the configured one
     $newBackendBlock = @"
   backend "azurerm" {
@@ -216,18 +233,18 @@ function Setup-TerraformBackend {
     use_azuread_auth     = true
   }
 "@
-    
+
     # Update provider versions to match locked versions
     $mainTfContent = $mainTfContent -replace 'version = "~>2.9"', 'version = "~>3.117"'
     $mainTfContent = $mainTfContent -replace 'version = ">=0.1.0"', 'version = ">=1.11"'
     $mainTfContent = $mainTfContent -replace 'version = "~>3.4"', 'version = "~>3.7"'
-    
+
     # Replace the existing backend block with the new configuration
     $backendPattern = 'backend "azurerm" \{[^}]*\}'
     $updatedContent = $mainTfContent -replace $backendPattern, $newBackendBlock
     $updatedContent | Set-Content -Path $mainTfPath -Force
     Write-Output "$(Get-Date): Backend configuration updated in $mainTfPath"
-    
+
     return @{
         ResourceGroup = $resourceGroupName
         StorageAccount = $storageAccountName
@@ -241,18 +258,18 @@ Push-Location $TerraformDir
 try {
     # Set up Terraform backend storage
     $backendInfo = Setup-TerraformBackend -settings $settings
-    
+
     # Set the Terraform workspace based on environment
     $workspace = $settings.environment
     Write-Output "$(Get-Date): Using Terraform workspace: $workspace"
-    
+
     # Initialize Terraform
     Write-Output "$(Get-Date): Initializing Terraform"
     & $terraformCommand init -reconfigure
     if ($LASTEXITCODE -ne 0) {
         throw "Terraform init failed with exit code $LASTEXITCODE"
     }
-    
+
     # Select or create workspace
     Write-Output "$(Get-Date): Selecting Terraform workspace: $workspace"
     & $terraformCommand workspace select $workspace
@@ -263,27 +280,27 @@ try {
             throw "Failed to create Terraform workspace with exit code $LASTEXITCODE"
         }
     }
-    
+
     # Plan deployment
     Write-Output "$(Get-Date): Planning Terraform deployment"
     & $terraformCommand plan -out=tfplan
     if ($LASTEXITCODE -ne 0) {
         throw "Terraform plan failed with exit code $LASTEXITCODE"
     }
-    
+
     # Apply deployment
     Write-Output "$(Get-Date): Applying Terraform deployment"
     & $terraformCommand apply -auto-approve tfplan
     if ($LASTEXITCODE -ne 0) {
         throw "Terraform apply failed with exit code $LASTEXITCODE"
     }
-    
+
     Write-Output "$(Get-Date): Terraform deployment completed successfully"
-    
+
     # Show outputs
     Write-Output "$(Get-Date): Deployment outputs:"
     & $terraformCommand output
-    
+
 } catch {
     Write-Error "Terraform deployment failed: $_"
     exit 1
@@ -291,4 +308,4 @@ try {
     Pop-Location
 }
 
-Write-Output "$(Get-Date): Azure initialization completed successfully!" 
+Write-Output "$(Get-Date): Azure initialization completed successfully!"
