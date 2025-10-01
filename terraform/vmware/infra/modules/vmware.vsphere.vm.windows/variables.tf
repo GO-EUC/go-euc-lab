@@ -98,10 +98,15 @@ variable "domain_admin_password" {
   sensitive   = true
 }
 
-variable "network_address" {
+variable "network_cidr" {
+  description = "Network CIDR to get IP address from"
+  type        = string
+  default     = null
+}
+variable "network_index" {
   description = "Static network address"
   type        = string
-  default     = ""
+  default     = null
   sensitive   = false
 }
 
@@ -155,4 +160,3 @@ variable "vsphere_source_template" {
   type        = string
   sensitive   = false
 }
-

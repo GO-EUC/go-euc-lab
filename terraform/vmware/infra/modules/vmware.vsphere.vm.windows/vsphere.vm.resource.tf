@@ -27,12 +27,12 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   dynamic "clone" {
-    for_each = var.network_address != "" ? [1] : []
+    for_each = var.network_index != "" ? [1] : []
     content {
       template_uuid = data.vsphere_virtual_machine.template.id
 
       customize {
-        timeout = 30
+        timeout = 120
 
         windows_options {
           computer_name  = "${var.vm_name}-${count.index + 1}"
@@ -40,7 +40,7 @@ resource "vsphere_virtual_machine" "vm" {
         }
 
         network_interface {
-          ipv4_address = var.network_address
+          ipv4_address = cidrhost(var.network_cidr, (var.network_index + count.index))
           ipv4_netmask = var.network_netmask
           dns_server_list = var.network_dns_list
         }
@@ -51,12 +51,12 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   dynamic "clone" {
-    for_each = var.network_address == "" ? [1] : []
+    for_each = var.network_index == "" ? [1] : []
     content {
       template_uuid = data.vsphere_virtual_machine.template.id
 
       customize {
-        timeout = 30
+        timeout = 120
 
         windows_options {
           computer_name  = "${var.vm_name}-${count.index + 1}"
