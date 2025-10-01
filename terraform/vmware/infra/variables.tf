@@ -20,7 +20,7 @@ variable "vmware_horizon" {
 
 variable "network_list" {
   description = "List of available CIDR based network address"
-  type = list(number)
+  type        = list(number)
 }
 
 variable "vsphere_datacenter" {
@@ -42,12 +42,12 @@ variable "domain_admin" {
 }
 
 variable "vault_address" {
-    description = "The vault address in format: http://vault.go.euc:8200"
-    type = string
+  description = "The vault address in format: http://vault.go.euc:8200"
+  type        = string
 }
 
 variable "vault_token" {
-    description = "The vault token that will be used for authtentication"
-    type = string
-    sensitive = true
+  description = "The vault token that will be used for authtentication"
+  type        = string
+  sensitive   = true
 }
