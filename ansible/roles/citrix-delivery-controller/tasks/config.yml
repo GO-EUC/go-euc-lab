@@ -1,5 +1,10 @@
 ---
 
+- name: Ensure service CitrixHostService is started
+  win_service:
+    name: CitrixHostService
+    state: started
+
 - name: Create Citrix Site
   citrix_site:
     name: "{{ citrix.site }}"

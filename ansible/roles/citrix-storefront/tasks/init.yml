@@ -34,10 +34,6 @@
     - name: Start Citrix Storefront script
       win_shell: C:\Windows\Temp\createsfsite.ps1
       when: sf_info.stat.exists == False
-      vars:
-        ansible_become: true
-        ansible_become_user: system
-        ansible_become_method: runas
 
     # - name: Wait for passcode file
     #   win_wait_for:
