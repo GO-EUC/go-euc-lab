@@ -1,0 +1,7 @@
+---
+- name: vSphere
+  win_dns_record:
+    name: "vcsa-1"
+    type: "A"
+    value: "10.2.0.5"
+    zone: "go.euc"
