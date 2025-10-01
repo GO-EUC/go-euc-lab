@@ -1,0 +1,105 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  tasks:
+  - name: Install requirements
+    include_tasks: vault.yml
+
+# - name: Remote Desktop
+#   hosts: all
+#   roles:
+#     - remote-desktop
+#   vars_files:
+#     - ansible.yml
+#     - domain.yml
+#     - accounts.yml
+#     - local.yml
+
+# - name: Domain Controller
+#   hosts: dc
+#   roles:
+#     - domain-controller
+#   vars_files:
+#     - ansible.yml
+#     - domain.yml
+#     - accounts.yml
+#     - local.yml
+
+# - name: Domain join
+#   hosts: "citrix_lic,citrix_ddc,citrix_sf"
+#   roles:
+#     - domain-join
+#   vars_files:
+#     - ansible.yml
+#     - local.yml
+#   vars:
+#     ou_path: "OU=Infra,OU=Machines,OU=GO"
+
+
+# - name: SQL Server
+#   hosts: sql
+#   vars_files:
+#     - ansible.yml
+#     - domain.yml
+#   roles:
+#   - mssql
+#   tasks:
+#     - name: Create databases
+#       win_shell: "sqlcmd -Q 'CREATE DATABASE {{ item }}'"
+#       loop:
+#         - LoadGen
+
+# - name: Install and configure the Management Server
+#   hosts: mgmt
+#   roles:
+#     - management
+#     - loadgen
+#   vars_files:
+#     - ansible.yml
+#     - domain.yml
+#     - accounts.yml
+#     - loadgen.yml
+#   vars:
+#     telegraf_monitor_vsphere: true
+#     sql_admin: "GO\\sql_svc"
+#     sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
+#     sql_server: "{{ groups['sql'][0] }}"
+#     sql_database: "LoadGen"
+
+# - name: Install and configure the LoadGen bots
+#   hosts: bots
+#   roles:
+#     - telegraf
+#   vars_files:
+#     - accounts.yml
+#     - ansible.yml
+#     - domain.yml
+#     - loadgen.yml
+
+- name: Install and configure Citrix Delivery Controller
+  hosts: citrix_ddc
+  roles:
+    - citrix-delivery-controller
+  vars_files:
+    - citrix.yml
+    - ansible.yml
+    - domain.yml
+
+- name: Install and configure Citrix License Server
+  hosts: citrix_lic
+  roles:
+  - citrix-license-server
+  vars_files:
+    - citrix.yml
+    - ansible.yml
+    - domain.yml
+
+- name: Install and configure Citrix Storefront
+  hosts: citrix_sf
+  roles:
+    - citrix-storefront
+  vars_files:
+    - ansible.yml
+    - domain.yml
+    - citrix.yml
