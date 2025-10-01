@@ -1,6 +1,4 @@
 ---
-loadgen_version: 8966
-
 datasource_name: GO-Datastore
 datasource_active: true
 datasource_table_create_on_load_test: true

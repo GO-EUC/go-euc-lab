@@ -1,4 +1,61 @@
 ---
+- name: Resize C partition to it's maximum size
+  win_partition:
+    disk_number: 0
+    drive_letter: C
+    partition_size: -1
+
+- name: Initialize data disk
+  win_initialize_disk:
+    disk_number: 1
+    style: "gpt"
+    online: true
+
+- name: Create a single partition on Disk 1
+  win_partition:
+    disk_number: 1
+    drive_letter: D
+    partition_size: -1
+
+- name: Format D as NTFS
+  win_format:
+    drive_letter: D
+    file_system: NTFS
+    new_label: Data
+
+- name: Create directory structure
+  win_file:
+    path: D:\Data\VMware
+    state: directory
+
+- name: Download vSphere certificates
+  win_get_url:
+    url: https://vcsa-1.go.euc/certs/download.zip
+    dest: D:\Data\VMware\certs.zip
+    validate_certs: no
+
+- name: Unzip vSphere certificates
+  win_unzip:
+    src: D:\Data\VMware\certs.zip
+    dest: D:\Data\VMware\
+    creates: D:\Data\VMware\certs\win
+
+- name: Find files vSphere certificates
+  win_find:
+    paths: D:\Data\VMware\certs\win
+    patterns: ['*.crt']
+  register: cert_files
+
+- name: Import the vSphere certificates
+  win_certificate_store:
+    path: "{{ item.path }}"
+    store_location: "LocalMachine"
+    store_name: "Root"
+    state: present
+  loop: "{{ cert_files.files }}"
+  loop_control:
+    label: "{{ item.filename }}"
+
 - name: Install remote management tools
   win_feature:
     name:
