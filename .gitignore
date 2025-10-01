@@ -3,16 +3,10 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
-
-# Ignore the ansible inventory file
-**/ansible/*inventory*
-
 .terraformrc
 terraform.rc
-
 *.tfvars
 *backend.conf
-
 terraform**/deploy.json
 
 # ignore any log and lock file
