@@ -1,50 +1,67 @@
 ---
-- name: Set fact for Workstation
-  set_fact:
-    citrix_type: Workstation
-  when: ansible_facts.os_installation_type == 'Client'
+- name: Obtain information from registry for install check
+  win_reg_stat:
+    path: HKLM:\Software\GO-EUC\Citrix
+    name: vda
+  register: citrix_state
 
-- name: Set fact for Server
-  set_fact:
-    citrix_type: Server
-  when: ansible_facts.os_installation_type == 'Server'
+- name: Block for Citrix installation
+  block:
+  - name: Set fact for Workstation
+    set_fact:
+      citrix_type: Workstation
+    when: ansible_facts.os_installation_type == 'Client'
 
-- name: Install Microsoft Visual C++ Redistributable Latest - X86"
-  win_package:
-    path: https://aka.ms/vs/17/release/vc_redist.x86.exe
-    arguments: /q /norestart
+  - name: Set fact for Server
+    set_fact:
+      citrix_type: Server
+    when: ansible_facts.os_installation_type == 'Server'
 
-- name: Install Microsoft Visual C++ Redistributable Latest - X64"
-  win_package:
-    path: https://aka.ms/vs/17/release/vc_redist.x64.exe
-    arguments: /q /norestart
+  # - name: Install Microsoft Visual C++ Redistributable Latest - X86"
+  #   win_package:
+  #     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
+  #     arguments: /q /norestart
 
-- name: Install Microsoft .NET Framework 4.8 - Offline installer
-  win_package:
-    path: https://go.microsoft.com/fwlink/?linkid=2088631
-    arguments: /q /norestart
+  # - name: Install Microsoft Visual C++ Redistributable Latest - X64"
+  #   win_package:
+  #     path: https://aka.ms/vs/17/release/vc_redist.x64.exe
+  #     arguments: /q /norestart
 
-- name: Install Citrix {{citrix_type}} VDA
-  win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
-    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
-    state: present
-    expected_return_code: [0, 3, 3010]
-  register: install
+  # - name: Install Microsoft .NET Framework 4.8 - Offline installer
+  #   win_package:
+  #     path: https://go.microsoft.com/fwlink/?linkid=2088631
+  #     arguments: /q /norestart
 
-- name: Reboot VDA during install
-  win_reboot:
-  when: install.rc == 3
+  - name: Install Citrix {{citrix_type}} VDA
+    win_package:
+      path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+      arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
+      state: present
+      expected_return_code: [0, 3, 3010]
+    register: install
 
-- name: Second install Citrix {{citrix_type}} VDA
-  win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
-    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
-    state: present
-    expected_return_code: [0, 3, 3010]
-  register: install
-  when: install.rc == 3
+  - name: Reboot VDA during install
+    win_reboot:
+    when: install.rc == 3
 
-- name: Reboot after VDA
-  win_reboot:
-  when: install.reboot_required
+  - name: Second install Citrix {{citrix_type}} VDA
+    win_package:
+      path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+      arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
+      state: present
+      expected_return_code: [0, 3, 3010]
+    register: install
+    when: install.rc == 3
+
+  - name: Reboot after VDA
+    win_reboot:
+    when: install.reboot_required
+
+  - name: Add registry for future installation check
+    win_regedit:
+      path: HKLM:\Software\GO-EUC\Citrix
+      name: vda
+      data: "{{ citrix.version }}"
+      type: string
+
+  when: (citrix_state.exists == false) or (citrix_state.value != citrix.version)

@@ -10,11 +10,11 @@
     set_fact:
       domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
 
-  - name: Set DNS to primary domain controller
-    win_dns_client:
-      adapter_names: '*'
-      ipv4_addresses:
-        - "{{ hostvars[groups['dc'][0]].ansible_host }}"
+  # - name: Set DNS to primary domain controller
+  #   win_dns_client:
+  #     adapter_names: '*'
+  #     ipv4_addresses:
+  #       - "{{ hostvars[groups['dc'][0]].ansible_host }}"
 
   - name: Domain join
     win_domain_membership:

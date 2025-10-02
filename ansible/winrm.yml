@@ -1,0 +1,7 @@
+---
+- name: Wait for system to become reachable
+  wait_for_connection:
+    sleep: 5
+    delay: 30
+    connect_timeout: 120
+    timeout: 900

@@ -1,6 +1,5 @@
 resource "vsphere_virtual_machine" "vm" {
-  count            = var.vm_count
-  name             = "${var.vm_name}-${count.index + 1}"
+  name             = var.vm_name
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
@@ -35,7 +34,7 @@ resource "vsphere_virtual_machine" "vm" {
         timeout = 120
 
         windows_options {
-          computer_name  = "${var.vm_name}-${count.index + 1}"
+          computer_name  = var.vm_name
           admin_password = var.local_admin_password
         }
 
@@ -59,8 +58,8 @@ resource "vsphere_virtual_machine" "vm" {
         timeout = 120
 
         windows_options {
-          computer_name  = "${var.vm_name}-${count.index + 1}"
-          admin_password = var.local_admin_password
+          computer_name  = var.vm_name
+          organization_name = "GO-EUC"
         }
 
         network_interface {}

@@ -114,8 +114,26 @@ try {
     Write-Output "Skip"
 }
 
+Write-Output "Removing AppX packages..."
+$packages = @(
+    "Microsoft.Copilot",
+    "Microsoft.WidgetsPlatformRuntime"
+)
 
+foreach ($package in $packages) {
+    $pkg = Get-AppxPackage -AllUsers -Name "$($package)*"
 
+    try {
+        if ($pkg) {
+            $pkg | Remove-AppxPackage -AllUsers
+            Write-Output "Removed: $($pkg.PackageFamilyName)"
+        } else {
+            Write-Output "Cannot find: $($package)"
+        }
+    } catch {
+        Write-Output "Cannot remove: $($pkg.PackageFamilyName)"
+    }
+}
 
 # Disable Password Expiration for the Administrator Accounts - (Administrator and Build)
 Write-Output "Disabling password expiration for the local Administrator accounts..."

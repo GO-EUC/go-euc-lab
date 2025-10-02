@@ -1,10 +1,20 @@
 ---
+- name: Wait for system to become reachable over WinRM
+  wait_for_connection:
+    sleep: 5
+    delay: 30
+    connect_timeout: 120
+    timeout: 900
+  register: result
+
 - name: Install all security, critical, and rollup updates
   win_updates:
     category_names:
+      - Updates
       - SecurityUpdates
       - CriticalUpdates
       - UpdateRollups
     reboot: yes
+    state: installed
     reboot_timeout: 3600
-    ignore_errors: yes
+  register: result

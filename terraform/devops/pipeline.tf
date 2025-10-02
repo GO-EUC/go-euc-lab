@@ -50,7 +50,7 @@ resource "azuredevops_build_definition" "image" {
 
 resource "azuredevops_build_definition" "build" {
   project_id = azuredevops_project.project.id
-  name       = "GitHub Build Deployment Pipeline"
+  name       = "Build Deployment Pipeline"
   ci_trigger {
     use_yaml = false
   }

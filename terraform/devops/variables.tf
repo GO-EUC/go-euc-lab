@@ -40,5 +40,5 @@ variable "github_repo" {
 variable "github_branch" {
   type        = string
   description = "The GitHub branch at the repo, default is main"
-  default     = "main"
+  default     = "refs/heads/main"
 }

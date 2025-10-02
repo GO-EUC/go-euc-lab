@@ -1,5 +1,4 @@
 ---
-ansible: "{{ hostvars['localhost']['ansible'] }}"
 loadgen: "{{ hostvars['localhost']['loadgen'] }}"
 loadgen_bot: "{{ hostvars['localhost']['loadgen_bot'] }}"
 sql_agt: "{{ hostvars['localhost']['sql_agt'] }}"

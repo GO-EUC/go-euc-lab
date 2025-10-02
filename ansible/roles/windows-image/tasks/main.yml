@@ -1,40 +1,36 @@
 ---
-- name: Set variables
-  set_fact:
-    delivery: citrix
+- name: Deployment Information
+  debug:
+    msg: "Running deployment for {{delivery}} on {{ansible_facts.os_name}}"
 
-# - name: Deployment Information
-#   debug:
-#     msg: "Running deployment for {{delivery}} on {{ansible_facts.os_name}}"
+- name: Add registry DelayedDesktopSwitchTimeout to value 0
+  win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    name: DelayedDesktopSwitchTimeout
+    data: 0
+    type: dword
 
-# - name: Add registry DelayedDesktopSwitchTimeout to value 0
-#   win_regedit:
-#     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
-#     name: DelayedDesktopSwitchTimeout
-#     data: 0
-#     type: dword
+- name: Install NVIDIA driver
+  import_tasks: nvidia.yml
 
-# - name: Install NVIDIA driver
-#   import_tasks: nvidia.yml
+- name: Install LoadGen
+  import_tasks: loadgen-addin.yml
 
-# - name: Install LoadGen
-#   import_tasks: loadgen-addin.yml
+- name: Install Citrix VDA
+  import_tasks: citrix-vda.yml
 
-# - name: Install Citrix VDA
-#   import_tasks: citrix-vda.yml
+- name: Install VMware Horizon
+  import_tasks: vmware-horizon.yml
+  when: delivery == 'vmware'
 
-# - name: Install VMware Horizon
-#   import_tasks: vmware-horizon.yml
-#   when: delivery == 'vmware'
+- name: Install Office 365
+  import_tasks: office365.yml
 
-# - name: Install Office 365
-#   import_tasks: office365.yml
+- name: Install Adobe Reader DC
+  import_tasks: adobe-reader-dc.yml
 
-# - name: Install Adobe Reader DC
-#   import_tasks: adobe-reader-dc.yml
-
-# - name: Apply Windows updates
-#   import_tasks: updates.yml
+- name: Apply Windows updates
+  import_tasks: updates.yml
 
 - name: Hardening Kitty Install
   hardening_kitty:
@@ -44,8 +40,8 @@
 #   hardening_kitty:
 #     state: present
 
-# - name: Apply Citrix Optimizer
-#   import_tasks: citrix-optimizer.yml
+- name: Apply Citrix Optimizer
+  import_tasks: citrix-optimizer.yml
 
 # - name: Microsoft Defender
 #   import_tasks: microsoft-defender.yml

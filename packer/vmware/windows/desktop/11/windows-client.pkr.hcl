@@ -88,6 +88,7 @@ source "vsphere-iso" "windows-desktop" {
   // Removable Media Settings
   iso_url      = "${var.iso_path}/${var.iso_file}"
   iso_paths    = local.iso_paths
+  iso_checksum = "none"
 
   cd_files = [
     "${path.cwd}/packer/vmware/scripts/${var.vm_guest_os_family}/"
@@ -148,6 +149,19 @@ source "vsphere-iso" "windows-desktop" {
 build {
   sources = ["source.vsphere-iso.windows-desktop"]
 
+  provisioner "windows-update" {
+    pause_before    = "30s"
+    search_criteria = "IsInstalled=0"
+    filters = [
+      "exclude:$_.Title -like '*VMware*'",
+      "exclude:$_.Title -like '*Preview*'",
+      "exclude:$_.Title -like '*Defender*'",
+      "exclude:$_.InstallationBehavior.CanRequestUserInput",
+      "include:$true"
+    ]
+    restart_timeout = "120m"
+  }
+
   provisioner "powershell" {
     environment_vars = [
       "BUILD_USERNAME=${var.build_username}"
@@ -163,18 +177,6 @@ build {
     inline            = var.inline
   }
 
-  provisioner "windows-update" {
-    pause_before    = "30s"
-    search_criteria = "IsInstalled=0"
-    filters = [
-      "exclude:$_.Title -like '*VMware*'",
-      "exclude:$_.Title -like '*Preview*'",
-      "exclude:$_.Title -like '*Defender*'",
-      "exclude:$_.InstallationBehavior.CanRequestUserInput",
-      "include:$true"
-    ]
-    restart_timeout = "120m"
-  }
   post-processor "manifest" {
     output     = local.manifest_output
     strip_path = true

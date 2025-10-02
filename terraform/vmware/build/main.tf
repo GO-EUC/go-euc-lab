@@ -1,20 +1,22 @@
 terraform {
 
   required_version = ">= 1.2"
+
   required_providers {
     vsphere = {
       source  = "hashicorp/vsphere"
-      version = "~>2.2"
+      version = "~>2.11.0"
+    }
+
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 4.6.0"
     }
 
     ansible = {
       source  = "ansible/ansible"
       version = "~>1.3.0"
     }
-  }
-
-  backend "pg" {
-    schema_name = "infra"
   }
 }
 
