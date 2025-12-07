@@ -3,8 +3,7 @@ locals {
   template_windows_2022 = jsondecode(file("${var.root_path}/manifests/windows-server-2022-standard.json"))
   template_windows_2025 = jsondecode(file("${var.root_path}/manifests/windows-server-2025-standard.json"))
 
-  template_windows_11 = jsondecode(file("${var.root_path}/manifests/windows-desktop-11.json"))
-  template_windows_10 = jsondecode(file("${var.root_path}/manifests/windows-desktop-10.json"))
+  template_windows_11 = jsondecode(file("${var.root_path}/manifests/windows-desktop-25h2-11.json"))
 
 
   vsphere_server   = cidrhost(jsondecode(data.vault_kv_secret.network.data_json).cidr, jsondecode(data.vault_kv_secret.vcsa.data_json).ip)
@@ -93,7 +92,9 @@ module "management_server" {
 }
 
 module "sql_server" {
-  source = "./modules/vmware.vsphere.vm.windows"
+  source = "../modules/vmware.vsphere.vm.windows"
+
+  count = 1
 
   vsphere_server   = local.vsphere_server
   vsphere_user     = local.vsphere_user
@@ -254,6 +255,38 @@ module "vmware_horizon" {
   domain_admin          = var.domain_admin
   domain_admin_password = random_password.password.result
 
+  network_cidr                   = local.nic_cidr
+  network_index                  = var.network_list[23]
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns)]
+  virtual_network_portgroup_name = local.vsphere_nic
+
+  vsphere_datacenter      = var.vsphere_datacenter
+  vsphere_datastore       = local.vsphere_datastore
+  vsphere_cluster         = var.vsphere_cluster
+  vsphere_source_template = local.template_windows_2025.builds[0].artifact_id
+}
+
+module "parallels_ras" {
+  count  = var.parallels_ras ? 1 : 0
+  source = "../modules/vmware.vsphere.vm.windows"
+
+  vsphere_server   = local.vsphere_server
+  vsphere_user     = local.vsphere_user
+  vsphere_password = local.vsphere_password
+
+  vm_name               = "prl-ras-${count.index + 1}"
+  vm_cpu                = 4
+  vm_memory             = 16384
+  local_admin_password  = local.build_password
+  domain                = local.domain
+  domain_admin          = var.domain_admin
+  domain_admin_password = random_password.password.result
+
+  network_cidr                   = local.nic_cidr
+  network_index                  = var.network_list[24]
+  network_gateway                = cidrhost(local.nic_cidr, local.nic_gateway)
+  network_dns_list               = [cidrhost(local.nic_cidr, var.network_list[0]), cidrhost(local.nic_cidr, local.nic_main_dns)]
   virtual_network_portgroup_name = local.vsphere_nic
 
   vsphere_datacenter      = var.vsphere_datacenter

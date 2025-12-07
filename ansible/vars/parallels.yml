@@ -1,0 +1,8 @@
+---
+parallels:
+  ras:
+    version: '21.0'
+    source: RASInstaller-21.0.26249.msi
+    path: "http://10.2.0.6:8080/Parallels/RAS"
+    agent:
+      source: RASClient-x64-21.0.26250.msi

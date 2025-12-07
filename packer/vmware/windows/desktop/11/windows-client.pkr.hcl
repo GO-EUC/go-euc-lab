@@ -37,9 +37,10 @@ locals {
   build_date      = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
   build_version   = formatdate("YYMM", timestamp())
   iso_paths       = ["[] /vmimages/tools-isoimages/${var.vm_guest_os_family}.iso"]
+  os_release      = regex("\\d{2}h[12]", var.iso_file)
   manifest_date   = formatdate("YYYY-MM-DD hh:mm:ss", timestamp())
   manifest_path   = "${path.cwd}/manifests/"
-  manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}.json"
+  manifest_output = "${local.manifest_path}${var.vm_guest_os_family}-${var.vm_guest_os_name}-${local.os_release}-${var.vm_guest_os_version}.json"
 }
 
 //  BLOCK: source
@@ -61,7 +62,7 @@ source "vsphere-iso" "windows-desktop" {
 
   // Virtual Machine Settings
   guest_os_type        = var.vm_guest_os_type
-  vm_name              = "${var.vm_guest_os_family}-${var.vm_guest_os_version}-v${local.build_version}"
+  vm_name              = "${var.vm_guest_os_family}-${var.vm_guest_os_version}-${local.os_release}-v${local.build_version}"
   firmware             = var.vm_firmware
   CPUs                 = var.vm_cpu_count
   cpu_cores            = var.vm_cpu_cores
@@ -176,6 +177,8 @@ build {
     elevated_password = var.build_password
     inline            = var.inline
   }
+
+  provisioner "windows-restart" {}
 
   post-processor "manifest" {
     output     = local.manifest_output

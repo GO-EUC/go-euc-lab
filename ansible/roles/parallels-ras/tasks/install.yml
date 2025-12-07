@@ -1,0 +1,13 @@
+---
+- name: Install Parallels RAS
+  win_package:
+    path: "{{parallels.ras.path}}/{{parallels.ras.version}}/{{parallels.ras.source}}"
+    arguments: ADDLOCAL=F_PowerShell,F_Controller,F_Console /qn
+    state: present
+    expected_return_code: [0, 3010]
+  vars:
+    ansible_become: true
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
+    ansible_become_method: runas
+  register: install

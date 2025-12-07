@@ -1,1 +1,1 @@
-Get-AppxPackage | Remove-AppxPackage
+Get-AppxPackage -AllUser | Remove-AppxPackage -AllUsers

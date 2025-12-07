@@ -18,6 +18,11 @@ variable "vmware_horizon" {
   default = false
 }
 
+variable "parallels_ras" {
+  type    = bool
+  default = false
+}
+
 variable "network_list" {
   description = "List of available CIDR based network address"
   type        = list(number)

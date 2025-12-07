@@ -8,13 +8,12 @@ resource "ansible_group" "all" {
   }
 }
 
-
 resource "ansible_group" "dc" {
   name = "dc"
 }
 
 resource "ansible_host" "dc" {
-  for_each = { for vm in module.domain_controller.vm : vm.name => vm }
+  for_each = { for vm in flatten([for m in module.domain_controller : try(m.vm, [])]) : vm.name => vm }
 
   name   = each.value.name
   groups = [ansible_group.dc.name]
@@ -22,6 +21,8 @@ resource "ansible_host" "dc" {
   variables = {
     ansible_host = each.value.default_ip_address
   }
+
+  depends_on = [ module.domain_controller ]
 }
 
 resource "ansible_group" "mgmt" {
@@ -29,7 +30,7 @@ resource "ansible_group" "mgmt" {
 }
 
 resource "ansible_host" "mgmt" {
-  for_each = { for vm in module.management_server.vm : vm.name => vm }
+  for_each = { for vm in flatten([for m in module.management_server : try(m.vm, [])]) : vm.name => vm }
 
   name   = each.value.name
   groups = [ansible_group.mgmt.name]
@@ -44,7 +45,7 @@ resource "ansible_group" "sql" {
 }
 
 resource "ansible_host" "sql" {
-  for_each = { for vm in module.sql_server.vm : vm.name => vm }
+  for_each = { for vm in flatten([for m in module.sql_server : try(m.vm, [])]) : vm.name => vm }
 
   name   = each.value.name
   groups = [ansible_group.sql.name]
@@ -59,7 +60,7 @@ resource "ansible_group" "bots" {
 }
 
 resource "ansible_host" "bots" {
-  for_each = { for vm in module.bots.vm : vm.name => vm }
+  for_each = { for vm in flatten([for m in module.bots : try(m.vm, [])]) : vm.name => vm }
 
   name   = each.value.name
   groups = [ansible_group.bots.name]
@@ -74,7 +75,7 @@ resource "ansible_group" "citrix_sf" {
 }
 
 resource "ansible_host" "citrix_sf" {
-  for_each = { for vm in try(module.citrix_storefront[0].vm, []) : vm.name => vm }
+  for_each = { for idx, m in module.citrix_storefront : idx => m.vm }
 
   name   = each.value.name
   groups = [ansible_group.citrix_sf.name]
@@ -82,6 +83,8 @@ resource "ansible_host" "citrix_sf" {
   variables = {
     ansible_host = each.value.default_ip_address
   }
+
+  depends_on = [ module.citrix_storefront ]
 }
 
 resource "ansible_group" "citrix_ddc" {
@@ -89,7 +92,7 @@ resource "ansible_group" "citrix_ddc" {
 }
 
 resource "ansible_host" "citrix_ddc" {
-  for_each = { for vm in try(module.citrix_delivery_controller[0].vm, []) : vm.name => vm }
+  for_each = { for idx, m in module.citrix_delivery_controller : idx => m.vm }
 
   name   = each.value.name
   groups = [ansible_group.citrix_ddc.name]
@@ -97,6 +100,8 @@ resource "ansible_host" "citrix_ddc" {
   variables = {
     ansible_host = each.value.default_ip_address
   }
+
+  depends_on = [ module.citrix_delivery_controller ]
 }
 
 resource "ansible_group" "citrix_lic" {
@@ -104,7 +109,7 @@ resource "ansible_group" "citrix_lic" {
 }
 
 resource "ansible_host" "citrix_lic" {
-  for_each = { for vm in try(module.citrix_license_server[0].vm, []) : vm.name => vm }
+  for_each = { for idx, m in module.citrix_license_server : idx => m.vm }
 
   name   = each.value.name
   groups = [ansible_group.citrix_lic.name]
@@ -112,4 +117,24 @@ resource "ansible_host" "citrix_lic" {
   variables = {
     ansible_host = each.value.default_ip_address
   }
+
+    depends_on = [ module.citrix_license_server ]
+}
+
+
+resource "ansible_group" "parallels_ras" {
+  name = "parallels_ras"
+}
+
+resource "ansible_host" "ras" {
+  for_each = { for idx, m in module.parallels_ras : idx => m.vm }
+
+  name   = each.value.name
+  groups = [ansible_group.parallels_ras.name]
+
+  variables = {
+    ansible_host = each.value.default_ip_address
+  }
+
+    depends_on = [ module.parallels_ras ]
 }

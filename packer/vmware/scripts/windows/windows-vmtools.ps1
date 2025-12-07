@@ -25,7 +25,7 @@ Function Get-VMToolsInstalled {
         [int]$Version = "32"
     }
     if (((Get-ChildItem "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall") | Where-Object { $_.GetValue( "DisplayName" ) -like "*VMware Tools*" } ).Length -gt 0) {
-       [int]$Version = "64"
+        [int]$Version = "64"
     }
     return $Version
 }
@@ -37,7 +37,11 @@ Set-Location E:
 # Installation Attempt
 
 Write-Output "Installing VMware Tools..."
-Start-Process "setup64.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+try {
+  Start-Process "setup.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+} catch {
+  Start-Process "setup64.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+}
 
 # Check to see if the 'VMTools' service is in a 'Running' state.
 
@@ -79,7 +83,12 @@ if (-not $Running) {
   # Installation Attempt
 
   Write-Output "Reintalling VMware Tools..."
-  Start-Process "setup64.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+  try {
+    Start-Process "setup.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+  } catch {
+    Start-Process "setup64.exe" -ArgumentList '/s /v "/qb REBOOT=R"' -Wait
+  }
+
 
   # Check to see if the 'VMTools' service is in a 'Running' state.
 

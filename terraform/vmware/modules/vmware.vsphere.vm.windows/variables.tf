@@ -50,7 +50,7 @@ variable "vm_disks" {
   default = [{
     unit_number = 0
     label       = "disk0"
-    size        = 100
+    size        = 128
   }]
 }
 

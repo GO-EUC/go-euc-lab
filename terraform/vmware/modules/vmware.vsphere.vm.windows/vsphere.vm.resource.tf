@@ -5,7 +5,7 @@ resource "vsphere_virtual_machine" "vm" {
 
   num_cpus = var.vm_cpu
   memory   = var.vm_memory
-  guest_id = var.vm_guest_id
+  guest_id = data.vsphere_virtual_machine.template.guest_id
 
   firmware = var.firmware
 
@@ -26,7 +26,7 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   dynamic "clone" {
-    for_each = var.network_index != "" ? [1] : []
+    for_each = var.network_index != null ? [1] : []
     content {
       template_uuid = data.vsphere_virtual_machine.template.id
 
@@ -36,10 +36,11 @@ resource "vsphere_virtual_machine" "vm" {
         windows_options {
           computer_name  = var.vm_name
           admin_password = var.local_admin_password
+          organization_name = "GO-EUC"
         }
 
         network_interface {
-          ipv4_address = cidrhost(var.network_cidr, (var.network_index + count.index))
+          ipv4_address = cidrhost(var.network_cidr, (var.network_index))
           ipv4_netmask = var.network_netmask
           dns_server_list = var.network_dns_list
         }
@@ -50,7 +51,7 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   dynamic "clone" {
-    for_each = var.network_index == "" ? [1] : []
+    for_each = var.network_index == null ? [1] : []
     content {
       template_uuid = data.vsphere_virtual_machine.template.id
 
@@ -59,6 +60,7 @@ resource "vsphere_virtual_machine" "vm" {
 
         windows_options {
           computer_name  = var.vm_name
+          admin_password = var.local_admin_password
           organization_name = "GO-EUC"
         }
 

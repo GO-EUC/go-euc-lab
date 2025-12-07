@@ -1,0 +1,12 @@
+---
+- name: Create Parallels RAS Farm
+  ras_farm:
+    gateway: "{{ groups['parallels_ras'] | join(', ') }}"
+    username: "{{ ansible_user }}"
+    password: "{{ ansible_password }}"
+    state: present
+  vars:
+    ansible_become: true
+    ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"

@@ -117,7 +117,8 @@ try {
 Write-Output "Removing AppX packages..."
 $packages = @(
     "Microsoft.Copilot",
-    "Microsoft.WidgetsPlatformRuntime"
+    "Microsoft.WidgetsPlatformRuntime",
+    "Microsoft.BingSearch"
 )
 
 foreach ($package in $packages) {

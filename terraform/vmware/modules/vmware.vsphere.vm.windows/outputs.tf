@@ -2,8 +2,12 @@ output "vm_name" {
     value = vsphere_virtual_machine.vm.name
 }
 
+output "vm" {
+    value = vsphere_virtual_machine.vm
+}
+
 output "vm_ip" {
-  value = vsphere_virtual_machine.vm.default_ip_address
+    value = vsphere_virtual_machine.vm.default_ip_address
 }
 
 output "vm_info" {
