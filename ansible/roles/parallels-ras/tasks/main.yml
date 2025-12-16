@@ -1,3 +1,6 @@
 ---
 - name: Install Parallels RAS
   import_tasks: install.yml
+
+- name: Configure Parallels RAS
+  import_tasks: config.yml

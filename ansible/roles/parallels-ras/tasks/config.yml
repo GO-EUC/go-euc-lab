@@ -1,9 +1,14 @@
 ---
 - name: Create Parallels RAS Farm
   ras_farm:
-    gateway: "{{ groups['parallels_ras'] | join(', ') }}"
+    gateway: "{{ ansible_hostname }}.{{ dns_domain_name }}"
     username: "{{ ansible_user }}"
     password: "{{ ansible_password }}"
+    provider_type: "VCenter"
+    provider_server: "{{ vmware.vsphere.name }}.{{ dns_domain_name }}"
+    provider_username: "{{ vsphere_username }}"
+    provider_password: "{{ vsphere_password }}"
+    provider_version: "v8_0"
     state: present
   vars:
     ansible_become: true

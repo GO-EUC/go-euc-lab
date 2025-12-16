@@ -70,6 +70,7 @@
     loadgen_bot: "{{ accounts.data.data.loadgen_bot }}"
     sql_agt: "{{ accounts.data.data.sql_agt }}"
     sql_svc: "{{ accounts.data.data.sql_svc }}"
+    vsphere_server: "{{ vcsa.data.data.name }}"
     vsphere_username: "{{ vcsa.data.data.user }}"
     vsphere_password: "{{ vcsa.data.data.password }}"
     vsphere_host: "{{ vcsa.data.data.name }}"
