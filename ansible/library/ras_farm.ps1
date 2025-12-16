@@ -31,6 +31,20 @@ if ($state -eq "absent") {
   } catch {
     Fail-Json $result "Fail to setup new RAS Session. Error: $($_)"
   }
+
+  try {
+    $listGateway = Get-RASGateway
+
+    $filterGateway = $listGateway | Where-Object { $_.Server -eq $gateway }
+
+    if ($filterGateway) {
+      $filterGateway | Remove-RASGateway
+      $result.changed = $true
+    }
+  } catch {
+    Fail-Json $result "Fail to create new RAS Gateway. Error: $($_)"
+  }
+
 } else {
   try {
     $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
@@ -40,8 +54,14 @@ if ($state -eq "absent") {
   }
 
   try {
-    New-RASGateway -Server $gateway
-    $result.changed = $true
+    $listGateway = Get-RASGateway
+
+    $filterGateway = $listGateway | Where-Object { $_.Server -eq $gateway }
+
+    if (!$filterGateway) {
+      New-RASGateway -Server $gateway -NoRestart
+      $result.changed = $true
+    }
   } catch {
     Fail-Json $result "Fail to create new RAS Gateway. Error: $($_)"
   }
