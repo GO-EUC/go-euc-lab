@@ -29,14 +29,14 @@
     path: /etc/bind/domain.zone
     line: "{{ item }}      IN      A     {{ hostvars[item].ansible_host }}"
     create: true
-  loop: "{{ groups['vcsa'] }}"
+  loop: "{{ groups['vcsa'] | default([]) }}"
 
 - name: Add a esx to a zone
   lineinfile:
     path: /etc/bind/domain.zone
     line: "{{ item }}      IN      A     {{ hostvars[item].ansible_host }}"
     create: true
-  loop: "{{ groups['esx'] }}"
+  loop: "{{ groups['esx'] | default([]) }}"
 
 - name: Create a DNS container
   docker_container:

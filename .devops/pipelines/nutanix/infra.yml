@@ -1,0 +1,124 @@
+parameters:
+- name: citrix_cloud
+  type: boolean
+  default: false
+- name: citrix_vad
+  type: boolean
+  default: false
+- name: vmware_horizon
+  type: boolean
+  default: false
+
+trigger: none
+pr: none
+
+pool: GO Pipelines
+
+variables:
+- group: Lab
+
+stages:
+- stage: unseal
+  jobs:
+  - job: vault
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          if ((vault status -format=json | ConvertFrom-Json).sealed) {
+            vault operator unseal $(vault_unseal_1)
+            vault operator unseal $(vault_unseal_2)
+            vault operator unseal $(vault_unseal_3)
+          }
+
+- stage: infra
+  dependsOn: unseal
+  jobs:
+  - job: provision
+    steps:
+    - task: DownloadBuildArtifacts@1
+      inputs:
+        buildType: specific
+        project: $(project_id)
+        pipeline: $(pipeline_id)
+        buildVersionToDownload: latest
+        downloadType: single
+        artifactName: manifests
+        downloadPath: $(Build.Repository.LocalPath)
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          $range = .devops/pipelines/scripts/network-plan.ps1 -Platform nutanix
+          @(
+            "root_path = `"$(Build.Repository.LocalPath)`"",
+            "network_list = $($range | ConvertTo-Json -Compress)",
+            "citrix_cloud = ${{ lower(parameters.citrix_cloud) }}",
+            "citrix_vad = ${{ lower(parameters.citrix_vad) }}",
+            "vmware_horizon = ${{ lower(parameters.vmware_horizon) }}"
+          ) | Set-Content terraform/nutanix/infra/terraform.tfvars
+    - task: CmdLine@2
+      inputs:
+        workingDirectory: terraform/nutanix/infra
+        script: terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"
+    - task: CmdLine@2
+      inputs:
+        workingDirectory: terraform/nutanix/infra
+        script: terraform apply -auto-approve -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)"
+
+- stage: domain
+  dependsOn: infra
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: domain.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: management
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: management.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: sql
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: mssql.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: rdgateway
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: rdgateway.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra

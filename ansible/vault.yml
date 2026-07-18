@@ -7,6 +7,10 @@
   ansible.builtin.pip:
     name: netaddr
 
+- name: Set platform defaults
+  ansible.builtin.set_fact:
+    go_euc_platform: "{{ lookup('env', 'platform') | default('vmware', true) }}"
+
 - name: Read build credentials from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
@@ -31,16 +35,25 @@
 - name: Read network info from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
-    path: go/vmware/network
+    path: "go/{{ go_euc_platform }}/network"
     token : '{{ vault_token }}'
   register: network
 
-- name: Read vcsa info from vault
+- name: Read VMware vCenter info from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
     path: go/vmware/vcsa
     token : '{{ vault_token }}'
   register: vcsa
+  when: go_euc_platform == 'vmware'
+
+- name: Read Nutanix Prism info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/prism
+    token : '{{ vault_token }}'
+  register: prism
+  when: go_euc_platform == 'nutanix'
 
 - name: Read influx info from vault
   community.hashi_vault.vault_read:
@@ -58,7 +71,7 @@
     dhcp_router:  "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.gateway) }}"
     dhcp_subnetmask: "{{ network.data.data.cidr | ansible.utils.ipaddr('netmask') }}"
     public_dns1: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.dns) }}"
-    public_dns2: "{{ network.data.data.cidr | ansible.utils.ipmath(vcsa.data.data.dns) }}"
+    public_dns2: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.dns) }}"
     dhcp_start_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.start) }}"
     dhcp_end_range: "{{ network.data.data.cidr | ansible.utils.ipmath(network.data.data.end) }}"
     ansible: "{{ accounts.data.data.ansible }}"
@@ -66,7 +79,10 @@
     loadgen_bot: "{{ accounts.data.data.loadgen_bot }}"
     sql_agt: "{{ accounts.data.data.sql_agt }}"
     sql_svc: "{{ accounts.data.data.sql_svc }}"
-    vsphere_username: "{{ vcsa.data.data.user }}"
-    vsphere_password: "{{ vcsa.data.data.password }}"
-    vsphere_host: "{{ vcsa.data.data.name }}"
+    vsphere_username: "{{ vcsa.data.data.user | default('') }}"
+    vsphere_password: "{{ vcsa.data.data.password | default('') }}"
+    vsphere_host: "{{ vcsa.data.data.name | default('') }}"
+    nutanix_username: "{{ prism.data.data.username | default('') }}"
+    nutanix_password: "{{ prism.data.data.password | default('') }}"
+    nutanix_host: "{{ prism.data.data.endpoint | default('') }}"
     influx_token: "{{ influx.data.data.token }}"

@@ -1,9 +1,14 @@
-
+[CmdletBinding()]
+param(
+    [ValidateSet("vmware", "nutanix")]
+    [string]$Platform = "vmware"
+)
 if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
     Install-Module "Indented.Net.IP" -Scope CurrentUser -Confirm:$false -Force
 }
 
-$network = vault kv get -format json -mount=go vmware/network | ConvertFrom-Json
+$networkPath = if ($Platform -eq "nutanix") { "nutanix/network" } else { "vmware/network" }
+$network = vault kv get -format json -mount=go $networkPath | ConvertFrom-Json
 
 $cidr = $network.data.cidr
 
@@ -17,14 +22,16 @@ $exclusions += $($build.data.ip)
 $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
 $exclusions += $($docker.data.ip)
 
-$vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
-$exclusions += $($vcsa.data.ip)
+if ($Platform -eq "vmware") {
+    $vcsa = vault kv get -format json -mount=go vmware/vcsa | ConvertFrom-Json
+    $exclusions += $($vcsa.data.ip)
 
-$names = vault kv list go/vmware/esx/ | ConvertFrom-Json
+    $names = vault kv list go/vmware/esx/ | ConvertFrom-Json
 
-foreach ($name in $names) {
-    $esx = vault kv get -format json -mount=go vmware/esx/$($name) | ConvertFrom-Json
-    $exclusions += $($esx.data.ip)
+    foreach ($name in $names) {
+        $esx = vault kv get -format json -mount=go vmware/esx/$($name) | ConvertFrom-Json
+        $exclusions += $($esx.data.ip)
+    }
 }
 
 $exclusions = $exclusions | Get-Unique
@@ -37,7 +44,11 @@ $end =  $networkRange[$network.data.end -1]
 
 $ipObjects = @()
 foreach ($exclusion in $exclusions) {
-    $ipObjects += $networkRange[$exclusion -1]
+    if ($exclusion -is [string] -and $exclusion -match '^\d{1,3}(\.\d{1,3}){3}$') {
+        $ipObjects += $networkRange | Where-Object { $_.IPAddressToString -eq $exclusion }
+    } else {
+        $ipObjects += $networkRange[$exclusion -1]
+    }
 }
 
 foreach ($ipObject in $ipObjects) {

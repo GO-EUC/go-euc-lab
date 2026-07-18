@@ -39,3 +39,9 @@
     host_storage: datastore2
     host_network: VM Network
     state: present
+  when: go_euc_platform | default('vmware') == 'vmware'
+
+- name: Report unsupported Nutanix Citrix hosting connection
+  ansible.builtin.debug:
+    msg: Nutanix AHV Citrix hosting connections are intentionally deferred until an AHV-specific connector is implemented.
+  when: go_euc_platform | default('vmware') == 'nutanix'

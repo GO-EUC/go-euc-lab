@@ -1,0 +1,27 @@
+parameters:
+- name: delivery
+  type: string
+  default: Citrix
+  values: [Citrix, VMware, RDSH]
+
+trigger: none
+pr: none
+
+pool: GO Pipelines
+
+variables:
+- group: Lab
+
+stages:
+- stage: customize
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: windows-image.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      delivery: ${{ parameters.delivery }}
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra

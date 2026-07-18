@@ -8,6 +8,9 @@ listener "tcp" {
   tls_disable = true
 }
 
+# Lab control-plane VMs often cannot satisfy Vault mlock; disable it for Docker.
+disable_mlock = true
+
 api_addr = "http://0.0.0.0:8200"
 
 ui = true

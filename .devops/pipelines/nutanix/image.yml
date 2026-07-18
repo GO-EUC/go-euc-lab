@@ -1,0 +1,43 @@
+trigger: none
+pr: none
+
+pool: GO Pipelines
+
+variables:
+- group: Lab
+
+parameters:
+- name: image_source_uri
+  displayName: Prepared Windows Server 2022 disk-image URI reachable by Prism Element
+  type: string
+
+stages:
+- stage: image
+  displayName: Import Nutanix image
+  jobs:
+  - job: import
+    steps:
+    - task: PowerShell@2
+      displayName: Import image and publish manifest
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          $prism = vault kv get -format=json -mount=go nutanix/prism | ConvertFrom-Json
+          $storage = vault kv get -format=json -mount=go nutanix/storage | ConvertFrom-Json
+          $password = ConvertTo-SecureString $prism.data.password -AsPlainText -Force
+          ./scripts/nutanix/New-PrismImageManifest.ps1 `
+            -Endpoint $prism.data.endpoint `
+            -Username $prism.data.username `
+            -Password $password `
+            -StorageContainerUuid $storage.data.container_uuid `
+            -ImageName windows-server-2022-standard `
+            -ImageSourceUri '${{ parameters.image_source_uri }}' `
+            -ManifestPath manifests/windows-server-2022-standard.json `
+            -SkipCertificateCheck
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: manifests
+        ArtifactName: manifests
+        publishLocation: Container

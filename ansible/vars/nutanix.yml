@@ -1,0 +1,4 @@
+---
+# Prism Element is used only by the infrastructure adapter. Guest roles remain
+# platform-neutral and consume their credentials/network facts from vault.yml.
+go_euc_platform: nutanix

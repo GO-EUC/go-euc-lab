@@ -21,6 +21,19 @@ jobs:
       - name: PSScriptAnalyzer on Ansible
         continue-on-error: true
         run: pwsh -Command Invoke-ScriptAnalyzer -Path "./ansible/*" -Setting "./tests/psscript/config.psd1" -EnableExit
+
+      - name: PSScriptAnalyzer on Nutanix automation
+        continue-on-error: true
+        run: pwsh -Command Invoke-ScriptAnalyzer -Path "./scripts/nutanix","./init/nutanix" -Setting "./tests/psscript/config.psd1" -EnableExit
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@main
+
+      - name: Validate Nutanix Packer templates
+        continue-on-error: true
+        run: |
+          packer init ./packer/nutanix/windows/server/2022
+          packer validate -syntax-only ./packer/nutanix/windows/server/2022
       
       - name: TFLint for Terraform
         continue-on-error: true

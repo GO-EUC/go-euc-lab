@@ -22,6 +22,8 @@ Welcome to the GO-EUC lab configuration repository. This repository showcases ho
 | vSphere | Citrix Virtual Apps & Desktops Service | Todo |
 | vSphere | Citrix ADC | In Progress |
 | vSphere | VMware Horizon Cloud | Todo |
+| Nutanix CE | None | In progress |
+| Nutanix CE | Citrix Virtual Apps & Desktops Service | Deferred pending AHV hosting-connection support |
 
 ## Technology Stack
 The following technology stack in this project:
@@ -32,6 +34,11 @@ The following technology stack in this project:
 | Packer | Golden image management. |
 | Ansible | Desired State Configuration. |
 | Docker | Containers, primarily used for Azure DevOps agent and GO-EUC web services. |
+
+## Nutanix CE
+Nutanix CE support starts at a preconfigured Prism Element endpoint. The solution does not build a CE cluster, deploy Prism Central, or configure AHV hosts. It bootstraps the Docker/Vault/PostgreSQL/NGINX control plane as a VM on the existing cluster, imports image artifacts through Prism Element, provisions the lab VMs, and reuses the shared Ansible roles.
+
+See [`init/nutanix/README.md`](init/nutanix/README.md) for prerequisites, the settings schema, and the required read-only Prism capability probe. Prism Element operations use local username/password authentication. The current path uses direct Prism Element APIs where the current official Terraform or Packer integration requires Prism Central.
 
 ## Prerequisite Microsoft Azure
 Before getting started the following prerequisite needs to be in place:

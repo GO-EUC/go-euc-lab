@@ -1,0 +1,33 @@
+{
+  "repo_root": "/path/to/GO-EUC-LAB",
+  "domain_name": "go.euc",
+  "ado_url": "https://dev.azure.com/orgname",
+  "ado_agents": 5,
+  "prism": {
+    "endpoint": "10.0.0.20",
+    "username": "admin",
+    "cluster_uuid": "cluster-uuid",
+    "storage_container_uuid": "storage-container-uuid",
+    "subnet_uuid": "subnet-uuid",
+    "insecure": true
+  },
+  "network": {
+    "cidr": "10.0.0.0/24",
+    "gateway": 1,
+    "dns": 1,
+    "start": 10,
+    "end": 200
+  },
+  "docker": {
+    "name": "dckr-1",
+    "user": "gouser",
+    "ip": 6,
+    "static_ip": "10.0.0.6",
+    "image_source_uri": "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+  },
+  "build": {
+    "user": "gouser",
+    "ip": 20
+  },
+  "software_store": "/path/to/Software"
+}

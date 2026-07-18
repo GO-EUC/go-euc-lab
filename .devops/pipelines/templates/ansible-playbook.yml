@@ -26,6 +26,10 @@ parameters:
   type: string
   default: 'none'
 
+- name: platform
+  type: string
+  default: 'vmware'
+
 jobs:
 - job: ansible
   displayName: Ansible deployment
@@ -56,6 +60,7 @@ jobs:
       script: |
         $env:delivery="${{ parameters.delivery }}"
         $env:build="${{ parameters.build }}"
+        $env:platform="${{ parameters.platform }}"
 
         $ansible_param = "-i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }}"
         if ($env:build -ne "none") {
