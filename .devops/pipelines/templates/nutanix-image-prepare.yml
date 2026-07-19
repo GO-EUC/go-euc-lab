@@ -1,0 +1,87 @@
+# Pre-registers the shared Nutanix VirtIO driver ISO in the Prism Central image
+# library before any image build stage runs. All build stages use the same
+# VirtIO ISO, so registering it once up front avoids the duplicate-image race
+# that occurs when parallel Packer builds try to register it at the same time.
+#
+# The image is created the same way the Packer Nutanix plugin (1.2.1) does it:
+# name = ISO filename, source_uri = software store URL. The plugin matches
+# existing images on that name/URI pair and reuses them instead of re-uploading.
+parameters:
+- name: stage_name
+  type: string
+  default: prepare_isos
+
+stages:
+- stage: ${{ parameters.stage_name }}
+  displayName: Register shared ISOs
+  dependsOn:
+  jobs:
+  - job: virtio
+    displayName: Register VirtIO ISO in the image library
+    steps:
+    - task: PowerShell@2
+      displayName: Upload VirtIO ISO to Prism Central
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Discover the VirtIO ISO in the NGINX software store.
+          $nutanixPath = "http://$(postgress_address):8080/Nutanix/"
+          $nutanixHtml = Invoke-WebRequest -Uri $nutanixPath
+          $virtioFile = ($nutanixHtml.Links | Where-Object {$_.href -ne '../' -and $_.href.ToLower().Contains('virtio')}).href | Select-Object -First 1
+          if (!$virtioFile) { throw "No Nutanix VirtIO ISO found in $nutanixPath." }
+          $virtioUri = "$($nutanixPath)$($virtioFile)"
+          Write-Host "VirtIO ISO: $virtioUri"
+
+          $env:VAULT_FORMAT="json"
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          $pc = vault kv get -format json -mount=go nutanix/prism_central | ConvertFrom-Json
+          $cluster = vault kv get -format json -mount=go nutanix/cluster | ConvertFrom-Json
+
+          $base = "https://$($pc.data.endpoint):9440/api/nutanix/v3"
+          $token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($pc.data.username):$($pc.data.password)"))
+          $headers = @{ Authorization = "Basic $token"; "Content-Type" = "application/json" }
+
+          # The plugin reuses an image only when both the name and the source
+          # URI match, so search the same way it does.
+          $list = Invoke-RestMethod -Uri "$base/images/list" -Method Post -Headers $headers `
+            -Body '{"kind":"image","length":500}' -SkipCertificateCheck
+          $existing = @($list.entities | Where-Object {
+            $_.spec.name -eq $virtioFile -and $_.status.resources.source_uri -eq $virtioUri
+          })
+          if ($existing.Count -gt 1) {
+            throw "Multiple images named '$virtioFile' with the same source URI exist in the library. Remove the duplicates in Prism Central and rerun."
+          }
+          if ($existing.Count -eq 1) {
+            Write-Host "VirtIO ISO already registered (uuid: $($existing[0].metadata.uuid)); nothing to do."
+            return
+          }
+
+          Write-Host "Registering '$virtioFile' in the Prism Central image library."
+          $body = @{
+            spec = @{
+              name = $virtioFile
+              resources = @{
+                image_type = "ISO_IMAGE"
+                source_uri = $virtioUri
+                initial_placement_ref_list = @(@{ kind = "cluster"; uuid = $cluster.data.uuid })
+              }
+            }
+            metadata = @{ kind = "image" }
+          } | ConvertTo-Json -Depth 6
+          $created = Invoke-RestMethod -Uri "$base/images" -Method Post -Headers $headers -Body $body -SkipCertificateCheck
+          $uuid = $created.metadata.uuid
+
+          # Wait for Prism to finish downloading the ISO from the software store.
+          $deadline = (Get-Date).AddMinutes(30)
+          do {
+            Start-Sleep -Seconds 15
+            $image = Invoke-RestMethod -Uri "$base/images/$uuid" -Headers $headers -SkipCertificateCheck
+            $state = $image.status.state
+            Write-Host "Image state: $state"
+            if ($state -eq "ERROR") {
+              throw "Image registration failed: $($image.status.message_list | ConvertTo-Json -Depth 5)"
+            }
+          } while ($state -ne "COMPLETE" -and (Get-Date) -lt $deadline)
+          if ($state -ne "COMPLETE") { throw "Timed out waiting for the VirtIO image to reach COMPLETE." }
+          Write-Host "VirtIO ISO registered (uuid: $uuid)."

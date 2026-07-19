@@ -12,7 +12,9 @@ packer {
   required_version = ">= 1.8.0"
   required_plugins {
     nutanix = {
-      version = ">= 1.2.0"
+      // Pinned: 1.3.0+ uploads through the v4.2 APIs, which do not exist on
+      // PC 2024.3 (the newest Prism Central deployable from Nutanix CE).
+      version = "= 1.2.1"
       source  = "github.com/nutanix-cloud-native/nutanix"
     }
     windows-update = {
@@ -44,9 +46,6 @@ source "nutanix" "windows-desktop" {
   nutanix_insecure = var.prism_central_insecure
   cluster_uuid     = var.nutanix_cluster_uuid
 
-  // Image stages run in parallel and share the OS/VirtIO source ISOs; tolerate
-  // a duplicate library entry instead of failing the build.
-  allow_duplicate_images = true
 
   // Virtual Machine Settings
   vm_name   = "${local.image_name}-v${local.build_version}"

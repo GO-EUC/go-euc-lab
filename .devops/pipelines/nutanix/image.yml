@@ -6,10 +6,16 @@ pool: GO Pipelines
 variables:
 - group: Lab
 
-# Each stage builds a Windows image from the ISO in the software store /
-# Prism image library using the Packer Nutanix builder against Prism Central,
-# then publishes a Prism Element manifest consumed by the infra pipeline.
+# The prepare stage registers the shared VirtIO driver ISO in the Prism image
+# library once, then each build stage runs a Windows image build from the ISO
+# in the software store / Prism image library using the Packer Nutanix builder
+# against Prism Central, and publishes a Prism Element manifest consumed by
+# the infra pipeline.
 stages:
+- template: ../templates/nutanix-image-prepare.yml
+  parameters:
+    stage_name: prepare_isos
+
 - template: ../templates/nutanix-packer-image.yml
   parameters:
     stage_name: image_win_10
@@ -17,6 +23,7 @@ stages:
     iso_match: windows_10
     template_path: packer/nutanix/windows/desktop/10
     image_name: windows-desktop-10
+    depends_on: [prepare_isos]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -25,6 +32,7 @@ stages:
     iso_match: windows_11
     template_path: packer/nutanix/windows/desktop/11
     image_name: windows-desktop-11
+    depends_on: [prepare_isos]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -33,6 +41,7 @@ stages:
     iso_match: windows_server_2019
     template_path: packer/nutanix/windows/server/2019
     image_name: windows-server-2019-standard
+    depends_on: [prepare_isos]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -41,6 +50,7 @@ stages:
     iso_match: windows_server_2022
     template_path: packer/nutanix/windows/server/2022
     image_name: windows-server-2022-standard
+    depends_on: [prepare_isos]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -49,3 +59,4 @@ stages:
     iso_match: windows_server_2025
     template_path: packer/nutanix/windows/server/2025
     image_name: windows-server-2025-standard
+    depends_on: [prepare_isos]

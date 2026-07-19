@@ -15,11 +15,14 @@ parameters:
   type: string
 - name: image_name
   type: string
+- name: depends_on
+  type: object
+  default: []
 
 stages:
 - stage: ${{ parameters.stage_name }}
   displayName: ${{ parameters.display_name }}
-  dependsOn:
+  dependsOn: ${{ parameters.depends_on }}
   jobs:
   - job: build
     displayName: Packer Build ${{ parameters.display_name }}
