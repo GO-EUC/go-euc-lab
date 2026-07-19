@@ -498,9 +498,10 @@ Write-Stage "Connected to the control-plane VM at $dockerIp."
 
 # SFTP session for file uploads (Vault config now, software store later).
 $sftpSession = New-SFTPSession -ComputerName $dockerIp -Credential $dockerCredential -AcceptKey -Force
-Write-Stage "Uploading Vault configuration."
+Write-Stage "Uploading Vault and NGINX configuration."
 # Upload to /tmp first; the gouser SFTP session cannot write to /etc directly.
 Set-SFTPItem -SFTPSession $sftpSession -Path (Get-PathFromRepositoryRoot -ChildPath @("init", "data", "vault", "config.hcl")) -Destination "/tmp/" -Force
+Set-SFTPItem -SFTPSession $sftpSession -Path (Get-PathFromRepositoryRoot -ChildPath @("init", "data", "nginx", "default.conf")) -Destination "/tmp/" -Force
 
 # Generate this run's secrets. All of them are persisted to Vault below, so
 # losing the console output is not fatal.
@@ -516,8 +517,9 @@ $sqlServicePassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789
 # duplicate names.
 $bootstrap = @(
     # Directory layout: /etc/postgresql (PG data), /etc/vault (Vault config/
-    # storage/logs, mounted at /vault in-container), /go (NGINX software store).
-    "sudo mkdir -p /etc/postgresql /etc/vault/config /etc/vault/file /etc/vault/logs /go && sudo mv /tmp/config.hcl /etc/vault/config/config.hcl && sudo chmod -R a+rwx /etc/vault /go",
+    # storage/logs, mounted at /vault in-container), /etc/nginx (NGINX config),
+    # /go (NGINX software store).
+    "sudo mkdir -p /etc/postgresql /etc/vault/config /etc/vault/file /etc/vault/logs /etc/nginx /go && sudo mv /tmp/config.hcl /etc/vault/config/config.hcl && sudo mv /tmp/default.conf /etc/nginx/default.conf && sudo chmod -R a+rwx /etc/vault /go && sudo chmod a+r /etc/nginx/default.conf",
     # Pin Postgres 16: postgres:latest (18+) changed the expected bind-mount path and breaks this layout.
     # The data dir is wiped and re-owned by UID 999 (the postgres user in the
     # image) because a new POSTGRES_PASSWORD only applies to a fresh data dir.
@@ -525,8 +527,10 @@ $bootstrap = @(
     # SKIP_SETCAP avoids the entrypoint's mlock setcap, which fails on this
     # guest; config.hcl sets disable_mlock accordingly.
     "docker rm -f vault >/dev/null 2>&1; docker run -d --restart unless-stopped -v /etc/vault:/vault --cap-add=IPC_LOCK -e SKIP_SETCAP=true -p 8200:8200 --name vault hashicorp/vault:latest server",
-    # NGINX serves /go as the lab software store on port 8080.
-    "docker rm -f nginx >/dev/null 2>&1; docker run -d --restart unless-stopped -v /go:/usr/share/nginx/html -p 8080:80 --name nginx nginx:latest"
+    # NGINX serves /go as the lab software store on port 8080. The custom
+    # default.conf enables autoindex, which the pipelines rely on to discover
+    # ISOs by scraping the directory listings.
+    "docker rm -f nginx >/dev/null 2>&1; docker run -d --restart unless-stopped -v /etc/nginx/default.conf:/etc/nginx/conf.d/default.conf -v /go:/usr/share/nginx/html -p 8080:80 --name nginx nginx:latest"
 )
 Write-Stage "Starting PostgreSQL, Vault, and NGINX containers."
 foreach ($command in $bootstrap) {
