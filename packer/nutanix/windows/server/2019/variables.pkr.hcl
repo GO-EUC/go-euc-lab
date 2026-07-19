@@ -195,13 +195,13 @@ variable "vm_boot_priority" {
 variable "vm_boot_wait" {
   type        = string
   description = "The time to wait before typing the boot command."
-  default     = "3s"
+  default     = "2s"
 }
 
 variable "vm_boot_command" {
   type        = list(string)
   description = "The virtual machine boot command to pass the 'press any key' prompt."
-  default     = ["<spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><enter>"]
+  default     = ["<spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><spacebar><wait><enter>"]
 }
 
 variable "vm_shutdown_command" {
