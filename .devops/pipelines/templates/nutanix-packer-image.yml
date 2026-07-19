@@ -1,0 +1,113 @@
+# Builds one Windows image on Nutanix with the Packer Nutanix (Prism Central)
+# builder and publishes a Prism Element manifest for Terraform.
+#
+# The operating system ISO and the Nutanix VirtIO driver ISO are discovered in
+# the NGINX software store; Packer registers them in the Prism image library
+# on first use and reuses them by name afterwards.
+parameters:
+- name: stage_name
+  type: string
+- name: display_name
+  type: string
+- name: iso_match
+  type: string
+- name: template_path
+  type: string
+- name: image_name
+  type: string
+
+stages:
+- stage: ${{ parameters.stage_name }}
+  displayName: ${{ parameters.display_name }}
+  dependsOn:
+  jobs:
+  - job: build
+    displayName: Packer Build ${{ parameters.display_name }}
+    steps:
+    - task: PowerShell@2
+      displayName: Set the Packer variables
+      inputs:
+        targetType: 'inline'
+        script: |
+          $msPath = "http://$(postgress_address):8080/Microsoft/"
+          $html = Invoke-WebRequest -Uri $msPath
+          $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.Contains('${{ parameters.iso_match }}')}).href
+
+          $checksum = $iso | Where-Object {$_.Contains('checksum')}
+          $isoFile = $($iso | Where-Object {$_.Contains('iso')})
+
+          $nutanixPath = "http://$(postgress_address):8080/Nutanix/"
+          $nutanixHtml = Invoke-WebRequest -Uri $nutanixPath
+          $virtioFile = ($nutanixHtml.Links | Where-Object {$_.href -ne '../' -and $_.href.ToLower().Contains('virtio')}).href | Select-Object -First 1
+          if (!$virtioFile) { throw "No Nutanix VirtIO ISO found in $nutanixPath." }
+
+          $env:VAULT_FORMAT="json"
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+
+          $pc = vault kv get -format json -mount=go nutanix/prism_central | ConvertFrom-Json
+          $cluster = vault kv get -format json -mount=go nutanix/cluster | ConvertFrom-Json
+          $storage = vault kv get -format json -mount=go nutanix/storage | ConvertFrom-Json
+          $network = vault kv get -format json -mount=go nutanix/network | ConvertFrom-Json
+          $build = vault kv get -format json -mount=go build | ConvertFrom-Json
+
+          $packerVars = @()
+          $packerVars += "prism_central_endpoint = `"$($pc.data.endpoint)`""
+          $packerVars += "prism_central_username = `"$($pc.data.username)`""
+          $packerVars += "nutanix_cluster_uuid = `"$($cluster.data.uuid)`""
+          $packerVars += "nutanix_subnet_uuid = `"$($network.data.subnet_uuid)`""
+          $packerVars += "nutanix_storage_container_uuid = `"$($storage.data.container_uuid)`""
+          $packerVars += "iso_uri = `"$($msPath)$($isoFile)`""
+          $packerVars += "virtio_iso_uri = `"$($nutanixPath)$($virtioFile)`""
+          $packerVars += "build_username = `"$($build.data.user)`""
+          $packerVars += "build_organization = `"GO-EUC`""
+          $packerVars += "network_address = $($build.data.ip)"
+          $packerVars += "network_cidr = `"$($network.data.cidr)`""
+          $packerVars += "network_gateway = $($network.data.gateway)"
+          $packerVars += "network_dns = $($network.data.dns)"
+          if ($checksum) {
+            Invoke-RestMethod -Uri "$($msPath)/$($checksum)" -OutFile "checksum"
+            $checksumContent = Get-Content -Path "checksum"
+            $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0])`""
+            $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1])`""
+          }
+
+          $packerVars | Set-Content -Path packer/nutanix/${{ parameters.stage_name }}.pkvars.hcl -Force
+          echo "##vso[task.setvariable variable=pc_password]$($pc.data.password)"
+          echo "##vso[task.setvariable variable=build_password]$($build.data.password)"
+
+    - task: CmdLine@2
+      displayName: Packer init
+      inputs:
+        script: 'packer init .'
+        workingDirectory: '$(Build.Repository.LocalPath)/${{ parameters.template_path }}'
+
+    - task: CmdLine@2
+      displayName: Packer build
+      inputs:
+        script: 'packer build -force -var-file="$(Build.Repository.LocalPath)/packer/nutanix/${{ parameters.stage_name }}.pkvars.hcl" -var "prism_central_password=$(pc_password)" -var "build_password=$(build_password)" ./${{ parameters.template_path }}'
+        workingDirectory: '$(Build.Repository.LocalPath)'
+
+    - task: PowerShell@2
+      displayName: Publish Prism Element manifest
+      inputs:
+        targetType: 'inline'
+        script: |
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          $prism = vault kv get -format=json -mount=go nutanix/prism | ConvertFrom-Json
+          $password = ConvertTo-SecureString $prism.data.password -AsPlainText -Force
+          ./scripts/nutanix/New-PrismImageManifest.ps1 `
+            -Endpoint $prism.data.endpoint `
+            -Username $prism.data.username `
+            -Password $password `
+            -ImageName '${{ parameters.image_name }}' `
+            -ManifestPath 'manifests/${{ parameters.image_name }}.json' `
+            -SkipCertificateCheck
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Packer manifest
+      inputs:
+        PathtoPublish: '$(Build.Repository.LocalPath)/manifests'
+        ArtifactName: 'manifests'
+        publishLocation: 'Container'

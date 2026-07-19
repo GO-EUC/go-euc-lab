@@ -1,6 +1,6 @@
 /*
     DESCRIPTION:
-    Microsoft Windows Server 2022 template using the Packer Builder for Nutanix (Prism Central).
+    Microsoft Windows 11 template using the Packer Builder for Nutanix (Prism Central).
     The builder boots a temporary VM from the operating system ISO in the Prism image library,
     drives the unattended installation, then captures the disk as a new library image.
 */
@@ -28,13 +28,13 @@ packer {
 locals {
   build_date    = formatdate("YYYY-MM-DD hh:mm ZZZ", timestamp())
   build_version = formatdate("YYMM", timestamp())
-  image_name    = "${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}-${var.vm_guest_os_edition_standard}"
+  image_name    = "${var.vm_guest_os_family}-${var.vm_guest_os_name}-${var.vm_guest_os_version}"
 }
 
 //  BLOCK: source
 //  Defines the builder configuration blocks.
 
-source "nutanix" "windows-server" {
+source "nutanix" "windows-desktop" {
 
   // Prism Central Endpoint Settings and Credentials
   nutanix_endpoint = var.prism_central_endpoint
@@ -54,6 +54,11 @@ source "nutanix" "windows-server" {
   cpu       = var.vm_cpu_sockets
   core      = var.vm_cpu_cores
   memory_mb = var.vm_mem_size
+
+  // Windows 11 requires a TPM; AHV provides a virtual TPM per VM.
+  vtpm {
+    enabled = var.vm_vtpm
+  }
 
   // The operating system ISO: reused from the image library by name when
   // present, otherwise downloaded from the software store URI first.
@@ -92,8 +97,8 @@ source "nutanix" "windows-server" {
       build_organization   = var.build_organization
       vm_inst_os_language  = var.vm_inst_os_language
       vm_inst_os_keyboard  = var.vm_inst_os_keyboard
-      vm_inst_os_image     = var.vm_inst_os_image_standard_desktop
-      vm_inst_os_kms_key   = var.vm_inst_os_kms_key_standard
+      vm_inst_os_image     = "${var.vm_guest_os_family} ${var.vm_guest_os_version} ${var.vm_inst_os_image}"
+      vm_inst_os_kms_key   = var.vm_inst_os_kms_key
       vm_guest_os_language = var.vm_guest_os_language
       vm_guest_os_keyboard = var.vm_guest_os_keyboard
       vm_guest_os_timezone = var.vm_guest_os_timezone
@@ -136,7 +141,7 @@ source "nutanix" "windows-server" {
 //  Defines the builders to run, provisioners, and post-processors.
 
 build {
-  sources = ["source.nutanix.windows-server"]
+  sources = ["source.nutanix.windows-desktop"]
 
   provisioner "powershell" {
     environment_vars = [

@@ -103,6 +103,48 @@ network_gateway = 1
 network_dns     = 1
 ```
 
+## Nutanix
+The Nutanix templates mirror the VMware layout and use the official [Packer Plugin for Nutanix](https://github.com/nutanix-cloud-native/packer-plugin-nutanix), which requires a Prism Central endpoint (see `init/nutanix/README.md` for the prerequisite).
+
+The following builds are included:
+
+### Microsoft Windows
+  * Microsoft Windows Server 2019/2022/2025 Standard
+  * Microsoft Windows 11 (secure boot with vTPM)
+  * Microsoft Windows 10
+
+Each build boots a temporary VM from the operating system ISO plus the Nutanix VirtIO driver ISO (both registered in the Prism image library from the software store on first use), runs the unattended installation, and captures the disk as an image library entry. The image pipeline then publishes a Prism Element manifest with the image's `vm_disk_id` for Terraform.
+
+Example windows-server-2022.pkrvars.hcl:
+```
+prism_central_endpoint         = "10.2.0.21"
+prism_central_username         = "admin"
+prism_central_password         = "********"
+nutanix_cluster_uuid           = "0005f2f8-..."
+nutanix_subnet_uuid            = "c1a2b3c4-..."
+nutanix_storage_container_uuid = "d4e5f6a7-..."
+
+iso_uri            = "http://10.2.0.6:8080/Microsoft/windows_server_2022.iso"
+iso_checksum_type  = "sha256"
+iso_checksum_value = "********"
+virtio_iso_uri     = "http://10.2.0.6:8080/Nutanix/Nutanix-VirtIO-1.2.3.iso"
+
+build_username     = "gouser"
+build_password     = "*******"
+build_organization = "GO-EUC"
+
+network_cidr    = "10.2.0.0/24"
+network_address = 20
+network_gateway = 1
+network_dns     = 1
+```
+
+Build command for Windows Server 2022 on Nutanix (run from the repository root so the provisioning scripts resolve):
+```
+packer init packer/nutanix/windows/server/2022
+packer build -var-file="packer/nutanix/windows-server-2022.pkrvars.hcl" packer/nutanix/windows/server/2022
+```
+
 ### Build commands
 
 Build command for Ubuntu:

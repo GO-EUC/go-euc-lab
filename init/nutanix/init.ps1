@@ -38,6 +38,11 @@
 .PARAMETER PrismPassword
     Password for the Prism Element user in the settings file.
 
+.PARAMETER PrismCentralPassword
+    Password for the Prism Central user in the settings file. Required when
+    settings.json contains a prism_central section; the image pipeline uses
+    Prism Central for Packer ISO builds.
+
 .PARAMETER DockerPassword
     Optional password for the control-plane VM user. If omitted, a random
     password is generated for this run (it is stored in Vault either way).
@@ -57,6 +62,7 @@ param(
     [Parameter(Mandatory = $true)][string]$AdoPat,
     [Parameter(Mandatory = $true)][string]$GitHubPat,
     [Parameter(Mandatory = $true)][securestring]$PrismPassword,
+    [securestring]$PrismCentralPassword,
     [securestring]$DockerPassword,
     [switch]$RecreateControlPlaneVm
 )
@@ -161,6 +167,16 @@ if (!(Test-Path $adapter) -or !(Test-Path $probe)) {
     throw "Nutanix scripts are missing. Run this from a checked-out GO-EUC-LAB repository."
 }
 Write-Stage "Using repository root '$repoRoot'."
+
+# Prism Central is a deployment prerequisite (deployed once through the Prism
+# Element UI) and drives the Packer ISO image builds. Its credentials are
+# seeded into Vault below so the image pipeline can authenticate.
+if ($settings.prism_central -and -not $PrismCentralPassword) {
+    throw "settings.json contains a prism_central section; pass its password with -PrismCentralPassword."
+}
+if (!$settings.prism_central) {
+    Write-Warning "No prism_central section in settings.json. The Nutanix image pipeline requires Prism Central; deploy it from Prism Element and rerun with the section configured."
+}
 
 # Posh-SSH provides cross-platform SSH/SFTP (Windows and macOS/Linux).
 if (!(Get-Module -ListAvailable -Name Posh-SSH)) {
@@ -596,6 +612,10 @@ $seed = @(
     "postgress user=tf password=$postgresPassword ip=$dockerIp database=state ssl=disable",
     "domain/accounts ansible=$ansiblePassword loadgen=$loadgenPassword loadgen_bot=$loadgenBotPassword sql_agt=$sqlAgentPassword sql_svc=$sqlServicePassword"
 )
+# Prism Central credentials feed the Packer ISO builds in the image pipeline.
+if ($settings.prism_central) {
+    $seed += "nutanix/prism_central endpoint=$($settings.prism_central.endpoint) username=$($settings.prism_central.username) password=$([Net.NetworkCredential]::new('', $PrismCentralPassword).Password) insecure=$($settings.prism_central.insecure)"
+}
 foreach ($secret in $seed) { Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix kv put -mount=go $secret" | Out-Null }
 
 # ---------------------------------------------------------------------------
@@ -706,7 +726,10 @@ Write-Stage "Starting $($settings.ado_agents) Azure DevOps agent container(s)."
 for ($index = 1; $index -le $settings.ado_agents; $index++) {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting agent-$index."
     # `docker rm -f` keeps reruns idempotent when the container already exists.
-    $agent = "docker rm -f agent$index >/dev/null 2>&1; docker run -d --restart unless-stopped -e AZP_URL='$($settings.ado_url)' -e AZP_TOKEN='$AdoPat' -e AZP_POOL='GO Pipelines' -e AZP_AGENT_NAME='agent-$index' --name agent$index goeuc/ado-agent:latest"
+    # CAP_IPC_LOCK is required because the Vault CLI inside the agent image
+    # carries the cap_ipc_lock file capability; without it, executing
+    # /usr/bin/vault fails with "Operation not permitted".
+    $agent = "docker rm -f agent$index >/dev/null 2>&1; docker run -d --restart unless-stopped --cap-add=CAP_IPC_LOCK -e AZP_URL='$($settings.ado_url)' -e AZP_TOKEN='$AdoPat' -e AZP_POOL='GO Pipelines' -e AZP_AGENT_NAME='agent-$index' --name agent$index goeuc/ado-agent:latest"
     $agentResult = Invoke-SSHCommand -SSHSession $session -Command $agent -TimeOut 300
     if ($agentResult.ExitStatus -ne 0) {
         throw "Failed to start agent-$index.`n$(Get-PoshSshText -CommandResult $agentResult)"

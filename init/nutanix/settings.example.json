@@ -4,11 +4,16 @@
   "ado_url": "https://dev.azure.com/orgname",
   "ado_agents": 5,
   "prism": {
-    "endpoint": "10.0.0.20",
+    "endpoint": "10.0.0.5",
     "username": "admin",
     "cluster_uuid": "cluster-uuid",
     "storage_container_uuid": "storage-container-uuid",
     "subnet_uuid": "subnet-uuid",
+    "insecure": true
+  },
+  "prism_central": {
+    "endpoint": "10.0.0.7",
+    "username": "admin",
     "insecure": true
   },
   "network": {

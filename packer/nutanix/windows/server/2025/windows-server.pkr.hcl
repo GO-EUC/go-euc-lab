@@ -1,6 +1,6 @@
 /*
     DESCRIPTION:
-    Microsoft Windows Server 2022 template using the Packer Builder for Nutanix (Prism Central).
+    Microsoft Windows Server 2025 template using the Packer Builder for Nutanix (Prism Central).
     The builder boots a temporary VM from the operating system ISO in the Prism image library,
     drives the unattended installation, then captures the disk as a new library image.
 */
