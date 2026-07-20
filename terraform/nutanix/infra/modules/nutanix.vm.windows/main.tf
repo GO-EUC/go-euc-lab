@@ -32,7 +32,7 @@ resource "null_resource" "vm" {
     }
     command = <<-EOT
       $secure = ConvertTo-SecureString $env:PRISM_PASSWORD -AsPlainText -Force
-      & '${self.triggers.adapter_path}' -Action CreateVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -ClusterUuid '${self.triggers.cluster_uuid}' -SubnetUuid '${self.triggers.subnet_uuid}' -ImageUuid '${self.triggers.image_uuid}' -Name '${self.triggers.name}' -Cpu ${self.triggers.vm_cpu} -MemoryMiB ${self.triggers.vm_memory} -DiskSizeGiB ${self.triggers.vm_disk_size} -SysprepUnattendPath '${self.triggers.sysprep_path}' -SkipCertificateCheck:${self.triggers.prism_insecure}
+      & '${self.triggers.adapter_path}' -Action CreateVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -ClusterUuid '${self.triggers.cluster_uuid}' -SubnetUuid '${self.triggers.subnet_uuid}' -ImageUuid '${self.triggers.image_uuid}' -Name '${self.triggers.name}' -Cpu ${self.triggers.vm_cpu} -MemoryMiB ${self.triggers.vm_memory} -DiskSizeGiB ${self.triggers.vm_disk_size} -SysprepUnattendPath '${self.triggers.sysprep_path}' -SkipCertificateCheck:$('${self.triggers.prism_insecure}' -eq 'true')
     EOT
   }
 
@@ -44,7 +44,7 @@ resource "null_resource" "vm" {
     }
     command = <<-EOT
       $secure = ConvertTo-SecureString $env:PRISM_PASSWORD -AsPlainText -Force
-      & '${self.triggers.adapter_path}' -Action DeleteVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -Name '${self.triggers.name}' -SkipCertificateCheck:${self.triggers.prism_insecure}
+      & '${self.triggers.adapter_path}' -Action DeleteVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -Name '${self.triggers.name}' -SkipCertificateCheck:$('${self.triggers.prism_insecure}' -eq 'true')
     EOT
   }
 }
