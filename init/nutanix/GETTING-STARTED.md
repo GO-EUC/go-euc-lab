@@ -6,7 +6,7 @@ The end state:
 
 - A control-plane VM (`dckr-1`) running PostgreSQL (Terraform state), HashiCorp Vault (secrets), NGINX (software store), and the Azure DevOps agents in Docker.
 - An Azure DevOps project with three pipelines: image build, lab deployment, and image customization.
-- Windows golden images (Server 2019/2022/2025, Windows 10/11) built from ISO with Packer and stored in the Prism image library.
+- Windows golden images (Server 2019/2022/2025, Windows 11) built from ISO with Packer and stored in the Prism image library.
 - Lab workload VMs (domain controller, management, SQL, RD Gateway, build machine, optional Citrix/Horizon roles) provisioned by Terraform and configured by Ansible.
 
 ## 1. Prerequisites
@@ -48,8 +48,6 @@ Create a local folder with the installation media. It is uploaded to the control
 
 ```
 ├── Microsoft
-│   ├── windows_10.iso
-│   ├── windows_10.checksum
 │   ├── windows_11.iso
 │   ├── windows_11.checksum
 │   ├── windows_server_2019.iso
@@ -64,7 +62,7 @@ Create a local folder with the installation media. It is uploaded to the control
 │   └── ... (only when deploying Citrix roles)
 ```
 
-- ISO file names must contain the OS marker the pipeline searches for: `windows_10`, `windows_11`, `windows_server_2019`, `windows_server_2022`, `windows_server_2025`.
+- ISO file names must contain the OS marker the pipeline searches for: `windows_11`, `windows_server_2019`, `windows_server_2022`, `windows_server_2025`.
 - Each `*.checksum` file is a one-line text file in the form `sha256:<hash>` for the matching ISO.
 - The `Nutanix/` folder must contain a [Nutanix VirtIO driver ISO](https://portal.nutanix.com/page/downloads?product=ahv) (any file name containing `virtio`). Windows setup needs its SCSI and network drivers.
 - ISOs already present in the Prism image library under the same file name are reused; anything missing is registered by Packer from the store on first build.
@@ -160,7 +158,7 @@ Rerun notes:
 
 In the new Azure DevOps project, run the **Nutanix CE Image Deployment Pipeline** (`.devops/pipelines/nutanix/image.yml`). No parameters are required.
 
-Each stage (Windows 10, 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). A manifest with the image's `vm_disk_id` is published as the `manifests` build artifact.
+Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). A manifest with the image's `vm_disk_id` is published as the `manifests` build artifact.
 
 You can cancel or skip stages for images you do not need; the infra pipeline currently requires `windows-server-2022-standard`. A full stage takes roughly 1-2 hours depending on Windows update volume; stages run in parallel across the available agents.
 

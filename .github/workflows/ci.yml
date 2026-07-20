@@ -32,7 +32,7 @@ jobs:
       - name: Validate Nutanix Packer templates
         continue-on-error: true
         run: |
-          for template in server/2019 server/2022 server/2025 desktop/10 desktop/11; do
+          for template in server/2019 server/2022 server/2025 desktop/11; do
             packer init "./packer/nutanix/windows/$template"
             packer validate -syntax-only "./packer/nutanix/windows/$template"
           done

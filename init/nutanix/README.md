@@ -65,7 +65,7 @@ The image import and VM APIs vary between CE releases. The direct Prism Element 
 
 ## Image builds
 
-The Nutanix image pipeline (`.devops/pipelines/nutanix/image.yml`) builds Windows Server 2019/2022/2025 and Windows 10/11 golden images with the official Packer Nutanix builder against Prism Central. Each stage:
+The Nutanix image pipeline (`.devops/pipelines/nutanix/image.yml`) builds Windows Server 2019/2022/2025 and Windows 11 golden images with the official Packer Nutanix builder against Prism Central. Each stage:
 
 1. Discovers the operating system ISO in the software store (`http://<docker-ip>:8080/Microsoft/`) exactly like the VMware image pipeline, plus the Nutanix VirtIO driver ISO in `http://<docker-ip>:8080/Nutanix/`.
 2. Passes the ISO URIs to Packer; the builder registers them in the Prism image library on first use and reuses them by name afterwards. ISOs that are already present in the image library under their software-store file name are used as-is.
