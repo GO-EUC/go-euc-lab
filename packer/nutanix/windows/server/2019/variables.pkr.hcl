@@ -198,7 +198,10 @@ variable "vm_shutdown_command" {
   // The image is generalized on capture: Nutanix guest customization applies
   // the Terraform sysprep answer file (hostname, static IP, admin password)
   // during the specialize pass, which only runs on a generalized image.
-  default     = "C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown /quiet"
+  // Sysprep is launched detached (Start-Process) because it only exits once
+  // the machine is already shutting down; running it synchronously leaves
+  // Packer waiting on a WinRM reply that never arrives.
+  default     = "powershell.exe -Command \"Start-Process -FilePath 'C:\\Windows\\System32\\Sysprep\\sysprep.exe' -ArgumentList '/generalize','/oobe','/shutdown','/quiet'\""
 }
 
 variable "common_shutdown_timeout" {
