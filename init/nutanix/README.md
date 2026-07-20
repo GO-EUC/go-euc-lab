@@ -30,7 +30,7 @@ $dockerPassword = Read-Host -AsSecureString
 - A VLAN/subnet and storage container already exist on the CE cluster.
 - Prism can fetch `docker.image_source_uri`, or the URI points to an internal HTTP server reachable by Prism.
 - The selected CIDR has reserved addresses for the Prism endpoints, gateway, DNS, Docker host, and other existing services.
-- The software store contains the Windows ISOs under `Microsoft/` and a Nutanix VirtIO driver ISO under `Nutanix/` (see "Image builds" below).
+- The software store contains the Windows ISOs under `Microsoft/Server/` and `Microsoft/Desktop/` and a Nutanix VirtIO driver ISO under `Nutanix/` (see "Image builds" below).
 - Azure DevOps and GitHub PATs have the permissions documented in `../README.md`.
 
 Run the capability probe before initialization:
@@ -67,7 +67,7 @@ The image import and VM APIs vary between CE releases. The direct Prism Element 
 
 The Nutanix image pipeline (`.devops/pipelines/nutanix/image.yml`) builds Windows Server 2019/2022/2025 and Windows 11 golden images with the official Packer Nutanix builder against Prism Central. Each stage:
 
-1. Discovers the operating system ISO in the software store (`http://<docker-ip>:8080/Microsoft/`) exactly like the VMware image pipeline, plus the Nutanix VirtIO driver ISO in `http://<docker-ip>:8080/Nutanix/`.
+1. Discovers the operating system ISO in the software store (`http://<docker-ip>:8080/Microsoft/Server/` or `.../Microsoft/Desktop/`, falling back to a flat `.../Microsoft/`), plus the Nutanix VirtIO driver ISO in `http://<docker-ip>:8080/Nutanix/`.
 2. Passes the ISO URIs to Packer; the builder registers them in the Prism image library on first use and reuses them by name afterwards. ISOs that are already present in the image library under their software-store file name are used as-is.
 3. Boots a temporary VM from the ISO, runs the unattended installation (VirtIO drivers are injected from the second CD-ROM), applies the provisioning scripts and Windows updates, and captures the disk as a library image (for example `windows-server-2022-standard`).
 4. Resolves the finished image through Prism Element and publishes a manifest with the image's `vm_disk_id`, which the Terraform composition clones when provisioning lab VMs.

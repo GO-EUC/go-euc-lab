@@ -21,6 +21,7 @@ stages:
     stage_name: image_win_11
     display_name: Image creation Windows 11
     iso_match: windows_11
+    iso_folder: Desktop
     template_path: packer/nutanix/windows/desktop/11
     image_name: windows-desktop-11
     depends_on: [prepare_isos]
@@ -30,6 +31,7 @@ stages:
     stage_name: image_server_19
     display_name: Image creation Server 2019
     iso_match: windows_server_2019
+    iso_folder: Server
     template_path: packer/nutanix/windows/server/2019
     image_name: windows-server-2019-standard
     depends_on: [prepare_isos]
@@ -39,6 +41,7 @@ stages:
     stage_name: image_server_22
     display_name: Image creation Server 2022
     iso_match: windows_server_2022
+    iso_folder: Server
     template_path: packer/nutanix/windows/server/2022
     image_name: windows-server-2022-standard
     depends_on: [prepare_isos]
@@ -48,6 +51,7 @@ stages:
     stage_name: image_server_25
     display_name: Image creation Server 2025
     iso_match: windows_server_2025
+    iso_folder: Server
     template_path: packer/nutanix/windows/server/2025
     image_name: windows-server-2025-standard
     depends_on: [prepare_isos]

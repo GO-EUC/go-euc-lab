@@ -123,7 +123,7 @@ nutanix_cluster_uuid           = "0005f2f8-..."
 nutanix_subnet_uuid            = "c1a2b3c4-..."
 nutanix_storage_container_uuid = "d4e5f6a7-..."
 
-iso_uri        = "http://10.2.0.6:8080/Microsoft/windows_server_2022.iso"
+iso_uri        = "http://10.2.0.6:8080/Microsoft/Server/windows_server_2022.iso"
 virtio_iso_uri = "http://10.2.0.6:8080/Nutanix/Nutanix-VirtIO-1.2.3.iso"
 
 build_username     = "gouser"

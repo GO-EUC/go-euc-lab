@@ -48,10 +48,12 @@ Create a local folder with the installation media. It is uploaded to the control
 
 ```
 ├── Microsoft
-│   ├── windows_11.iso
-│   ├── windows_server_2019.iso
-│   ├── windows_server_2022.iso
-│   └── windows_server_2025.iso
+│   ├── Server
+│   │   ├── windows_server_2019.iso
+│   │   ├── windows_server_2022.iso
+│   │   └── windows_server_2025.iso
+│   ├── Desktop
+│   │   └── windows_11.iso
 ├── Nutanix
 │   └── Nutanix-VirtIO-1.2.3.iso
 ├── Citrix
@@ -59,6 +61,7 @@ Create a local folder with the installation media. It is uploaded to the control
 ```
 
 - ISO file names must contain the OS marker the pipeline searches for: `windows_11`, `windows_server_2019`, `windows_server_2022`, `windows_server_2025`.
+- The `Microsoft/Server` and `Microsoft/Desktop` subfolders match the standard store layout described in [`init/README.md`](../README.md); the image pipeline also falls back to ISOs placed directly in `Microsoft/` if the subfolders are absent.
 - The `Nutanix/` folder must contain a [Nutanix VirtIO driver ISO](https://portal.nutanix.com/page/downloads?product=ahv) (any file name containing `virtio`). Windows setup needs its SCSI and network drivers.
 - ISOs already present in the Prism image library under the same file name are reused; anything missing is registered by Packer from the store on first build.
 

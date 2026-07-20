@@ -11,6 +11,12 @@ parameters:
   type: string
 - name: iso_match
   type: string
+# Subfolder of Microsoft/ in the software store (Server or Desktop), matching
+# the layout documented in init/README.md. Discovery falls back to a flat
+# Microsoft/ folder when the subfolder does not exist.
+- name: iso_folder
+  type: string
+  values: [Server, Desktop]
 - name: template_path
   type: string
 - name: image_name
@@ -35,13 +41,23 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          $msPath = "http://$(postgress_address):8080/Microsoft/"
-          $html = Invoke-WebRequest -Uri $msPath
-          # Match case-insensitively: store files may be capitalized (e.g. Windows_11.iso).
-          $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.ToLower().Contains('${{ parameters.iso_match }}')}).href
-          if (!$iso) { throw "No ISO matching '${{ parameters.iso_match }}' found in $msPath." }
-
-          $isoFile = $($iso | Where-Object {$_.ToLower().EndsWith('.iso')})
+          # Look in the documented store layout first (Microsoft/Server or
+          # Microsoft/Desktop), then fall back to a flat Microsoft/ folder.
+          $candidates = @(
+            "http://$(postgress_address):8080/Microsoft/${{ parameters.iso_folder }}/",
+            "http://$(postgress_address):8080/Microsoft/"
+          )
+          $isoFile = $null
+          foreach ($msPath in $candidates) {
+            try { $html = Invoke-WebRequest -Uri $msPath } catch { continue }
+            # Match case-insensitively: store files may be capitalized (e.g. Windows_11.iso).
+            $isoFile = ($html.Links | Where-Object {
+              $_.href -ne '../' -and $_.href.ToLower().Contains('${{ parameters.iso_match }}') -and $_.href.ToLower().EndsWith('.iso')
+            }).href | Select-Object -First 1
+            if ($isoFile) { break }
+          }
+          if (!$isoFile) { throw "No ISO matching '${{ parameters.iso_match }}' found in: $($candidates -join ', ')." }
+          Write-Host "Using ISO: $($msPath)$($isoFile)"
 
           $nutanixPath = "http://$(postgress_address):8080/Nutanix/"
           $nutanixHtml = Invoke-WebRequest -Uri $nutanixPath
