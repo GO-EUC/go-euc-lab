@@ -45,19 +45,30 @@ try {
 
 # Set the Windows Remote Management configuration. SkipNetworkProfileCheck
 # keeps this working even if a connection is still categorized as Public.
+# Each setting is applied independently: `winrm quickconfig` fails outright on
+# Public networks, and a single try/catch around the whole block used to skip
+# the Basic-auth settings Packer depends on when that happened.
 Write-Output "Setting the Windows Remote Management configuration..."
 try {
     Enable-PSRemoting -SkipNetworkProfileCheck -Force
-    winrm quickconfig -q
-    winrm quickconfig -transport:http
-    winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-    winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="800"}'
-    winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-    winrm set winrm/config/service/auth '@{Basic="true"}'
-    winrm set winrm/config/client/auth '@{Basic="true"}'
-    winrm set winrm/config/listener?Address=*+Transport=HTTP '@{Port="5985"}'
 } catch {
-    Write-Output "Error setting Windows Remote Management Config..."
+    Write-Output "Enable-PSRemoting failed: $($_.Exception.Message)"
+}
+$winrmSettings = @(
+    @("winrm/config", '@{MaxTimeoutms="1800000"}'),
+    @("winrm/config/winrs", '@{MaxMemoryPerShellMB="800"}'),
+    @("winrm/config/service", '@{AllowUnencrypted="true"}'),
+    @("winrm/config/service/auth", '@{Basic="true"}'),
+    @("winrm/config/client/auth", '@{Basic="true"}'),
+    @("winrm/config/listener?Address=*+Transport=HTTP", '@{Port="5985"}')
+)
+foreach ($setting in $winrmSettings) {
+    try {
+        winrm set $setting[0] $setting[1] | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "winrm set exited with $LASTEXITCODE" }
+    } catch {
+        Write-Output "Failed to apply $($setting[0]): $($_.Exception.Message)"
+    }
 }
 
 
