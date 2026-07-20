@@ -43,7 +43,9 @@ module "windows_workloads" {
   prism_endpoint = local.prism.endpoint
   prism_username = local.prism.username
   prism_password = local.prism.password
-  prism_insecure = local.prism.insecure
+  # Vault stores every kv value as a string and the initializer writes the
+  # PowerShell boolean as "True", which Terraform cannot convert directly.
+  prism_insecure = lower(tostring(local.prism.insecure)) == "true"
   cluster_uuid   = local.cluster.uuid
   subnet_uuid    = local.network.subnet_uuid
   image_uuid     = local.server_2022

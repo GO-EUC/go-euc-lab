@@ -607,7 +607,7 @@ Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix secrets enable -ve
 # ("postgress" spelling is the repository-wide convention.)
 $seed = @(
     "domain name=$($settings.domain_name)",
-    "nutanix/prism endpoint=$($settings.prism.endpoint) username=$($settings.prism.username) password=$([Net.NetworkCredential]::new('', $PrismPassword).Password) insecure=$($settings.prism.insecure)",
+    "nutanix/prism endpoint=$($settings.prism.endpoint) username=$($settings.prism.username) password=$([Net.NetworkCredential]::new('', $PrismPassword).Password) insecure=$(([string]$settings.prism.insecure).ToLower())",
     "nutanix/cluster uuid=$($settings.prism.cluster_uuid)",
     "nutanix/storage container_uuid=$($settings.prism.storage_container_uuid)",
     "nutanix/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns) start=$($settings.network.start) end=$($settings.network.end) subnet_uuid=$($settings.prism.subnet_uuid)",
@@ -618,7 +618,7 @@ $seed = @(
 )
 # Prism Central credentials feed the Packer ISO builds in the image pipeline.
 if ($settings.prism_central) {
-    $seed += "nutanix/prism_central endpoint=$($settings.prism_central.endpoint) username=$($settings.prism_central.username) password=$([Net.NetworkCredential]::new('', $PrismCentralPassword).Password) insecure=$($settings.prism_central.insecure)"
+    $seed += "nutanix/prism_central endpoint=$($settings.prism_central.endpoint) username=$($settings.prism_central.username) password=$([Net.NetworkCredential]::new('', $PrismCentralPassword).Password) insecure=$(([string]$settings.prism_central.insecure).ToLower())"
 }
 foreach ($secret in $seed) { Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix kv put -mount=go $secret" | Out-Null }
 
