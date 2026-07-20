@@ -112,6 +112,16 @@
                <Description>Remove requirement for TPM 2.0</Description>
                <Path>reg add HKLM\SYSTEM\Setup\LabConfig /v BypassTPMCheck /t REG_DWORD /d 1 /f</Path>
             </RunSynchronousCommand>
+            <RunSynchronousCommand wcm:action="add">
+               <Order>2</Order>
+               <!-- Windows 11 24H2 pre-provisions BitLocker device encryption
+                    while still in WinPE, before any later unattend pass runs, and
+                    sysprep /generalize then fails with 0x80310039. Setup checks
+                    this key in the WinPE registry before applying the image, so
+                    it must be set here in the windowsPE pass. -->
+               <Description>Prevent automatic BitLocker device encryption</Description>
+               <Path>reg add HKLM\SYSTEM\CurrentControlSet\Control\BitLocker /v PreventDeviceEncryption /t REG_DWORD /d 1 /f</Path>
+            </RunSynchronousCommand>
          </RunSynchronous>
       </component>
    </settings>
