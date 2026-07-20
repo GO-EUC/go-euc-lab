@@ -151,7 +151,7 @@ Rerun notes:
 
 ## 5. Build the golden images
 
-In the new Azure DevOps project, run the **Nutanix CE Image Deployment Pipeline** (`.devops/pipelines/nutanix/image.yml`). No parameters are required.
+In the new Azure DevOps project, run **Nutanix CE - 1. Images** (`.devops/pipelines/nutanix/image.yml`). No parameters are required.
 
 Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). A manifest with the image's `vm_disk_id` is published as the `manifests` build artifact.
 
@@ -159,7 +159,7 @@ You can cancel or skip stages for images you do not need; the infra pipeline cur
 
 ## 6. Deploy the lab
 
-Run the **Nutanix CE Lab Deployment Pipeline** (`.devops/pipelines/nutanix/infra.yml`). Parameters:
+Run **Nutanix CE - 2. Infra** (`.devops/pipelines/nutanix/infra.yml`). Parameters:
 
 | Parameter | Effect |
 | :-------- | :----- |
@@ -171,7 +171,7 @@ The pipeline unseals Vault, downloads the image manifests, provisions the worklo
 
 ## 7. Customize the build image
 
-Run the **Nutanix CE Build Deployment Pipeline** (`.devops/pipelines/nutanix/build.yml`) with the `delivery` parameter (`Citrix`, `VMware`, or `RDSH`) to run the Windows image customization playbook against the build VM.
+Run **Nutanix CE - 3. Delivery** (`.devops/pipelines/nutanix/build.yml`) with the `delivery` parameter (`Citrix`, `VMware`, or `RDSH`) to run the Windows image customization playbook against the build VM.
 
 ## Troubleshooting
 

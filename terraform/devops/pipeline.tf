@@ -80,7 +80,7 @@ resource "azuredevops_build_definition" "build" {
 
 resource "azuredevops_build_definition" "nutanix_infra" {
   project_id = azuredevops_project.project.id
-  name       = "Nutanix CE Lab Deployment Pipeline"
+  name       = "Nutanix CE - 2. Infra"
 
   ci_trigger {
     use_yaml = false
@@ -109,7 +109,7 @@ resource "azuredevops_build_definition" "nutanix_infra" {
 
 resource "azuredevops_build_definition" "nutanix_image" {
   project_id = azuredevops_project.project.id
-  name       = "Nutanix CE Image Deployment Pipeline"
+  name       = "Nutanix CE - 1. Images"
 
   ci_trigger {
     use_yaml = false
@@ -128,7 +128,7 @@ resource "azuredevops_build_definition" "nutanix_image" {
 
 resource "azuredevops_build_definition" "nutanix_build" {
   project_id = azuredevops_project.project.id
-  name       = "Nutanix CE Build Deployment Pipeline"
+  name       = "Nutanix CE - 3. Delivery"
 
   ci_trigger {
     use_yaml = false
