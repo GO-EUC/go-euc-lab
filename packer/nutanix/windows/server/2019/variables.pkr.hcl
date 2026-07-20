@@ -155,18 +155,6 @@ variable "iso_uri" {
   description = "The URI of the guest operating system ISO. Downloaded into the Prism image library on first use. (e.g. 'http://10.0.0.6:8080/Microsoft/windows_server_2022.iso')"
 }
 
-variable "iso_checksum_type" {
-  type        = string
-  description = "The checksum type of the guest operating system ISO. (e.g. 'sha256')"
-  default     = null
-}
-
-variable "iso_checksum_value" {
-  type        = string
-  description = "The checksum value of the guest operating system ISO."
-  default     = null
-}
-
 variable "virtio_iso_uri" {
   type        = string
   description = "The URI of the Nutanix VirtIO driver ISO. Downloaded into the Prism image library on first use. (e.g. 'http://10.0.0.6:8080/Nutanix/Nutanix-VirtIO-1.2.3.iso')"

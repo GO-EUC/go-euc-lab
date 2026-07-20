@@ -41,8 +41,7 @@ stages:
           $iso = ($html.Links | Where-Object {$_.href -ne '../' -and $_.href.ToLower().Contains('${{ parameters.iso_match }}')}).href
           if (!$iso) { throw "No ISO matching '${{ parameters.iso_match }}' found in $msPath." }
 
-          $checksum = $iso | Where-Object {$_.ToLower().Contains('checksum')}
-          $isoFile = $($iso | Where-Object {$_.ToLower().Contains('iso')})
+          $isoFile = $($iso | Where-Object {$_.ToLower().EndsWith('.iso')})
 
           $nutanixPath = "http://$(postgress_address):8080/Nutanix/"
           $nutanixHtml = Invoke-WebRequest -Uri $nutanixPath
@@ -73,13 +72,6 @@ stages:
           $packerVars += "network_cidr = `"$($network.data.cidr)`""
           $packerVars += "network_gateway = $($network.data.gateway)"
           $packerVars += "network_dns = $($network.data.dns)"
-          if ($checksum) {
-            Invoke-RestMethod -Uri "$($msPath)$($checksum)" -OutFile "checksum"
-            $checksumContent = (Get-Content -Path "checksum" | Select-Object -First 1).Trim()
-            # The Nutanix plugin only accepts lowercase checksum types (sha256/sha1).
-            $packerVars += "iso_checksum_type = `"$($checksumContent.Split(':')[0].ToLower())`""
-            $packerVars += "iso_checksum_value = `"$($checksumContent.Split(':')[1].Trim())`""
-          }
 
           $packerVars | Set-Content -Path packer/nutanix/${{ parameters.stage_name }}.pkvars.hcl -Force
           echo "##vso[task.setvariable variable=pc_password]$($pc.data.password)"

@@ -59,8 +59,6 @@ source "nutanix" "windows-server" {
   vm_disks {
     image_type                 = "ISO_IMAGE"
     source_image_uri           = var.iso_uri
-    source_image_checksum      = var.iso_checksum_value
-    source_image_checksum_type = var.iso_checksum_type
   }
 
   // The Nutanix VirtIO driver ISO, required by Windows setup for the SCSI disk
