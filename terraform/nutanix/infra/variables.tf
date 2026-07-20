@@ -1,8 +1,3 @@
-variable "root_path" {
-  type        = string
-  description = "Repository root used to locate image manifests and Prism scripts."
-}
-
 variable "network_list" {
   type        = list(number)
   description = "Available host offsets from the platform-neutral network planner."

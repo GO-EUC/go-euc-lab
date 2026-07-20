@@ -112,7 +112,7 @@ The following builds are included:
   * Microsoft Windows Server 2019/2022/2025 Standard
   * Microsoft Windows 11 (secure boot with vTPM)
 
-Each build boots a temporary VM from the operating system ISO plus the Nutanix VirtIO driver ISO (both registered in the Prism image library from the software store on first use), runs the unattended installation, and captures the disk as an image library entry. The image pipeline then publishes a Prism Element manifest with the image's `vm_disk_id` for Terraform.
+Each build boots a temporary VM from the operating system ISO plus the Nutanix VirtIO driver ISO (both registered in the Prism image library from the software store on first use), runs the unattended installation, and captures the disk as an image library entry, which the infra Terraform resolves by name when cloning lab VMs.
 
 Example windows-server-2022.pkrvars.hcl:
 ```

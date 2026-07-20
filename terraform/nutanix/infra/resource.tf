@@ -1,12 +1,17 @@
-locals {
-  prism   = jsondecode(data.vault_kv_secret.prism.data_json)
-  cluster = jsondecode(data.vault_kv_secret.cluster.data_json)
-  network = jsondecode(data.vault_kv_secret.network.data_json)
-  build   = jsondecode(data.vault_kv_secret.build.data_json)
-  domain  = jsondecode(data.vault_kv_secret.domain.data_json)
+# The golden image is resolved by name straight from the Prism Central image
+# library (the Packer templates capture it under this fixed name), so no
+# manifest artifact needs to be passed between the image and infra pipelines.
+data "nutanix_image" "server_2022" {
+  image_name = "windows-server-2022-standard"
+}
 
-  server_2022 = jsondecode(file("${var.root_path}/manifests/windows-server-2022-standard.json")).builds[0].artifact_id
-  adapter     = "${var.root_path}/scripts/nutanix/Invoke-PrismElement.ps1"
+locals {
+  prism_central = jsondecode(data.vault_kv_secret.prism_central.data_json)
+  cluster       = jsondecode(data.vault_kv_secret.cluster.data_json)
+  network       = jsondecode(data.vault_kv_secret.network.data_json)
+  build         = jsondecode(data.vault_kv_secret.build.data_json)
+  domain        = jsondecode(data.vault_kv_secret.domain.data_json)
+
   prefix      = tonumber(split("/", local.network.cidr)[1])
   gateway     = cidrhost(local.network.cidr, local.network.gateway)
   default_dns = cidrhost(local.network.cidr, local.network.dns)
@@ -36,20 +41,13 @@ module "windows_workloads" {
   for_each = local.workloads
   source   = "./modules/nutanix.vm.windows"
 
-  vm_name        = each.key
-  vm_cpu         = each.value.cpu
-  vm_memory      = each.value.memory
-  vm_disk_size   = each.value.disk
-  prism_endpoint = local.prism.endpoint
-  prism_username = local.prism.username
-  prism_password = local.prism.password
-  # Vault stores every kv value as a string and the initializer writes the
-  # PowerShell boolean as "True", which Terraform cannot convert directly.
-  prism_insecure = lower(tostring(local.prism.insecure)) == "true"
-  cluster_uuid   = local.cluster.uuid
-  subnet_uuid    = local.network.subnet_uuid
-  image_uuid     = local.server_2022
-  adapter_path   = local.adapter
+  vm_name      = each.key
+  vm_cpu       = each.value.cpu
+  vm_memory    = each.value.memory
+  vm_disk_size = each.value.disk
+  cluster_uuid = local.cluster.uuid
+  subnet_uuid  = local.network.subnet_uuid
+  image_uuid   = data.nutanix_image.server_2022.id
 
   network_addresses    = [cidrhost(local.network.cidr, var.network_list[each.value.offset])]
   network_prefix       = local.prefix

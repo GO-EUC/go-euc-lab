@@ -8,5 +8,5 @@ output "vm_info" {
     [for i in range(var.vm_count) : "${var.vm_name}-${i + 1}"],
     var.network_addresses
   ))
-  depends_on = [null_resource.vm]
+  depends_on = [nutanix_virtual_machine.vm]
 }

@@ -1,5 +1,6 @@
 # Builds one Windows image on Nutanix with the Packer Nutanix (Prism Central)
-# builder and publishes a Prism Element manifest for Terraform.
+# builder. The finished image lands in the Prism Central image library under
+# its fixed name, where the infra Terraform resolves it directly.
 #
 # The operating system ISO and the Nutanix VirtIO driver ISO are discovered in
 # the NGINX software store; Packer registers them in the Prism image library
@@ -18,8 +19,6 @@ parameters:
   type: string
   values: [Server, Desktop]
 - name: template_path
-  type: string
-- name: image_name
   type: string
 - name: depends_on
   type: object
@@ -99,32 +98,10 @@ stages:
         script: 'packer init .'
         workingDirectory: '$(Build.Repository.LocalPath)/${{ parameters.template_path }}'
 
+    # No manifest step: the infra Terraform resolves the finished image by its
+    # fixed name straight from the Prism Central image library.
     - task: CmdLine@2
       displayName: Packer build
       inputs:
         script: 'packer build -force -var-file="$(Build.Repository.LocalPath)/packer/nutanix/${{ parameters.stage_name }}.pkvars.hcl" -var "prism_central_password=$(pc_password)" -var "build_password=$(build_password)" ./${{ parameters.template_path }}'
         workingDirectory: '$(Build.Repository.LocalPath)'
-
-    - task: PowerShell@2
-      displayName: Publish Prism Element manifest
-      inputs:
-        targetType: 'inline'
-        script: |
-          $env:VAULT_ADDR="$(vault_addr)"
-          $env:VAULT_TOKEN="$(vault_token)"
-          $prism = vault kv get -format=json -mount=go nutanix/prism | ConvertFrom-Json
-          $password = ConvertTo-SecureString $prism.data.password -AsPlainText -Force
-          ./scripts/nutanix/New-PrismImageManifest.ps1 `
-            -Endpoint $prism.data.endpoint `
-            -Username $prism.data.username `
-            -Password $password `
-            -ImageName '${{ parameters.image_name }}' `
-            -ManifestPath 'manifests/${{ parameters.image_name }}.json' `
-            -SkipCertificateCheck
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Packer manifest
-      inputs:
-        PathtoPublish: '$(Build.Repository.LocalPath)/manifests'
-        ArtifactName: 'manifests'
-        publishLocation: 'Container'

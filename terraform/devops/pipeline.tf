@@ -94,16 +94,9 @@ resource "azuredevops_build_definition" "nutanix_infra" {
     service_connection_id = azuredevops_serviceendpoint_github.github.id
   }
 
-  variable {
-    name  = "pipeline_id"
-    value = azuredevops_build_definition.nutanix_image.id
-  }
-
-  variable {
-    name  = "project_id"
-    value = azuredevops_project.project.id
-  }
-
+  # Unlike the VMware path, no pipeline_id/project_id variables are needed:
+  # the infra Terraform resolves images by name from the Prism Central image
+  # library instead of downloading a manifest artifact from the image pipeline.
   variable_groups = [azuredevops_variable_group.lab.id]
 }
 

@@ -6,8 +6,8 @@ data "vault_kv_secret" "build" {
   path = "go/build"
 }
 
-data "vault_kv_secret" "prism" {
-  path = "go/nutanix/prism"
+data "vault_kv_secret" "prism_central" {
+  path = "go/nutanix/prism_central"
 }
 
 data "vault_kv_secret" "cluster" {

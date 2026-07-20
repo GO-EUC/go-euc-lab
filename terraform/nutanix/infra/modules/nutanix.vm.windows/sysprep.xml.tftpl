@@ -6,7 +6,9 @@
     </component>
     <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
       <Interfaces>
-        <Interface wcm:action="add" wcm:keyValue="1" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+        <Interface wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+          <!-- AHV presents a single VirtIO NIC that Windows names "Ethernet". -->
+          <Identifier>Ethernet</Identifier>
           <Ipv4Settings><DhcpEnabled>false</DhcpEnabled></Ipv4Settings>
           <UnicastIpAddresses><IpAddress wcm:action="add" wcm:keyValue="1">${ip_address}/${prefix}</IpAddress></UnicastIpAddresses>
           <Routes><Route wcm:action="add"><Identifier>1</Identifier><Prefix>0.0.0.0/0</Prefix><NextHopAddress>${gateway}</NextHopAddress></Route></Routes>
@@ -14,11 +16,32 @@
       </Interfaces>
     </component>
     <component name="Microsoft-Windows-DNS-Client" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
-      <Interfaces><Interface wcm:action="add" wcm:keyValue="1" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"><DNSServerSearchOrder><IpAddress wcm:action="add" wcm:keyValue="1">${dns}</IpAddress></DNSServerSearchOrder></Interface></Interfaces>
+      <Interfaces>
+        <Interface wcm:action="add" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+          <Identifier>Ethernet</Identifier>
+          <DNSServerSearchOrder>
+%{ for index, server in dns_servers ~}
+            <IpAddress wcm:action="add" wcm:keyValue="${index + 1}">${server}</IpAddress>
+%{ endfor ~}
+          </DNSServerSearchOrder>
+        </Interface>
+      </Interfaces>
     </component>
   </settings>
   <settings pass="oobeSystem">
     <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+      <!-- The image is generalized at the end of the Packer build, so first
+           boot runs OOBE; skip every interactive screen. -->
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideLocalAccountScreen>true</HideLocalAccountScreen>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <ProtectYourPC>3</ProtectYourPC>
+        <SkipMachineOOBE>true</SkipMachineOOBE>
+        <SkipUserOOBE>true</SkipUserOOBE>
+      </OOBE>
       <UserAccounts><AdministratorPassword><Value>${admin_password}</Value><PlainText>true</PlainText></AdministratorPassword></UserAccounts>
     </component>
   </settings>

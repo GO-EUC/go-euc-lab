@@ -195,7 +195,10 @@ variable "vm_boot_command" {
 variable "vm_shutdown_command" {
   type        = string
   description = "Command(s) for guest operating system shutdown."
-  default     = "shutdown /s /t 10 /f /d p:4:1 /c \"Shutdown by Packer\""
+  // The image is generalized on capture: Nutanix guest customization applies
+  // the Terraform sysprep answer file (hostname, static IP, admin password)
+  // during the specialize pass, which only runs on a generalized image.
+  default     = "C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown /quiet"
 }
 
 variable "common_shutdown_timeout" {

@@ -61,7 +61,7 @@ The initializer imports an Ubuntu cloud image, creates the control-plane VM, the
 - `go/nutanix/storage`
 - shared `go/domain`, `go/docker`, `go/build`, `go/postgress`, and `go/domain/accounts`
 
-The image import and VM APIs vary between CE releases. The direct Prism Element adapter reports API/task failures explicitly.
+The initializer talks to Prism Element directly (through `scripts/nutanix/Invoke-PrismElement.ps1`) to create the control-plane VM; the image and infra pipelines use Prism Central.
 
 ## Image builds
 
@@ -70,7 +70,7 @@ The Nutanix image pipeline (`.devops/pipelines/nutanix/image.yml`) builds Window
 1. Discovers the operating system ISO in the software store (`http://<docker-ip>:8080/Microsoft/Server/` or `.../Microsoft/Desktop/`, falling back to a flat `.../Microsoft/`), plus the Nutanix VirtIO driver ISO in `http://<docker-ip>:8080/Nutanix/`.
 2. Passes the ISO URIs to Packer; the builder registers them in the Prism image library on first use and reuses them by name afterwards. ISOs that are already present in the image library under their software-store file name are used as-is.
 3. Boots a temporary VM from the ISO, runs the unattended installation (VirtIO drivers are injected from the second CD-ROM), applies the provisioning scripts and Windows updates, and captures the disk as a library image (for example `windows-server-2022-standard`).
-4. Resolves the finished image through Prism Element and publishes a manifest with the image's `vm_disk_id`, which the Terraform composition clones when provisioning lab VMs.
+4. Captures the finished image in the Prism Central image library under a fixed name (for example `windows-server-2022-standard`); the Terraform composition (using the official `nutanix` provider against Prism Central) resolves it by that name and clones it when provisioning lab VMs. No manifest artifact is exchanged between the pipelines.
 
 Place the VirtIO ISO (downloadable from the Nutanix portal, e.g. `Nutanix-VirtIO-1.2.3.iso`) in the `Nutanix/` folder of the software store before running the pipeline.
 

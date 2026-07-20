@@ -207,8 +207,12 @@ if ($existingVm) {
     }
 
     if ($SysprepUnattendPath) {
+        # The Element v2 API has no dedicated sysprep field (that is v3 only):
+        # the unattend XML is passed as plain-text userdata, the same way the
+        # Prism UI "Custom Script" option accepts a Windows answer file.
         $vm.vm_customization_config = @{
-            sysprep = @{ unattendxml = [Convert]::ToBase64String([IO.File]::ReadAllBytes($SysprepUnattendPath)) }
+            userdata             = [IO.File]::ReadAllText($SysprepUnattendPath)
+            files_to_inject_list = @()
         }
     }
     if ($CloudInitPath) {

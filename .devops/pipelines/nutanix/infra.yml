@@ -39,15 +39,8 @@ stages:
   jobs:
   - job: provision
     steps:
-    - task: DownloadBuildArtifacts@1
-      inputs:
-        buildType: specific
-        project: $(project_id)
-        pipeline: $(pipeline_id)
-        buildVersionToDownload: latest
-        downloadType: single
-        artifactName: manifests
-        downloadPath: $(Build.Repository.LocalPath)
+    # No manifest artifact is needed: Terraform resolves the golden image by
+    # name directly from the Prism Central image library.
     - task: PowerShell@2
       inputs:
         targetType: inline
@@ -56,7 +49,6 @@ stages:
           $env:VAULT_TOKEN="$(vault_token)"
           $range = .devops/pipelines/scripts/network-plan.ps1 -Platform nutanix
           @(
-            "root_path = `"$(Build.Repository.LocalPath)`"",
             "network_list = $($range | ConvertTo-Json -Compress)",
             "citrix_cloud = ${{ lower(parameters.citrix_cloud) }}",
             "citrix_vad = ${{ lower(parameters.citrix_vad) }}",

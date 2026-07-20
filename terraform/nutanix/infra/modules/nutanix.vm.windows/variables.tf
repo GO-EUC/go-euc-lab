@@ -15,20 +15,13 @@ variable "vm_disk_size" {
   type    = number
   default = 100
 }
-variable "prism_endpoint" { type = string }
-variable "prism_username" { type = string }
-variable "prism_password" {
-  type      = string
-  sensitive = true
-}
-variable "prism_insecure" {
-  type    = bool
-  default = true
+variable "boot_type" {
+  type    = string
+  default = "UEFI"
 }
 variable "cluster_uuid" { type = string }
 variable "subnet_uuid" { type = string }
 variable "image_uuid" { type = string }
-variable "adapter_path" { type = string }
 variable "network_addresses" {
   type = list(string)
 }

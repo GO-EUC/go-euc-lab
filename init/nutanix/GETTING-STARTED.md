@@ -156,7 +156,7 @@ Rerun notes:
 
 In the new Azure DevOps project, run **Nutanix CE - 1. Images** (`.devops/pipelines/nutanix/image.yml`). No parameters are required.
 
-Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). A manifest with the image's `vm_disk_id` is published as the `manifests` build artifact.
+Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). The infra pipeline resolves these images by name directly from the Prism Central image library, so no build artifact is exchanged.
 
 You can cancel or skip stages for images you do not need; the infra pipeline currently requires `windows-server-2022-standard`. A full stage takes roughly 1-2 hours depending on Windows update volume; stages run in parallel across the available agents.
 
@@ -170,7 +170,7 @@ Run **Nutanix CE - 2. Infra** (`.devops/pipelines/nutanix/infra.yml`). Parameter
 | citrix_vad | Adds the Citrix DDC, StoreFront, and license VMs. |
 | vmware_horizon | Adds the Horizon connection server VM. |
 
-The pipeline unseals Vault, downloads the image manifests, provisions the workload VMs through the Prism Element adapter (Terraform), and runs the Ansible stages: domain, management, SQL, and RD Gateway.
+The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), and runs the Ansible stages: domain, management, SQL, and RD Gateway.
 
 ## 7. Customize the build image
 
