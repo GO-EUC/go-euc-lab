@@ -26,6 +26,9 @@ stages:
   jobs:
   - job: build
     displayName: Packer Build ${{ parameters.display_name }}
+    # Image builds regularly exceed the 60-minute Azure DevOps default because
+    # of the Windows Update pass; 0 means unlimited on self-hosted agents.
+    timeoutInMinutes: 0
     steps:
     - task: PowerShell@2
       displayName: Set the Packer variables
