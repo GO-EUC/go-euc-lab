@@ -133,6 +133,15 @@
                <Description>Remove requirement for an online Microsoft account</Description>
                <Path>reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE /v BypassNRO /t REG_DWORD /d 1 /f</Path>
             </RunSynchronousCommand>
+            <RunSynchronousCommand wcm:action="add">
+               <Order>2</Order>
+               <!-- Windows 11 auto-enables device encryption during OOBE when it
+                    detects UEFI + vTPM, and sysprep /generalize refuses to run on
+                    an encrypted OS volume (0x80310039). Specialize runs before
+                    OOBE, so this blocks the encryption from ever starting. -->
+               <Description>Prevent automatic BitLocker device encryption</Description>
+               <Path>reg add HKLM\SYSTEM\CurrentControlSet\Control\BitLocker /v PreventDeviceEncryption /t REG_DWORD /d 1 /f</Path>
+            </RunSynchronousCommand>
          </RunSynchronous>
       </component>
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
@@ -210,9 +219,17 @@
                <RequiresUserInput>true</RequiresUserInput>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
+               <!-- Safety net for the PreventDeviceEncryption registry key set in
+                    the specialize pass: decrypt any volume that still ended up
+                    encrypted, since sysprep /generalize fails on encrypted disks. -->
+               <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "Get-BitLockerVolume | Where-Object { $_.VolumeStatus -ne 'FullyDecrypted' } | ForEach-Object { Disable-BitLocker -MountPoint $_.MountPoint }"</CommandLine>
+               <Order>3</Order>
+               <Description>Disable BitLocker device encryption</Description>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
                <!-- The Packer scripts CD-ROM letter is not fixed on AHV, so locate windows-init.ps1 across drives. -->
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "foreach ($drive in Get-PSDrive -PSProvider FileSystem) { $script = Join-Path $drive.Root 'windows-init.ps1'; if (Test-Path $script) { powershell.exe -ExecutionPolicy Bypass -File $script } }"</CommandLine>
-               <Order>3</Order>
+               <Order>4</Order>
                <Description>Initial Configuration</Description>
             </SynchronousCommand>
          </FirstLogonCommands>
