@@ -1,8 +1,13 @@
-resource "terraform_data" "vm" {
+# null_resource is used instead of terraform_data because the DevOps agent
+# image ships Terraform 1.3, which predates terraform_data (added in 1.4).
+# Everything the provisioners need is stored in triggers: destroy-time
+# provisioners may only reference self, and a change to any trigger (including
+# the sysprep hash) forces the VM to be recreated.
+resource "null_resource" "vm" {
   count      = var.vm_count
-  depends_on = [terraform_data.sysprep]
+  depends_on = [null_resource.sysprep]
 
-  input = {
+  triggers = {
     name           = "${var.vm_name}-${count.index + 1}"
     ip_address     = var.network_addresses[count.index]
     image_uuid     = var.image_uuid
@@ -17,16 +22,17 @@ resource "terraform_data" "vm" {
     vm_memory      = var.vm_memory
     vm_disk_size   = var.vm_disk_size
     sysprep_path   = "${path.module}/sysprep-${count.index}.xml"
+    sysprep_hash   = null_resource.sysprep[count.index].triggers.content_hash
   }
 
   provisioner "local-exec" {
     interpreter = ["pwsh", "-Command"]
     environment = {
-      PRISM_PASSWORD = self.input.prism_password
+      PRISM_PASSWORD = self.triggers.prism_password
     }
     command = <<-EOT
       $secure = ConvertTo-SecureString $env:PRISM_PASSWORD -AsPlainText -Force
-      & '${self.input.adapter_path}' -Action CreateVm -Endpoint '${self.input.prism_endpoint}' -Username '${self.input.prism_username}' -Password $secure -ClusterUuid '${self.input.cluster_uuid}' -SubnetUuid '${self.input.subnet_uuid}' -ImageUuid '${self.input.image_uuid}' -Name '${self.input.name}' -Cpu ${self.input.vm_cpu} -MemoryMiB ${self.input.vm_memory} -DiskSizeGiB ${self.input.vm_disk_size} -SysprepUnattendPath '${self.input.sysprep_path}' -SkipCertificateCheck:${self.input.prism_insecure}
+      & '${self.triggers.adapter_path}' -Action CreateVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -ClusterUuid '${self.triggers.cluster_uuid}' -SubnetUuid '${self.triggers.subnet_uuid}' -ImageUuid '${self.triggers.image_uuid}' -Name '${self.triggers.name}' -Cpu ${self.triggers.vm_cpu} -MemoryMiB ${self.triggers.vm_memory} -DiskSizeGiB ${self.triggers.vm_disk_size} -SysprepUnattendPath '${self.triggers.sysprep_path}' -SkipCertificateCheck:${self.triggers.prism_insecure}
     EOT
   }
 
@@ -34,30 +40,28 @@ resource "terraform_data" "vm" {
     when        = destroy
     interpreter = ["pwsh", "-Command"]
     environment = {
-      PRISM_PASSWORD = self.input.prism_password
+      PRISM_PASSWORD = self.triggers.prism_password
     }
     command = <<-EOT
       $secure = ConvertTo-SecureString $env:PRISM_PASSWORD -AsPlainText -Force
-      & '${self.input.adapter_path}' -Action DeleteVm -Endpoint '${self.input.prism_endpoint}' -Username '${self.input.prism_username}' -Password $secure -Name '${self.input.name}' -SkipCertificateCheck:${self.input.prism_insecure}
+      & '${self.triggers.adapter_path}' -Action DeleteVm -Endpoint '${self.triggers.prism_endpoint}' -Username '${self.triggers.prism_username}' -Password $secure -Name '${self.triggers.name}' -SkipCertificateCheck:${self.triggers.prism_insecure}
     EOT
-  }
-
-  lifecycle {
-    replace_triggered_by = [terraform_data.sysprep]
   }
 }
 
-resource "terraform_data" "sysprep" {
+resource "null_resource" "sysprep" {
   count = var.vm_count
 
-  input = sha256(templatefile("${path.module}/sysprep.xml.tftpl", {
-    computer_name  = "${var.vm_name}-${count.index + 1}"
-    ip_address     = var.network_addresses[count.index]
-    prefix         = var.network_prefix
-    gateway        = var.network_gateway
-    dns            = var.network_dns[0]
-    admin_password = var.local_admin_password
-  }))
+  triggers = {
+    content_hash = sha256(templatefile("${path.module}/sysprep.xml.tftpl", {
+      computer_name  = "${var.vm_name}-${count.index + 1}"
+      ip_address     = var.network_addresses[count.index]
+      prefix         = var.network_prefix
+      gateway        = var.network_gateway
+      dns            = var.network_dns[0]
+      admin_password = var.local_admin_password
+    }))
+  }
 
   provisioner "local-exec" {
     interpreter = ["pwsh", "-Command"]
