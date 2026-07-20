@@ -174,33 +174,25 @@
             </LocalAccounts>
          </UserAccounts>
          <FirstLogonCommands>
-            <SynchronousCommand wcm:action="add">
-               <!-- The AHV VirtIO adapter enumerates as "Ethernet" (vmxnet3 on VMware is "Ethernet0"). -->
-               <CommandLine>cmd.exe /c netsh interface ip set address "Ethernet" static ${network_address} ${network_subnet} ${network_gateway}</CommandLine>
-               <Description>Assign IP</Description>
-               <Order>1</Order>
-            </SynchronousCommand>
-            <SynchronousCommand wcm:action="add">
-               <CommandLine>cmd.exe /c netsh interface ip add dns "Ethernet" ${network_dns} </CommandLine>
-               <Description>Assign DNS</Description>
-               <Order>2</Order>
-            </SynchronousCommand>
+            <!-- The build VM keeps its DHCP lease: Packer discovers the DHCP address
+                 through the Prism API and connects WinRM to it, so assigning a static
+                 IP mid-build would break the connection. -->
             <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force"</CommandLine>
                <Description>Set Execution Policy 64-Bit</Description>
-               <Order>3</Order>
+               <Order>1</Order>
                <RequiresUserInput>true</RequiresUserInput>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force"</CommandLine>
                <Description>Set Execution Policy 32-Bit</Description>
-               <Order>4</Order>
+               <Order>2</Order>
                <RequiresUserInput>true</RequiresUserInput>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
                <!-- The Packer scripts CD-ROM letter is not fixed on AHV, so locate windows-init.ps1 across drives. -->
                <CommandLine>%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe -Command "foreach ($drive in Get-PSDrive -PSProvider FileSystem) { $script = Join-Path $drive.Root 'windows-init.ps1'; if (Test-Path $script) { powershell.exe -ExecutionPolicy Bypass -File $script } }"</CommandLine>
-               <Order>5</Order>
+               <Order>3</Order>
                <Description>Initial Configuration</Description>
             </SynchronousCommand>
          </FirstLogonCommands>
