@@ -1,11 +1,12 @@
 output "vm_info" {
-  # Built from the input variables rather than null_resource.vm triggers: the
-  # triggers map contains the (sensitive) Prism password, and Terraform
-  # propagates that sensitivity to the whole map, which would force every root
-  # output consuming this value to be marked sensitive.
-  value = [
-    for i in range(var.vm_count) :
-    "${var.vm_name}-${i + 1} ansible_host=${var.network_addresses[i]}"
-  ]
+  # The VM addresses derive from the network CIDR stored in Vault, so they
+  # carry Terraform's sensitive mark. Names and IPs are not secrets (Ansible
+  # needs them in its inventory), so strip the mark the same way the VMware
+  # infra outputs do.
+  value = nonsensitive(formatlist(
+    "%s ansible_host=%s",
+    [for i in range(var.vm_count) : "${var.vm_name}-${i + 1}"],
+    var.network_addresses
+  ))
   depends_on = [null_resource.vm]
 }
