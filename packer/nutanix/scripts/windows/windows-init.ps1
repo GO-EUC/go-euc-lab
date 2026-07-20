@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 # Set-NetConnectionProfile throws, so retry before falling back to the registry.
 Write-Output "Setting the network connection profile to Private..."
 $profileSet = $false
-for ($attempt = 1; $attempt -le 10; $attempt++) {
+for ($attempt = 1; $attempt -le 30; $attempt++) {
     try {
         Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
         $profileSet = $true
