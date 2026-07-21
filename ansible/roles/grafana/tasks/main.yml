@@ -52,6 +52,49 @@
     mode: "0640"
   become: true
 
+- name: Install unzip
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: true
+
+# The dashboard bundle lives outside the lab, so a failed download must not
+# break the deployment; the dashboards can be dropped in manually later.
+- name: Download the GO-EUC dashboard bundle
+  ansible.builtin.get_url:
+    url: "{{ grafana_dashboards_url }}"
+    dest: /tmp/grafana-dashboards.zip
+    force: true
+    mode: "0644"
+  register: grafana_dashboards_zip
+  failed_when: false
+
+- name: Report a failed dashboard download
+  ansible.builtin.debug:
+    msg: "Could not download {{ grafana_dashboards_url }}; skipping the dashboard import. Place dashboard JSON files in /etc/grafana/dashboards to import them."
+  when: grafana_dashboards_zip.status_code | default(0) != 200
+
+- name: Extract the dashboards
+  ansible.builtin.unarchive:
+    src: /tmp/grafana-dashboards.zip
+    dest: /etc/grafana/dashboards
+    remote_src: true
+    owner: "472"
+    group: "472"
+  become: true
+  when: grafana_dashboards_zip.status_code | default(0) == 200
+
+# Exported dashboards reference the datasource through a ${DS_GO} input
+# placeholder; rewrite it to the fixed uid of the provisioned datasource so
+# the imports bind without prompting.
+- name: Normalize the dashboard datasource placeholders
+  ansible.builtin.shell: >-
+    find /etc/grafana/dashboards -name '*.json' -exec
+    sed -i -e 's/"${DS_GO}"/"DS_GO"/g' -e 's/"{DS_GO}"/"DS_GO"/g'
+    -e 's/${DS_GO}/DS_GO/g' -e 's/{DS_GO}/DS_GO/g' {} +
+  become: true
+  when: grafana_dashboards_zip.status_code | default(0) == 200
+
 - name: Create the Grafana container
   community.docker.docker_container:
     name: grafana

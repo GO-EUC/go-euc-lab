@@ -4,3 +4,5 @@ grafana_admin_user: admin
 # The GO-EUC dashboards reference their Influx datasource by this fixed
 # name/uid (DS_GO), so the provisioned datasource must match it exactly.
 grafana_datasource_name: DS_GO
+# Version-controlled GO-EUC dashboard bundle, imported on every run.
+grafana_dashboards_url: https://goeucartifacts4hiu9i.blob.core.windows.net/files/Dashboards.zip

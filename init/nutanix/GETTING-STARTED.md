@@ -177,7 +177,7 @@ The pipeline unseals Vault, provisions the workload VMs through the official `nu
 The `docker` stage runs the `ansible/monitoring.yml` playbook against the control-plane VM and deploys two containers next to the existing NGINX/Vault/Postgres set:
 
 - **InfluxDB 2.x** on port 8086, initialized non-interactively with the `GO` organization and the `Performance` and `Tests` buckets the GO-EUC dashboards expect.
-- **Grafana** on port 3000, with an Influx datasource provisioned under the fixed name `DS_GO` and a file-based dashboard provider (drop dashboard JSON files into `/etc/grafana/dashboards` on the VM to import them).
+- **Grafana** on port 3000, with an Influx datasource provisioned under the fixed name `DS_GO`. The GO-EUC dashboard bundle is downloaded and imported automatically on every run; additional dashboard JSON files dropped into `/etc/grafana/dashboards` on the VM are imported too.
 
 All credentials are generated on first run and stored in Vault: `go/influx` (`url`, `org`, `user`, `password`, `token`) and `go/grafana` (`url`, `user`, `password`). Reruns reuse them, so the stage is idempotent. The telegraf agents installed on the workload VMs read the Influx URL, org, and token from `go/influx`, so metrics land in the lab's own InfluxDB instead of the hosted GO-EUC endpoint.
 
