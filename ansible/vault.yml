@@ -55,12 +55,16 @@
   register: prism
   when: go_euc_platform == 'nutanix'
 
+# The influx token only feeds the optional telegraf monitoring role and is
+# not seeded by every platform initializer (the Nutanix path has no influx),
+# so a missing secret must not fail the whole playbook.
 - name: Read influx info from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
     path: go/influx
     token : '{{ vault_token }}'
   register: influx
+  failed_when: false
 
 - name: Set variables
   set_fact:
@@ -85,4 +89,4 @@
     nutanix_username: "{{ prism.data.data.username | default('') }}"
     nutanix_password: "{{ prism.data.data.password | default('') }}"
     nutanix_host: "{{ prism.data.data.endpoint | default('') }}"
-    influx_token: "{{ influx.data.data.token }}"
+    influx_token: "{{ influx.data.data.token | default('') }}"
