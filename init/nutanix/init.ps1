@@ -331,6 +331,10 @@ write_files:
 # apply the optional static network, install Docker, and start it.
 # NOTE: Prism only applies this on the VM's FIRST boot. Changing it requires
 # -RecreateControlPlaneVm.
+# Docker is installed from runcmd AFTER netplan applies, not through the
+# cloud-init `packages` module: the packages module runs before runcmd, and on
+# subnets without DHCP the VM has no network at all until the static Netplan
+# configuration is applied, so an earlier apt install would silently fail.
 @"
 #cloud-config
 users:
@@ -347,11 +351,11 @@ chpasswd:
       password: $dockerPlaintextPassword
       type: text
 $staticNetworkConfiguration
-package_update: true
-packages: [docker.io]
 runcmd:
   - netplan generate
   - netplan apply
+  - apt-get update
+  - apt-get install -y docker.io
   - systemctl enable --now docker
 "@ | Set-Content -Path $cloudInit -Encoding utf8
 
@@ -453,9 +457,37 @@ if ($staticIp) {
         }
     } until ($dockerIp)
 
-    # Reboot once the static address is live. This gives the guest a clean
-    # start on its final address (fresh sshd, no half-applied network state)
-    # before the bootstrap connects.
+    # The static address appears as soon as `netplan apply` runs, but cloud-init
+    # is still executing the remaining first-boot commands (the Docker install
+    # needs the network, so it runs after netplan). Restarting now would cut
+    # those short, and first-boot commands never re-run. Connect over SSH and
+    # block on cloud-init completion before the reboot.
+    Write-Stage "Waiting for cloud-init to finish first boot before restarting (timeout: 15 minutes)."
+    $preRebootDeadline = (Get-Date).AddMinutes(5)
+    $preRebootSession = $null
+    Clear-PoshSshTrustedHost -HostName $dockerIp
+    do {
+        Start-Sleep -Seconds 5
+        try {
+            $preRebootSession = New-SSHSession -ComputerName $dockerIp -Credential $dockerCredential -AcceptKey -Force -ErrorAction Stop
+        } catch {
+            $preRebootSession = $null
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] SSH is not ready yet: $($_.Exception.Message)"
+        }
+        if ((Get-Date) -gt $preRebootDeadline) {
+            throw "Timed out waiting for SSH on $dockerIp to check cloud-init before the restart."
+        }
+    } until ($preRebootSession)
+    $cloudInitResult = Invoke-SSHCommand -SSHSession $preRebootSession -Command "cloud-init status --wait" -TimeOut 900
+    if ($cloudInitResult.ExitStatus -eq 1) {
+        $cloudInitLog = Invoke-SSHCommand -SSHSession $preRebootSession -Command "tail -40 /var/log/cloud-init-output.log" -ErrorAction SilentlyContinue
+        throw "cloud-init reported an error during first boot.`n$(Get-PoshSshText -CommandResult $cloudInitLog)"
+    }
+    Remove-SSHSession -SSHSession $preRebootSession | Out-Null
+
+    # Reboot once cloud-init is done. This gives the guest a clean start on
+    # its final address (fresh sshd, no half-applied network state) before
+    # the bootstrap connects.
     Write-Stage "Restarting the control-plane VM after the static address is available."
     & $adapter -Action RestartVm -Endpoint $settings.prism.endpoint -Username $settings.prism.username `
         -Password $PrismPassword -Name $settings.docker.name -SkipCertificateCheck:$settings.prism.insecure | Out-Null
@@ -499,6 +531,16 @@ do {
     }
 } until ($session)
 Write-Stage "Connected to the control-plane VM at $dockerIp."
+
+# SSH comes up well before first boot finishes (sshd starts early; the Docker
+# install runs late in runcmd because it needs the network). Block until
+# cloud-init is done so the container bootstrap below finds Docker installed.
+Write-Stage "Waiting for cloud-init to complete (timeout: 15 minutes)."
+$cloudInitStatus = Invoke-SSHCommand -SSHSession $session -Command "cloud-init status --wait" -TimeOut 900
+if ($cloudInitStatus.ExitStatus -eq 1) {
+    $cloudInitLog = Invoke-SSHCommand -SSHSession $session -Command "tail -40 /var/log/cloud-init-output.log" -ErrorAction SilentlyContinue
+    throw "cloud-init reported an error during first boot.`n$(Get-PoshSshText -CommandResult $cloudInitLog)"
+}
 
 # ---------------------------------------------------------------------------
 # Stage 5: Start the control-plane containers
