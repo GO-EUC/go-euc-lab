@@ -44,11 +44,14 @@ telegraf_agent_omit_hostname: False
 
 telegraf_global_tags: []
 
+# The endpoint, org, and token come from the go/influx Vault secret (resolved
+# in vault.yml), so agents report to the in-lab monitoring stack when one has
+# been deployed and to the hosted GO-EUC instance otherwise.
 telegraf_agent_output:
   - type: influxdb_v2
     config:
-      - urls = ["https://influx.logitblog.com"]
-      - organization = "GO"
+      - urls = ["{{ influx_url }}"]
+      - organization = "{{ influx_org }}"
       - bucket = "Performance"
       - token = "{{ influx_token }}"
 

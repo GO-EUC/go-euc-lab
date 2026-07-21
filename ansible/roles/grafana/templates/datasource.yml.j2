@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: {{ grafana_datasource_name }}
+    uid: {{ grafana_datasource_name }}
+    type: influxdb
+    access: proxy
+    url: {{ influx_url }}
+    isDefault: true
+    editable: true
+    jsonData:
+      version: Flux
+      organization: {{ influx_org }}
+      defaultBucket: {{ influx_bucket_performance }}
+      tlsSkipVerify: true
+    secureJsonData:
+      token: {{ influx_admin_token }}

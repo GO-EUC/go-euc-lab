@@ -23,6 +23,26 @@ $dockerPassword = Read-Host -AsSecureString
 
 `-PrismCentralPassword` is required when `settings.json` contains a `prism_central` section. The credentials are stored in Vault at `go/nutanix/prism_central` and used by the image pipeline for Packer builds.
 
+## Reusing an existing monitoring stack
+
+By default the infra pipeline deploys InfluxDB and Grafana as containers on the control-plane VM (`ansible/monitoring.yml`). If you already run your own Influx/Grafana, set `monitoring.external` to `true` in `settings.json` and fill in the connection details:
+
+```json
+"monitoring": {
+  "external": true,
+  "influx": {
+    "url": "https://influx.example.com",
+    "org": "GO",
+    "token": "influx-api-token"
+  },
+  "grafana": {
+    "url": "https://grafana.example.com"
+  }
+}
+```
+
+The initializer seeds these values into Vault (`go/influx`, and `go/grafana` when a Grafana URL is given) with `external=true`; the infra pipeline's docker stage then skips the in-lab deployment and the telegraf agents on the workload VMs report to the external instance. `settings.json` is gitignored, so the token stays out of the repository. With `external` set to `false` (or the whole block omitted), the monitoring playbook deploys the containers and generates the credentials itself.
+
 ## Required preconditions
 
 - Prism Element is reachable on TCP 9440 from the initialization workstation and the Azure DevOps agents.
@@ -60,6 +80,7 @@ The initializer imports an Ubuntu cloud image, creates the control-plane VM, the
 - `go/nutanix/network`
 - `go/nutanix/storage`
 - shared `go/domain`, `go/docker`, `go/build`, `go/postgress`, and `go/domain/accounts`
+- `go/influx` and `go/grafana`, only when `monitoring.external` is enabled (otherwise the infra pipeline's monitoring playbook seeds them)
 
 The initializer talks to Prism Element directly (through `scripts/nutanix/Invoke-PrismElement.ps1`) to create the control-plane VM; the image and infra pipelines use Prism Central.
 

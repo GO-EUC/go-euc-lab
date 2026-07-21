@@ -178,6 +178,14 @@ if (!$settings.prism_central) {
     Write-Warning "No prism_central section in settings.json. The Nutanix image pipeline requires Prism Central; deploy it from Prism Element and rerun with the section configured."
 }
 
+# An external monitoring stack (monitoring.external = true) must come with the
+# connection details the telegraf agents and dashboards will use.
+if ($settings.monitoring -and $settings.monitoring.external) {
+    if (-not $settings.monitoring.influx.url -or -not $settings.monitoring.influx.token) {
+        throw "settings.json enables monitoring.external; monitoring.influx.url and monitoring.influx.token are required."
+    }
+}
+
 # Posh-SSH provides cross-platform SSH/SFTP (Windows and macOS/Linux).
 if (!(Get-Module -ListAvailable -Name Posh-SSH)) {
     Write-Stage "Installing required Posh-SSH module."
@@ -506,6 +514,10 @@ Set-SFTPItem -SFTPSession $sftpSession -Path (Get-PathFromRepositoryRoot -ChildP
 # Generate this run's secrets. All of them are persisted to Vault below, so
 # losing the console output is not fatal.
 $postgresPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 20)
+# The build VM credential gets its own random value (like the VMware path)
+# rather than reusing the control-plane password: it is baked into every
+# golden image by Packer and used by Ansible against the workload VMs.
+$buildPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789'.ToCharArray() | Get-Random -Count 20)
 $ansiblePassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 20)
 $loadgenPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 20)
 $loadgenBotPassword = -join ('abcdefghkmnrstuvwxyzABCDEFGHKLMNPRSTUVWXYZ23456789!@#'.ToCharArray() | Get-Random -Count 20)
@@ -612,13 +624,25 @@ $seed = @(
     "nutanix/storage container_uuid=$($settings.prism.storage_container_uuid)",
     "nutanix/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns) start=$($settings.network.start) end=$($settings.network.end) subnet_uuid=$($settings.prism.subnet_uuid)",
     "docker name=$($settings.docker.name) user=$($settings.docker.user) password=$dockerPlaintextPassword ip=$dockerIp",
-    "build user=$($settings.build.user) ip=$($settings.build.ip) password=$dockerPlaintextPassword",
+    "build user=$($settings.build.user) ip=$($settings.build.ip) password=$buildPassword",
     "postgress user=tf password=$postgresPassword ip=$dockerIp database=state ssl=disable",
     "domain/accounts ansible=$ansiblePassword loadgen=$loadgenPassword loadgen_bot=$loadgenBotPassword sql_agt=$sqlAgentPassword sql_svc=$sqlServicePassword"
 )
 # Prism Central credentials feed the Packer ISO builds in the image pipeline.
 if ($settings.prism_central) {
     $seed += "nutanix/prism_central endpoint=$($settings.prism_central.endpoint) username=$($settings.prism_central.username) password=$([Net.NetworkCredential]::new('', $PrismCentralPassword).Password) insecure=$(([string]$settings.prism_central.insecure).ToLower())"
+}
+# Optional external monitoring stack. When monitoring.external is true the
+# go/influx secret is seeded from settings.json (url/org/token of the existing
+# InfluxDB); the infra pipeline's docker stage then skips the in-lab
+# InfluxDB/Grafana deployment and the telegraf agents report to the external
+# instance instead. When false or absent, the monitoring playbook deploys the
+# containers on this control-plane VM and seeds go/influx itself.
+if ($settings.monitoring -and $settings.monitoring.external) {
+    $seed += "influx external=true url=$($settings.monitoring.influx.url) org=$($settings.monitoring.influx.org) token=$($settings.monitoring.influx.token)"
+    if ($settings.monitoring.grafana.url) {
+        $seed += "grafana external=true url=$($settings.monitoring.grafana.url)"
+    }
 }
 foreach ($secret in $seed) { Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix kv put -mount=go $secret" | Out-Null }
 

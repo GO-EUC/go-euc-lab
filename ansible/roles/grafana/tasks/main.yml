@@ -1,0 +1,90 @@
+---
+# Deploys Grafana as a container on the control-plane (docker) VM, provisions
+# the Influx datasource under the fixed name the GO-EUC dashboards expect, and
+# seeds the admin credentials into Vault under go/grafana. Requires the influx
+# role to have run first (it sets influx_url/influx_org/influx_admin_token).
+- name: Read the existing grafana secret from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/grafana
+    token: "{{ vault_token }}"
+  register: grafana_secret
+  failed_when: false
+  delegate_to: localhost
+
+- name: Set the grafana credentials
+  ansible.builtin.set_fact:
+    grafana_url: "http://{{ ansible_default_ipv4.address }}:3000"
+    grafana_admin_password: "{{ grafana_secret.data.data.password | default(lookup('password', '/dev/null length=20 chars=ascii_letters,digits'), true) }}"
+
+- name: Make directories for the Grafana data and provisioning
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    # Grafana runs as uid 472 inside the container.
+    owner: "472"
+    group: "472"
+    mode: "0750"
+  become: true
+  loop:
+    - /etc/grafana/data
+    - /etc/grafana/provisioning/datasources
+    - /etc/grafana/provisioning/dashboards
+    - /etc/grafana/dashboards
+
+# Contains the Influx admin token, so keep it readable by Grafana only.
+- name: Provision the Influx datasource
+  ansible.builtin.template:
+    src: datasource.yml.j2
+    dest: /etc/grafana/provisioning/datasources/influxdb.yml
+    owner: "472"
+    group: "472"
+    mode: "0640"
+  become: true
+  register: grafana_datasource
+
+- name: Provision the dashboard provider
+  ansible.builtin.template:
+    src: dashboards.yml.j2
+    dest: /etc/grafana/provisioning/dashboards/dashboards.yml
+    owner: "472"
+    group: "472"
+    mode: "0640"
+  become: true
+
+- name: Create the Grafana container
+  community.docker.docker_container:
+    name: grafana
+    image: "{{ grafana_image }}"
+    restart_policy: unless-stopped
+    # Reload provisioning when the datasource definition changed.
+    recreate: "{{ grafana_datasource.changed }}"
+    volumes:
+      - /etc/grafana/data:/var/lib/grafana
+      - /etc/grafana/provisioning:/etc/grafana/provisioning
+      - /etc/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "{{ ansible_default_ipv4.address }}:3000:3000"
+    env:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+
+- name: Wait for Grafana to become ready
+  ansible.builtin.uri:
+    url: "http://{{ ansible_default_ipv4.address }}:3000/api/health"
+    status_code: 200
+  register: grafana_health
+  until: grafana_health.status == 200
+  retries: 30
+  delay: 5
+
+- name: Seed the grafana secret in vault
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: go/grafana
+    token: "{{ vault_token }}"
+    data:
+      url: "{{ grafana_url }}"
+      user: "{{ grafana_admin_user }}"
+      password: "{{ grafana_admin_password }}"
+  delegate_to: localhost

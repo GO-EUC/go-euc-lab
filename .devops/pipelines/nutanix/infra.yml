@@ -63,8 +63,47 @@ stages:
         workingDirectory: terraform/nutanix/infra
         script: terraform apply -auto-approve -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)"
 
+# Monitoring stack (InfluxDB + Grafana) on the control-plane VM. Runs before
+# the domain stage so the telegraf agents installed on the workload VMs can
+# read the Influx URL and token from Vault (go/influx) right away.
+- stage: docker
+  dependsOn: unseal
+  jobs:
+  - job: monitoring
+    displayName: Deploy monitoring containers
+    steps:
+    - task: CmdLine@2
+      displayName: Setup required packages
+      inputs:
+        script: |
+          pip3 install hvac
+          ansible-galaxy collection install community.docker
+          ansible-galaxy collection install community.hashi_vault
+    - task: PowerShell@2
+      displayName: Deploy InfluxDB and Grafana
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_FORMAT="json"
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+
+          # The Nutanix initializer stores the control-plane address as a full
+          # IP under go/docker (unlike the VMware offset-based layout).
+          $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
+
+          @(
+            "[docker]",
+            "$($docker.data.name) ansible_host=$($docker.data.ip)"
+          ) | Set-Content -Path ansible/inventory -Force
+
+          $env:ANSIBLE_HOST_KEY_CHECKING=$false
+          ansible-playbook ansible/monitoring.yml -i ansible/inventory -e ansible_user=$($docker.data.user) -e ansible_password=`'$($docker.data.password)`' -e vault_addr=$(vault_addr) -e vault_token=$(vault_token)
+
 - stage: domain
-  dependsOn: infra
+  dependsOn:
+  - infra
+  - docker
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:

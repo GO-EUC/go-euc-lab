@@ -1,0 +1,35 @@
+---
+# Deploys the monitoring stack (InfluxDB + Grafana) on the control-plane
+# (docker) VM. This is the Nutanix counterpart of docker.yml: NGINX is already
+# created by init/nutanix/init.ps1 and bind is VMware-only (vSphere host name
+# resolution), so only the monitoring roles run here.
+#
+# Labs that already run their own Influx/Grafana seed go/influx with
+# external=true through the initializer (settings.json monitoring block); the
+# deployment is then skipped entirely and the telegraf agents report to the
+# external instance using the url/org/token from that same secret.
+- name: Monitoring
+  hosts: docker
+  pre_tasks:
+    - name: Read the influx secret from vault
+      community.hashi_vault.vault_read:
+        url: "{{ vault_addr }}"
+        path: go/influx
+        token: "{{ vault_token }}"
+      register: monitoring_secret
+      failed_when: false
+      delegate_to: localhost
+
+    - name: Determine whether an external monitoring stack is configured
+      ansible.builtin.set_fact:
+        monitoring_external: "{{ monitoring_secret.data.data.external | default('false') | bool }}"
+
+    - name: Report the external monitoring stack
+      ansible.builtin.debug:
+        msg: "External monitoring stack configured at {{ monitoring_secret.data.data.url }}; skipping the in-lab deployment."
+      when: monitoring_external
+  roles:
+    - role: influx
+      when: not monitoring_external
+    - role: grafana
+      when: not monitoring_external

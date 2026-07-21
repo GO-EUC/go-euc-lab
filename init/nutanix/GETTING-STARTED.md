@@ -170,7 +170,18 @@ Run **Nutanix CE - 2. Infra** (`.devops/pipelines/nutanix/infra.yml`). Parameter
 | citrix_vad | Adds the Citrix DDC, StoreFront, and license VMs. |
 | vmware_horizon | Adds the Horizon connection server VM. |
 
-The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), and runs the Ansible stages: domain, management, SQL, and RD Gateway.
+The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), deploys the monitoring stack, and runs the Ansible stages: domain, management, SQL, and RD Gateway.
+
+### Monitoring stack
+
+The `docker` stage runs the `ansible/monitoring.yml` playbook against the control-plane VM and deploys two containers next to the existing NGINX/Vault/Postgres set:
+
+- **InfluxDB 2.x** on port 8086, initialized non-interactively with the `GO` organization and the `Performance` and `Tests` buckets the GO-EUC dashboards expect.
+- **Grafana** on port 3000, with an Influx datasource provisioned under the fixed name `DS_GO` and a file-based dashboard provider (drop dashboard JSON files into `/etc/grafana/dashboards` on the VM to import them).
+
+All credentials are generated on first run and stored in Vault: `go/influx` (`url`, `org`, `user`, `password`, `token`) and `go/grafana` (`url`, `user`, `password`). Reruns reuse them, so the stage is idempotent. The telegraf agents installed on the workload VMs read the Influx URL, org, and token from `go/influx`, so metrics land in the lab's own InfluxDB instead of the hosted GO-EUC endpoint.
+
+Already running your own Influx/Grafana? Set `monitoring.external` to `true` in `settings.json` with your instance's URL, org, and token before running the initializer (see the [initializer README](README.md#reusing-an-existing-monitoring-stack)). The docker stage then skips the deployment and telegraf reports to your existing stack.
 
 ## 7. Customize the build image
 

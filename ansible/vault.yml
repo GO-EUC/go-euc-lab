@@ -55,9 +55,9 @@
   register: prism
   when: go_euc_platform == 'nutanix'
 
-# The influx token only feeds the optional telegraf monitoring role and is
-# not seeded by every platform initializer (the Nutanix path has no influx),
-# so a missing secret must not fail the whole playbook.
+# The influx secret only feeds the optional telegraf monitoring role and is
+# not present until the monitoring stack has been deployed (the docker stage
+# of the infra pipeline), so a missing secret must not fail the playbook.
 - name: Read influx info from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
@@ -89,4 +89,8 @@
     nutanix_username: "{{ prism.data.data.username | default('') }}"
     nutanix_password: "{{ prism.data.data.password | default('') }}"
     nutanix_host: "{{ prism.data.data.endpoint | default('') }}"
+    # The URL and org fall back to the hosted GO-EUC instance for labs whose
+    # go/influx secret predates the in-lab monitoring stack (token only).
     influx_token: "{{ influx.data.data.token | default('') }}"
+    influx_url: "{{ influx.data.data.url | default('https://influx.logitblog.com') }}"
+    influx_org: "{{ influx.data.data.org | default('GO') }}"

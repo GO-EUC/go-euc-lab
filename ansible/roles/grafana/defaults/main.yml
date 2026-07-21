@@ -1,0 +1,6 @@
+---
+grafana_image: grafana/grafana:latest
+grafana_admin_user: admin
+# The GO-EUC dashboards reference their Influx datasource by this fixed
+# name/uid (DS_GO), so the provisioned datasource must match it exactly.
+grafana_datasource_name: DS_GO

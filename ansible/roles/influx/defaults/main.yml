@@ -1,0 +1,9 @@
+---
+# The org and bucket names must match what the telegraf role writes into every
+# agent config (organization = "GO", bucket = "Performance") and what the
+# GO-EUC Grafana dashboards query.
+influx_image: influxdb:2.7
+influx_org: GO
+influx_bucket_performance: Performance
+influx_bucket_tests: Tests
+influx_admin_user: influxadmin

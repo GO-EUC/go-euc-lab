@@ -34,5 +34,16 @@
     "user": "gouser",
     "ip": 20
   },
+  "monitoring": {
+    "external": false,
+    "influx": {
+      "url": "https://influx.example.com",
+      "org": "GO",
+      "token": "influx-api-token"
+    },
+    "grafana": {
+      "url": "https://grafana.example.com"
+    }
+  },
   "software_store": "/path/to/Software"
 }

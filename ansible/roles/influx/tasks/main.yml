@@ -1,0 +1,94 @@
+---
+# Deploys InfluxDB 2.x as a container on the control-plane (docker) VM and
+# seeds its credentials into Vault under go/influx. Reruns reuse the secret
+# from Vault so the container and every telegraf agent keep working.
+- name: Install the Python Docker SDK
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Read the existing influx secret from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/influx
+    token: "{{ vault_token }}"
+  register: influx_secret
+  failed_when: false
+  delegate_to: localhost
+
+# Reuse credentials from a previous run when present; otherwise generate them.
+# The empty-string check (second default argument) also covers a go/influx
+# secret that predates the monitoring stack and only holds a blank token.
+- name: Set the influx credentials
+  ansible.builtin.set_fact:
+    influx_url: "http://{{ ansible_default_ipv4.address }}:8086"
+    influx_admin_user: "{{ influx_secret.data.data.user | default(influx_admin_user, true) }}"
+    influx_admin_password: "{{ influx_secret.data.data.password | default(lookup('password', '/dev/null length=20 chars=ascii_letters,digits'), true) }}"
+    influx_admin_token: "{{ influx_secret.data.data.token | default(lookup('password', '/dev/null length=40 chars=ascii_letters,digits'), true) }}"
+
+- name: Make directories for the InfluxDB data and configuration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: a+rwx
+  become: true
+  loop:
+    - /etc/influxdb/data
+    - /etc/influxdb/config
+
+# The DOCKER_INFLUXDB_INIT_* variables perform the one-time non-interactive
+# setup (admin user, org, first bucket, admin token) on an empty data
+# directory; they are ignored on restarts against existing data.
+- name: Create the InfluxDB container
+  community.docker.docker_container:
+    name: influx
+    image: "{{ influx_image }}"
+    restart_policy: unless-stopped
+    volumes:
+      - /etc/influxdb/data:/var/lib/influxdb2
+      - /etc/influxdb/config:/etc/influxdb2
+    ports:
+      - "{{ ansible_default_ipv4.address }}:8086:8086"
+    env:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: "{{ influx_admin_user }}"
+      DOCKER_INFLUXDB_INIT_PASSWORD: "{{ influx_admin_password }}"
+      DOCKER_INFLUXDB_INIT_ORG: "{{ influx_org }}"
+      DOCKER_INFLUXDB_INIT_BUCKET: "{{ influx_bucket_performance }}"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "{{ influx_admin_token }}"
+
+- name: Wait for InfluxDB to become ready
+  ansible.builtin.uri:
+    url: "http://{{ ansible_default_ipv4.address }}:8086/health"
+    status_code: 200
+  register: influx_health
+  until: influx_health.status == 200
+  retries: 30
+  delay: 5
+
+# The setup only creates the first bucket; the Tests bucket (test metadata,
+# used by the GO-EUC dashboards) is created explicitly.
+- name: Ensure the Tests bucket exists
+  ansible.builtin.command: >-
+    docker exec influx influx bucket create
+    --name {{ influx_bucket_tests }}
+    --org {{ influx_org }}
+    --token {{ influx_admin_token }}
+  register: influx_bucket
+  changed_when: influx_bucket.rc == 0
+  failed_when: influx_bucket.rc != 0 and 'already exists' not in influx_bucket.stderr
+
+- name: Seed the influx secret in vault
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: go/influx
+    token: "{{ vault_token }}"
+    data:
+      url: "{{ influx_url }}"
+      org: "{{ influx_org }}"
+      user: "{{ influx_admin_user }}"
+      password: "{{ influx_admin_password }}"
+      token: "{{ influx_admin_token }}"
+  delegate_to: localhost
