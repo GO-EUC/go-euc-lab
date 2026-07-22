@@ -6,12 +6,23 @@ pool: GO Pipelines
 variables:
 - group: Lab
 
-# The prepare stage registers the shared VirtIO driver ISO in the Prism image
-# library once, then each build stage runs a Windows image build from the ISO
-# in the software store / Prism image library using the Packer Nutanix builder
+# The dhcp_up stage starts a temporary dnsmasq DHCP container on the
+# control-plane VM (the lab VLAN has no standing DHCP server; the Packer
+# build VMs need a lease for the WinRM connection), and the prepare stage
+# registers the shared VirtIO driver ISO in the Prism image library once.
+# Each build stage then runs a Windows image build from the ISO in the
+# software store / Prism image library using the Packer Nutanix builder
 # against Prism Central. The captured images stay in the Prism Central image
-# library, where the infra pipeline's Terraform resolves them by name.
+# library, where the infra pipeline's Terraform resolves them by name. The
+# final stage always removes the DHCP container again, so the lab never keeps
+# a DHCP server competing with the domain controller's.
 stages:
+- template: ../templates/nutanix-dhcp.yml
+  parameters:
+    stage_name: dhcp_up
+    display_name: Start build DHCP
+    dhcp_state: started
+
 - template: ../templates/nutanix-image-prepare.yml
   parameters:
     stage_name: prepare_isos
@@ -23,7 +34,7 @@ stages:
     iso_match: windows_11
     iso_folder: Desktop
     template_path: packer/nutanix/windows/desktop/11
-    depends_on: [prepare_isos]
+    depends_on: [prepare_isos, dhcp_up]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -32,7 +43,7 @@ stages:
     iso_match: windows_server_2019
     iso_folder: Server
     template_path: packer/nutanix/windows/server/2019
-    depends_on: [prepare_isos]
+    depends_on: [prepare_isos, dhcp_up]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -41,7 +52,7 @@ stages:
     iso_match: windows_server_2022
     iso_folder: Server
     template_path: packer/nutanix/windows/server/2022
-    depends_on: [prepare_isos]
+    depends_on: [prepare_isos, dhcp_up]
 
 - template: ../templates/nutanix-packer-image.yml
   parameters:
@@ -50,4 +61,13 @@ stages:
     iso_match: windows_server_2025
     iso_folder: Server
     template_path: packer/nutanix/windows/server/2025
-    depends_on: [prepare_isos]
+    depends_on: [prepare_isos, dhcp_up]
+
+- template: ../templates/nutanix-dhcp.yml
+  parameters:
+    stage_name: dhcp_down
+    display_name: Remove build DHCP
+    dhcp_state: absent
+    depends_on: [image_win_11, image_server_19, image_server_22, image_server_25]
+    # Tear the DHCP container down even when builds fail or are skipped.
+    condition: always()

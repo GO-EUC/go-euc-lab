@@ -1,0 +1,62 @@
+---
+# Runs a temporary dnsmasq DHCP server as a container on the control-plane
+# (docker) VM for the image build phase: the Packer build VMs need a DHCP
+# lease for the WinRM connection, but the lab VLAN has no DHCP server (the
+# domain controller provides DHCP only after the infra deployment). The image
+# pipeline brings this container up before the builds and removes it in its
+# final stage, so the lab never keeps a competing DHCP server.
+- name: Install the Python Docker SDK
+  ansible.builtin.apt:
+    name: python3-docker
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Make the dnsmasq configuration directory
+  ansible.builtin.file:
+    path: /etc/dnsmasq
+    state: directory
+    mode: "0755"
+  become: true
+  when: dhcp_state == 'started'
+
+# dnsmasq ping-checks an address before offering it, so a pool overlapping
+# addresses that are already in use (the same start..end range the domain
+# controller's DHCP scope uses later) stays conflict-free.
+- name: Write the dnsmasq configuration
+  ansible.builtin.copy:
+    dest: /etc/dnsmasq/dhcp.conf
+    mode: "0644"
+    content: |
+      # DHCP only: port=0 disables the DNS component so the container does
+      # not clash with systemd-resolved on the host.
+      port=0
+      dhcp-range={{ dhcp_range_start }},{{ dhcp_range_end }},{{ dhcp_netmask }},{{ dhcp_lease_time }}
+      dhcp-option=option:router,{{ dhcp_gateway }}
+      dhcp-option=option:dns-server,{{ dhcp_dns | join(',') }}
+  become: true
+  register: dhcp_configuration
+  when: dhcp_state == 'started'
+
+# Host networking is required so the DHCP broadcasts on the lab VLAN reach
+# dnsmasq; a bridged container would never see them.
+- name: Create the dnsmasq container
+  community.docker.docker_container:
+    name: dhcp
+    image: alpine:3
+    network_mode: host
+    capabilities:
+      - NET_ADMIN
+      - NET_RAW
+    restart_policy: unless-stopped
+    recreate: "{{ dhcp_configuration.changed }}"
+    command: sh -c "apk add --no-cache dnsmasq && exec dnsmasq --keep-in-foreground --conf-file=/etc/dnsmasq.d/dhcp.conf"
+    volumes:
+      - /etc/dnsmasq:/etc/dnsmasq.d
+  when: dhcp_state == 'started'
+
+- name: Remove the dnsmasq container
+  community.docker.docker_container:
+    name: dhcp
+    state: absent
+  when: dhcp_state == 'absent'

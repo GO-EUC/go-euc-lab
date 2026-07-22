@@ -1,0 +1,8 @@
+---
+# Temporary DHCP for the image build phase on Nutanix. Invoked by the image
+# pipeline with dhcp_state=started before the builds and dhcp_state=absent
+# after them; see ansible/roles/dhcp for the rationale.
+- name: DHCP
+  hosts: docker
+  roles:
+    - dhcp

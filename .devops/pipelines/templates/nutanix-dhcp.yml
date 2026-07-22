@@ -1,0 +1,72 @@
+# Starts or removes the temporary dnsmasq DHCP container on the control-plane
+# VM (ansible/roles/dhcp). The Packer build VMs need a DHCP lease for the
+# WinRM connection, but the lab VLAN deliberately has no standing DHCP server:
+# the domain controller provides DHCP after the infra deployment. The image
+# pipeline therefore brackets the builds with started/absent instances of
+# this template.
+parameters:
+- name: stage_name
+  type: string
+- name: display_name
+  type: string
+- name: dhcp_state
+  type: string
+  values: [started, absent]
+- name: depends_on
+  type: object
+  default: []
+# The teardown stage overrides this with always() so the DHCP container is
+# removed even when an image build fails.
+- name: condition
+  type: string
+  default: succeeded()
+
+stages:
+- stage: ${{ parameters.stage_name }}
+  displayName: ${{ parameters.display_name }}
+  dependsOn: ${{ parameters.depends_on }}
+  condition: ${{ parameters.condition }}
+  jobs:
+  - job: dhcp
+    displayName: ${{ parameters.display_name }}
+    steps:
+    - task: CmdLine@2
+      displayName: Setup required packages
+      inputs:
+        script: |
+          ansible-galaxy collection install community.docker
+
+    - task: PowerShell@2
+      displayName: ${{ parameters.display_name }}
+      inputs:
+        targetType: inline
+        script: |
+          if (!(Get-Module -ListAvailable -Name "Indented.Net.IP")) {
+            Install-Module "Indented.Net.IP" -Scope CurrentUser -Confirm:$false -Force
+          }
+
+          $env:VAULT_FORMAT="json"
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+
+          $docker = vault kv get -format json -mount=go docker | ConvertFrom-Json
+          $network = vault kv get -format json -mount=go nutanix/network | ConvertFrom-Json
+
+          # The DHCP pool reuses the network start..end range - the same range
+          # the domain controller's DHCP scope serves later - resolved from
+          # the offsets stored in Vault. dnsmasq ping-checks before offering,
+          # so addresses already taken by static workload VMs are skipped.
+          $cidr = $network.data.cidr
+          $range = Get-NetworkRange -IPAddress $cidr.Split('/')[0] -SubnetMask $cidr.Split('/')[1]
+          $netmask = (ConvertTo-Mask -MaskLength ([int]$cidr.Split('/')[1])).IPAddressToString
+          $gateway = $range[$network.data.gateway - 1].IPAddressToString
+          $rangeStart = $range[$network.data.start - 1].IPAddressToString
+          $rangeEnd = $range[$network.data.end - 1].IPAddressToString
+
+          @(
+            "[docker]",
+            "$($docker.data.name) ansible_host=$($docker.data.ip)"
+          ) | Set-Content -Path ansible/inventory -Force
+
+          $env:ANSIBLE_HOST_KEY_CHECKING=$false
+          ansible-playbook ansible/dhcp.yml -i ansible/inventory -e ansible_user=$($docker.data.user) -e ansible_password=`'$($docker.data.password)`' -e dhcp_state=${{ parameters.dhcp_state }} -e dhcp_range_start=$rangeStart -e dhcp_range_end=$rangeEnd -e dhcp_netmask=$netmask -e dhcp_gateway=$gateway

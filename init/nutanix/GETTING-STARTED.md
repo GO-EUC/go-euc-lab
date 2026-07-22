@@ -156,6 +156,8 @@ Rerun notes:
 
 In the new Azure DevOps project, run **Nutanix CE - 1. Images** (`.devops/pipelines/nutanix/image.yml`). No parameters are required.
 
+The pipeline first starts a temporary dnsmasq DHCP container on the control-plane VM: the Packer build VMs need a DHCP lease for the WinRM connection, and the lab VLAN intentionally has no standing DHCP server (the domain controller provides DHCP once the lab is deployed). The final pipeline stage always removes the container again, even when builds fail.
+
 Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). The infra pipeline resolves these images by name directly from the Prism Central image library, so no build artifact is exchanged.
 
 You can cancel or skip stages for images you do not need; the infra pipeline currently requires `windows-server-2022-standard`. A full stage takes roughly 1-2 hours depending on Windows update volume; stages run in parallel across the available agents.
@@ -192,6 +194,6 @@ Run **Nutanix CE - 3. Delivery** (`.devops/pipelines/nutanix/build.yml`) with th
 - **Initializer cannot SSH to the control plane** — the VM boots on DHCP and switches to the static address late in first boot; the script waits for Prism to report the static IP, reboots the VM, and retries. If it times out, open the VM console in Prism and check `/var/log/cloud-init-output.log`. Rerun with `-RecreateControlPlaneVm` after fixing settings.
 - **Vault shows "not ready" repeatedly** — check the container on the control plane: `docker logs vault`. The Vault CLI inside the container needs `VAULT_ADDR=http://127.0.0.1:8200`.
 - **Pipelines cannot reach Vault/Postgres after a control-plane reboot** — Vault starts sealed; every pipeline begins with an unseal stage using the keys stored as pipeline variables, so simply rerun the pipeline.
-- **Packer build hangs at "Waiting for IP"** — open the temporary VM's console in Prism. The most common causes are missing VirtIO drivers (wrong `Nutanix/` ISO), an ISO whose edition name does not match the autounattend `vm_inst_os_image` value, or the build IP (`build.ip`) already being in use.
+- **Packer build hangs at "Waiting for IP"** — open the temporary VM's console in Prism. The most common causes are no DHCP on the lab VLAN (check the `dhcp` container on the control plane: `docker logs dhcp`; the pipeline's first stage should have started it), missing VirtIO drivers (wrong `Nutanix/` ISO), or an ISO whose edition name does not match the autounattend `vm_inst_os_image` value.
 - **Image already exists errors in Packer** — the templates set `force_deregister`, so stale images are replaced; genuine duplicates of the *source ISO* are tolerated. Clean out duplicate ISO entries in the image library if they accumulate.
 - **Terraform apply fails with Azure DevOps 401/403** — recreate the Azure DevOps PAT with Read, Write & Manage on "Project and Team" and "Agent Pools".

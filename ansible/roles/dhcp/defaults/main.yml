@@ -1,0 +1,9 @@
+---
+# started = deploy the dnsmasq container, absent = remove it.
+dhcp_state: started
+dhcp_lease_time: 1h
+# External resolvers handed to the build VMs; there is no in-lab DNS during
+# the image build phase (the domain controller does not exist yet).
+dhcp_dns:
+  - 8.8.8.8
+  - 8.8.4.4
