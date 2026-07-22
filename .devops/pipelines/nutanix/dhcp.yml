@@ -1,11 +1,12 @@
-# Utility pipeline: turns the temporary dnsmasq DHCP container on the
-# control-plane VM on or off, independent of the image pipeline (which
-# brackets its builds with the same template automatically). Useful when
-# debugging a build VM manually or when a cancelled run left the lab without
-# the state you want.
+# Utility pipeline: enable or disable the temporary dnsmasq DHCP container on
+# the control-plane VM outside an image pipeline run. The image pipeline
+# normally manages the container itself (starts it before the builds, removes
+# it afterwards); this pipeline covers manual runs — for example starting
+# DHCP for troubleshooting a build VM, or cleaning up a container left behind
+# by a cancelled run before the domain controller's DHCP goes live.
 parameters:
-- name: nutanix_dhcp_enabled
-  displayName: Nutanix Enable DHCP (uncheck to remove it)
+- name: enable
+  displayName: Enable the build DHCP server (disable removes it)
   type: boolean
   default: true
 
@@ -18,8 +19,8 @@ variables:
 - group: Lab
 
 stages:
-# Vault starts sealed after a control-plane reboot; unseal it first like the
-# other pipelines do.
+# Vault starts sealed after a control-plane reboot; unseal first so the DHCP
+# template can read the docker and network secrets.
 - stage: unseal
   jobs:
   - job: vault
@@ -36,13 +37,18 @@ stages:
             vault operator unseal $(vault_unseal_3)
           }
 
-- template: ../templates/nutanix-dhcp.yml
-  parameters:
-    stage_name: dhcp
-    ${{ if parameters.dhcp_enabled }}:
+- ${{ if parameters.enable }}:
+  - template: ../templates/nutanix-dhcp.yml
+    parameters:
+      stage_name: dhcp_up
       display_name: Start build DHCP
       dhcp_state: started
-    ${{ else }}:
+      depends_on: [unseal]
+
+- ${{ else }}:
+  - template: ../templates/nutanix-dhcp.yml
+    parameters:
+      stage_name: dhcp_down
       display_name: Remove build DHCP
       dhcp_state: absent
-    depends_on: [unseal]
+      depends_on: [unseal]

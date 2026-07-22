@@ -119,6 +119,28 @@ resource "azuredevops_build_definition" "nutanix_image" {
   variable_groups = [azuredevops_variable_group.lab.id]
 }
 
+# Utility pipeline: manually start or remove the temporary build DHCP
+# container on the control-plane VM (the image pipeline manages it
+# automatically during its own runs).
+resource "azuredevops_build_definition" "nutanix_dhcp" {
+  project_id = azuredevops_project.project.id
+  name       = "Nutanix CE - Build DHCP"
+
+  ci_trigger {
+    use_yaml = false
+  }
+
+  repository {
+    repo_type             = "GitHub"
+    repo_id               = "${var.github_org}/${var.github_repo}"
+    branch_name           = var.github_branch
+    yml_path              = ".devops/pipelines/nutanix/dhcp.yml"
+    service_connection_id = azuredevops_serviceendpoint_github.github.id
+  }
+
+  variable_groups = [azuredevops_variable_group.lab.id]
+}
+
 resource "azuredevops_build_definition" "nutanix_build" {
   project_id = azuredevops_project.project.id
   name       = "Nutanix CE - 3. Delivery"

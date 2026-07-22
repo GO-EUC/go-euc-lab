@@ -158,6 +158,8 @@ In the new Azure DevOps project, run **Nutanix CE - 1. Images** (`.devops/pipeli
 
 The pipeline first starts a temporary dnsmasq DHCP container on the control-plane VM: the Packer build VMs need a DHCP lease for the WinRM connection, and the lab VLAN intentionally has no standing DHCP server (the domain controller provides DHCP once the lab is deployed). The final pipeline stage always removes the container again, even when builds fail.
 
+The **Nutanix CE - Build DHCP** utility pipeline (`.devops/pipelines/nutanix/dhcp.yml`) starts or removes the same container manually via its `enable` parameter — useful when troubleshooting a build VM outside a pipeline run, or to clean up after a cancelled run.
+
 Each stage (Windows 11, Server 2019, 2022, 2025) discovers its ISO in the software store, lets Packer register the ISO plus the VirtIO ISO in the Prism image library, boots a temporary VM, installs Windows unattended, applies Windows updates, and captures the result as a library image (`windows-server-2022-standard`, `windows-desktop-11`, ...). The infra pipeline resolves these images by name directly from the Prism Central image library, so no build artifact is exchanged.
 
 You can cancel or skip stages for images you do not need; the infra pipeline currently requires `windows-server-2022-standard`. A full stage takes roughly 1-2 hours depending on Windows update volume; stages run in parallel across the available agents.
