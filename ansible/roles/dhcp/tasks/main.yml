@@ -10,6 +10,9 @@
     name: python3-docker
     state: present
     update_cache: yes
+    # A fresh Ubuntu VM runs unattended-upgrades on boot, which holds the
+    # dpkg lock for several minutes; wait for it instead of failing.
+    lock_timeout: 600
   become: true
 
 - name: Make the dnsmasq configuration directory

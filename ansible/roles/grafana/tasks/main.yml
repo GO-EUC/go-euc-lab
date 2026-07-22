@@ -56,6 +56,9 @@
   ansible.builtin.apt:
     name: unzip
     state: present
+    # A fresh Ubuntu VM runs unattended-upgrades on boot, which holds the
+    # dpkg lock for several minutes; wait for it instead of failing.
+    lock_timeout: 600
   become: true
 
 # The dashboard bundle lives outside the lab, so a failed download must not
