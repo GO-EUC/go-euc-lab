@@ -76,8 +76,16 @@
       }
 
     vars:
+      # Become is needed because the DHCP cmdlets reject WinRM's network
+      # logon; what matters is the interactive token, not SYSTEM itself.
+      # Becoming the connection user WITH a password goes through
+      # CreateProcessWithLogonW, whereas passwordless become (SYSTEM) uses
+      # CreateProcessWithTokenW, which current Windows cumulative updates
+      # block with ERROR_CHILD_PROCESS_BLOCKED (367). The connection account
+      # is the domain administrator after promotion, so it has the rights.
       ansible_become: true
-      ansible_become_user: system
       ansible_become_method: runas
+      ansible_become_user: "{{ ansible_user }}"
+      ansible_become_password: "{{ ansible_password }}"
 
   when: lookup('env', 'platform') != 'azure'

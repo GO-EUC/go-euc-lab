@@ -78,6 +78,11 @@
     expected_return_code: [0]
     state: present
   vars:
+    # Become with an explicit password (CreateProcessWithLogonW): current
+    # Windows cumulative updates block the passwordless/SYSTEM become path
+    # (CreateProcessWithTokenW) with ERROR_CHILD_PROCESS_BLOCKED (367).
+    # The interactive token is what matters here, not SYSTEM itself.
     ansible_become: true
-    ansible_become_user: system
     ansible_become_method: runas
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password }}"
