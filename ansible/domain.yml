@@ -8,6 +8,21 @@
 
 - name: Domain Controller
   hosts: dc
+  # Fact gathering runs before pre_tasks, so it is deferred until the
+  # connection wait below has passed.
+  gather_facts: no
+  pre_tasks:
+    # On Nutanix, Terraform returns as soon as the VM is created, while the
+    # sysprep guest customization (hostname, static address, WinRM) still
+    # needs several minutes of reboot cycles. Wait instead of failing the
+    # first WinRM attempt. On VMware the provider already waits for guest
+    # customization, so this returns immediately.
+    - name: Wait for the VM to finish guest customization
+      ansible.builtin.wait_for_connection:
+        timeout: 1800
+        sleep: 15
+    - name: Gathering Facts
+      ansible.builtin.setup:
   roles:
     - domain-controller
   vars_files:

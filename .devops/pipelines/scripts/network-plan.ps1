@@ -58,6 +58,14 @@ foreach ($ipObject in $ipObjects) {
 $startIndex = $networkRange.IndexOf($start)
 $endIndex = $networkRange.IndexOf($end)
 
+# A start/end that collides with an exclusion (gateway, DNS, build, docker)
+# is no longer in the filtered range; IndexOf then returns -1 and the range
+# operator would silently wrap around to the end of the subnet (a DC at
+# .254 instead of .2). Fail loudly instead.
+if ($startIndex -lt 0 -or $endIndex -lt 0) {
+    throw "network start/end (offsets $($network.data.start)/$($network.data.end)) collide with an excluded address (gateway, DNS, build, or docker). Adjust the network range in the settings/Vault."
+}
+
 $networkRange = $networkRange[$startIndex.. $endIndex]
 
 $indexList = @()
