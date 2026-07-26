@@ -9,6 +9,7 @@
 - name: Domain join the MSSQL Server
   hosts: sql
   roles:
+    - rdp
     - domain-join
   vars_files:
     - ansible.yml

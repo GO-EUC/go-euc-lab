@@ -1,0 +1,22 @@
+---
+# The golden images ship with Remote Desktop disabled, so every server enables
+# it as part of its own configuration playbook.
+
+- name: Allow Remote Desktop connections
+  win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    data: 0
+    type: dword
+
+# Matches the VMware image preparation: NLA off so consoles and older clients
+# can connect without a full credential prompt up front.
+- name: Disable Network Level Authentication
+  win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp
+    name: UserAuthentication
+    data: 0
+    type: dword
+
+- name: Allow Remote Desktop through the firewall
+  win_shell: Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'

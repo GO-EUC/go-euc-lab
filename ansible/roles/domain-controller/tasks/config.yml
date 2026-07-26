@@ -90,18 +90,36 @@
     groups:
       - LoadGen
 
+# All 100 accounts are created in a single PowerShell session instead of a
+# win_domain_user loop: each loop iteration is a full WinRM round trip with a
+# fresh PowerShell process and AD module import (~10s per account, 15+ minutes
+# total). One session doing the same work takes seconds.
 - name: Create LoadGen accounts
-  win_domain_user:
-    name: "{{ 'LoadGen%03d' | format(item | int) }}"
-    upn: "{{ 'LoadGen%03d' | format(item | int)  | lower }}@{{ dns_domain_name | lower }}"
-    company: LoadGen
-    password: "{{ loadgen }}"
-    password_never_expires: false
-    user_cannot_change_password: true
-    state: present
-    path: "OU=LoadGen,OU=GO,{{ domain_path }}"
-    description: LoadGen simulation account
-    groups:
-      - LoadGen
-  when: "{{ item }} != 0"
-  loop: "{{ range(101) | list }}"
+  win_shell: |
+    $ErrorActionPreference = 'Stop'
+    Import-Module ActiveDirectory
+
+    $ou = 'OU=LoadGen,OU=GO,{{ domain_path }}'
+    $password = ConvertTo-SecureString -String '{{ loadgen | regex_replace("'", "''") }}' -AsPlainText -Force
+    $names = 1..100 | ForEach-Object { 'LoadGen{0:d3}' -f $_ }
+
+    $existing = @(Get-ADUser -SearchBase $ou -Filter * | Select-Object -ExpandProperty SamAccountName)
+    $created = @($names | Where-Object { $existing -notcontains $_ })
+    foreach ($name in $created) {
+      New-ADUser -Name $name -SamAccountName $name `
+        -UserPrincipalName ('{0}@{1}' -f $name.ToLower(), '{{ dns_domain_name | lower }}') `
+        -Company LoadGen -Description 'LoadGen simulation account' `
+        -Path $ou -AccountPassword $password `
+        -CannotChangePassword $true -PasswordNeverExpires $false `
+        -Enabled $true
+    }
+
+    $members = @(Get-ADGroupMember -Identity LoadGen | Select-Object -ExpandProperty SamAccountName)
+    $missing = @($names | Where-Object { $members -notcontains $_ })
+    if ($missing.Count -gt 0) {
+      Add-ADGroupMember -Identity LoadGen -Members $missing
+    }
+
+    Write-Output "created=$($created.Count) grouped=$($missing.Count)"
+  register: loadgen_accounts
+  changed_when: "'created=0 grouped=0' not in loadgen_accounts.stdout"

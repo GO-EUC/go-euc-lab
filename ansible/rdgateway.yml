@@ -9,6 +9,7 @@
 - name: Domain join the RD Gateway
   hosts: rd_gateway
   roles:
+    - rdp
     - domain-join
   vars_files:
     - ansible.yml

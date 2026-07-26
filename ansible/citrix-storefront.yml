@@ -9,6 +9,7 @@
 - name: Domain join the Citrix Storefront
   hosts: citrix_sf
   roles:
+    - rdp
     - domain-join
   vars_files:
     - ansible.yml

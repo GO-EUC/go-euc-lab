@@ -9,6 +9,7 @@
 - name: Domain join the Management Server
   hosts: mgmt
   roles:
+    - rdp
     - domain-join
   vars_files:
     - ansible.yml

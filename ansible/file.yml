@@ -12,6 +12,7 @@
 - name: File Server
   hosts: fs
   roles:
+  - rdp
   - domain-join
   vars:
     dns_domain_name: 'GO.EUC'

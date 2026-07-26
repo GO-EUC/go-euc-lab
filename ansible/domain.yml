@@ -24,6 +24,7 @@
     - name: Gathering Facts
       ansible.builtin.setup:
   roles:
+    - rdp
     - domain-controller
   vars_files:
     - ansible.yml

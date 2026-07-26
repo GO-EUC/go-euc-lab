@@ -9,6 +9,7 @@
 - name: Domain join the VMware Horizon Connection Server
   hosts: vmware_hcs
   roles:
+    - rdp
     - domain-join
   vars_files:
     - ansible.yml

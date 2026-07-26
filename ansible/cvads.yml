@@ -13,6 +13,7 @@
   hosts: cc
   serial: 1
   roles:
+    - rdp
     - domain-join
     - citrix-cloud-connector
   vars:
