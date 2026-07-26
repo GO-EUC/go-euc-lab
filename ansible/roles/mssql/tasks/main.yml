@@ -11,6 +11,18 @@
 - name: Initialize the disk
   win_shell: Get-Disk | Where-Object {$_.PartitionStyle -eq "RAW"} | Initialize-Disk
 
+# On Nutanix the guest-customization ISO stays attached as a CD-ROM and
+# claims D: on first boot, which is where the data partition must live.
+- name: Move any CD-ROM off drive letter D
+  win_shell: |
+    $cdrom = Get-CimInstance Win32_Volume -Filter "DriveType = 5 AND DriveLetter = 'D:'"
+    if ($cdrom) {
+      Set-CimInstance -InputObject $cdrom -Property @{ DriveLetter = 'Z:' }
+      Write-Output moved
+    }
+  register: cdrom_move
+  changed_when: "'moved' in cdrom_move.stdout"
+
 - name: Create partition partition on the disk
   community.windows.win_partition:
     drive_letter: D
