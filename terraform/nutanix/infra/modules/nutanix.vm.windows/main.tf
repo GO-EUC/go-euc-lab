@@ -43,6 +43,22 @@ resource "nutanix_virtual_machine" "vm" {
     disk_size_mib = var.vm_disk_size * 1024
   }
 
+  # Optional blank data disk, mirroring the VMware module's multi-disk layout
+  # (the mssql role expects its data volume as disk number 1).
+  dynamic "disk_list" {
+    for_each = var.vm_data_disk_size > 0 ? [var.vm_data_disk_size] : []
+    content {
+      disk_size_mib = disk_list.value * 1024
+      device_properties {
+        device_type = "DISK"
+        disk_address = {
+          adapter_type = "SCSI"
+          device_index = 1
+        }
+      }
+    }
+  }
+
   nic_list {
     subnet_uuid = var.subnet_uuid
   }

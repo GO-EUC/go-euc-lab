@@ -17,9 +17,10 @@ locals {
   default_dns = cidrhost(local.network.cidr, local.network.dns)
 
   workloads = merge({
-    dc         = { offset = 0, cpu = 4, memory = 4096, disk = 100 }
-    mngt       = { offset = 1, cpu = 4, memory = 4096, disk = 512 }
-    sql        = { offset = 2, cpu = 4, memory = 4096, disk = 256 }
+    dc   = { offset = 0, cpu = 4, memory = 4096, disk = 100 }
+    mngt = { offset = 1, cpu = 4, memory = 4096, disk = 512 }
+    # data_disk becomes D: (MSSQLData), matching the VMware sql layout.
+    sql        = { offset = 2, cpu = 4, memory = 4096, disk = 256, data_disk = 64 }
     rdgw       = { offset = 15, cpu = 4, memory = 4096, disk = 100 }
     build-2022 = { offset = 3, cpu = 4, memory = 16384, disk = 128 }
     },
@@ -41,13 +42,14 @@ module "windows_workloads" {
   for_each = local.workloads
   source   = "./modules/nutanix.vm.windows"
 
-  vm_name      = each.key
-  vm_cpu       = each.value.cpu
-  vm_memory    = each.value.memory
-  vm_disk_size = each.value.disk
-  cluster_uuid = local.cluster.uuid
-  subnet_uuid  = local.network.subnet_uuid
-  image_uuid   = data.nutanix_image.server_2022.id
+  vm_name           = each.key
+  vm_cpu            = each.value.cpu
+  vm_memory         = each.value.memory
+  vm_disk_size      = each.value.disk
+  vm_data_disk_size = lookup(each.value, "data_disk", 0)
+  cluster_uuid      = local.cluster.uuid
+  subnet_uuid       = local.network.subnet_uuid
+  image_uuid        = data.nutanix_image.server_2022.id
 
   network_addresses    = [cidrhost(local.network.cidr, var.network_list[each.value.offset])]
   network_prefix       = local.prefix

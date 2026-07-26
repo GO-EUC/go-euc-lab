@@ -34,3 +34,9 @@ variable "local_admin_password" {
   type      = string
   sensitive = true
 }
+# Size in GiB of an optional blank second disk (0 = none), e.g. the SQL
+# server's MSSQLData volume.
+variable "vm_data_disk_size" {
+  type    = number
+  default = 0
+}

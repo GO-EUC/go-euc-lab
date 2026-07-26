@@ -100,7 +100,7 @@
     Import-Module ActiveDirectory
 
     $ou = 'OU=LoadGen,OU=GO,{{ domain_path }}'
-    $password = ConvertTo-SecureString -String '{{ loadgen | regex_replace("'", "''") }}' -AsPlainText -Force
+    $password = ConvertTo-SecureString -String $env:LOADGEN_PASSWORD -AsPlainText -Force
     $names = 1..100 | ForEach-Object { 'LoadGen{0:d3}' -f $_ }
 
     $existing = @(Get-ADUser -SearchBase $ou -Filter * | Select-Object -ExpandProperty SamAccountName)
@@ -121,5 +121,9 @@
     }
 
     Write-Output "created=$($created.Count) grouped=$($missing.Count)"
+  # The password travels as an environment variable: quoting it inline breaks
+  # Ansible's free-form argument parsing when it contains quotes.
+  environment:
+    LOADGEN_PASSWORD: "{{ loadgen }}"
   register: loadgen_accounts
   changed_when: "'created=0 grouped=0' not in loadgen_accounts.stdout"
