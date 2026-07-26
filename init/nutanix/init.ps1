@@ -186,6 +186,16 @@ if ($settings.monitoring -and $settings.monitoring.external) {
     }
 }
 
+# The CIDR must be the network address (host bits zero). Terraform's cidrhost
+# normalizes host bits away, but Ansible's ipmath filter adds offsets to the
+# literal address, silently shifting every derived value (DHCP ranges, router
+# option, DNS forwarders) when e.g. 192.168.1.1/24 is used for 192.168.1.0/24.
+$cidrParts = $settings.network.cidr.Split("/")
+$cidrNetworkAddress = Get-CidrHost -Cidr $settings.network.cidr -HostOffset 0
+if ($cidrNetworkAddress -ne $cidrParts[0]) {
+    throw "network.cidr '$($settings.network.cidr)' has host bits set; use the network address: $cidrNetworkAddress/$($cidrParts[1])."
+}
+
 # Posh-SSH provides cross-platform SSH/SFTP (Windows and macOS/Linux).
 if (!(Get-Module -ListAvailable -Name Posh-SSH)) {
     Write-Stage "Installing required Posh-SSH module."
