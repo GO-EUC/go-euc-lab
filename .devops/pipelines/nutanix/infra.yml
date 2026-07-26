@@ -115,6 +115,22 @@ stages:
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
 
+# Enable Remote Desktop on every deployed Windows VM: the golden images ship
+# with RDP off, and being able to RDP in beats using the Prism console when a
+# stage needs troubleshooting.
+- stage: rdp
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: rdp.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
 - stage: management
   dependsOn: domain
   jobs:
