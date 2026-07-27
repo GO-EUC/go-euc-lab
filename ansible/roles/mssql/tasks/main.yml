@@ -41,12 +41,13 @@
 
 # Windows Server ships PowerShellGet 1.0.0.1, whose Install-Module has no
 # -AcceptLicense parameter, but SQLServerDsc requires license acceptance.
-# Install a current PowerShellGet first; each following task runs in a new
-# session and picks up the newest version automatically.
+# state: latest is required - with state: present the in-box 1.0.0.1 already
+# satisfies the check and nothing is upgraded. Each following task runs in a
+# new session and picks up the newest version automatically.
 - name: Update PowerShellGet and PackageManagement
   win_psmodule:
     name: "{{ item }}"
-    state: present
+    state: latest
   loop:
     - PowerShellGet
     - PackageManagement
