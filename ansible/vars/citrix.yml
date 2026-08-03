@@ -6,6 +6,8 @@ citrix:
   version: "{{ hostvars['localhost']['citrix_version_discovered'] | default('2407') }}"
   source: "{{ hostvars['localhost']['citrix_source_discovered'] | default('Citrix_Virtual_Apps_and_Desktops_7_2407.iso') }}"
   path: "{{ software_store | default('http://10.2.0.6:8080') }}/Citrix/CVAD"
+  # Full download URL for the ISO, layout-aware (versioned or flat store).
+  iso_url: "{{ hostvars['localhost']['citrix_iso_url'] | default((software_store | default('http://10.2.0.6:8080')) ~ '/Citrix/CVAD/2407/Citrix_Virtual_Apps_and_Desktops_7_2407.iso') }}"
   site: Default
   database_port: 1433
   database_site: CVAD_Site_DB

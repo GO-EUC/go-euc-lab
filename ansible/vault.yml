@@ -97,10 +97,11 @@
 
 # ---------------------------------------------------------------------------
 # Software store discovery. The NGINX store serves autoindex listings, so the
-# newest Citrix CVAD version (Citrix/CVAD/<version>/<iso>) is resolved at run
-# time instead of hardcoding it in vars/citrix.yml. Best-effort: when the
-# store address is not passed in or the Citrix content is missing, the vars
-# file falls back to its pinned defaults.
+# newest Citrix CVAD version is resolved at run time instead of hardcoding it
+# in vars/citrix.yml. Two layouts are supported: version folders
+# (Citrix/CVAD/<version>/<iso>) and a flat folder with the version in the ISO
+# filename. Best-effort: when the store address is not passed in or the
+# Citrix content is missing, the vars file falls back to its pinned defaults.
 - name: Read the CVAD folder listing from the software store
   ansible.builtin.uri:
     url: "{{ software_store }}/Citrix/CVAD/"
@@ -109,9 +110,10 @@
   failed_when: false
   when: software_store is defined
 
-- name: Collect the CVAD version folders
+- name: Collect the CVAD version folders and ISO files
   ansible.builtin.set_fact:
     cvad_versions: "{{ cvad_index.content | default('') | regex_findall('href=\"([0-9]+)/\"') }}"
+    cvad_isos: "{{ cvad_index.content | default('') | regex_findall('href=\"([^\"]+[.]iso)\"') }}"
   when:
     - software_store is defined
     - cvad_index.status | default(0) == 200
@@ -132,10 +134,22 @@
 - name: Set the discovered CVAD ISO name
   ansible.builtin.set_fact:
     citrix_source_discovered: "{{ cvad_folder.content | regex_findall('href=\"([^\"]+[.]iso)\"') | first }}"
+    citrix_iso_url: "{{ software_store }}/Citrix/CVAD/{{ citrix_version_discovered }}/{{ cvad_folder.content | regex_findall('href=\"([^\"]+[.]iso)\"') | first }}"
   when:
     - citrix_version_discovered is defined
     - cvad_folder.status | default(0) == 200
     - cvad_folder.content | default('') | regex_findall('href=\"([^\"]+[.]iso)\"') | length > 0
+
+# Flat layout: the ISOs sit directly in Citrix/CVAD/ and the shared filename
+# prefix makes a lexical sort pick the highest version.
+- name: Set the discovered CVAD ISO from a flat store layout
+  ansible.builtin.set_fact:
+    citrix_source_discovered: "{{ cvad_isos | sort | last }}"
+    citrix_version_discovered: "{{ cvad_isos | sort | last | regex_search('_7_([0-9]{4})', '\\1') | first }}"
+    citrix_iso_url: "{{ software_store }}/Citrix/CVAD/{{ cvad_isos | sort | last }}"
+  when:
+    - cvad_versions | default([]) | length == 0
+    - cvad_isos | default([]) | length > 0
 
 # Same discovery for VMware Horizon (VMware/Horizon/<version>/<installers>).
 - name: Read the Horizon folder listing from the software store

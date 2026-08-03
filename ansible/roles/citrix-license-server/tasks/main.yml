@@ -58,7 +58,7 @@
 
     - name: Download Citrix ISO
       win_get_url:
-        url: "{{citrix.path}}/{{citrix.version}}/{{citrix.source}}"
+        url: "{{ citrix.iso_url }}"
         dest: "C:\\Download\\Citrix\\{{citrix.source}}"
       when: citrix_iso.stat.exists == false
 
