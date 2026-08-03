@@ -37,3 +37,7 @@ output "vmware_hcs" {
 output "build" {
   value = module.windows_workloads["build-2022"].vm_info
 }
+
+output "bots" {
+  value = module.bots.vm_info
+}

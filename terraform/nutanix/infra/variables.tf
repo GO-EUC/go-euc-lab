@@ -26,3 +26,10 @@ variable "vmware_horizon" {
   type    = bool
   default = false
 }
+
+# Number of LoadGen bot VMs (4 vCPU / 16 GiB each). The VMware lab deploys
+# 10; CE clusters usually have less memory headroom, so this defaults lower.
+variable "bot_count" {
+  type    = number
+  default = 2
+}

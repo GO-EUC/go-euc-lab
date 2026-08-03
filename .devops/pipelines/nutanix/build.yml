@@ -1,4 +1,9 @@
 parameters:
+- name: redeploy
+  displayName: Redeploy Build Machine
+  type: boolean
+  default: false
+
 - name: delivery
   type: string
   default: Citrix
@@ -13,6 +18,37 @@ variables:
 - group: Lab
 
 stages:
+# Optionally re-clone the build VM from the golden image first, so the
+# delivery customization starts from a clean slate (the VMware pipeline
+# offers the same switch).
+- stage: redeploy
+  jobs:
+  - job: infra
+    condition: eq('${{ parameters.redeploy }}', true)
+    displayName: Redeploy the build machine
+    steps:
+    - task: PowerShell@2
+      displayName: Set variables
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_ADDR="$(vault_addr)"
+          $env:VAULT_TOKEN="$(vault_token)"
+          $range = .devops/pipelines/scripts/network-plan.ps1 -Platform nutanix
+          @(
+            "network_list = $($range | ConvertTo-Json -Compress)"
+          ) | Set-Content terraform/nutanix/infra/terraform.tfvars
+    - task: CmdLine@2
+      displayName: Terraform init
+      inputs:
+        workingDirectory: terraform/nutanix/infra
+        script: terraform init -backend-config="conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)"
+    - task: CmdLine@2
+      displayName: Terraform replace build machine
+      inputs:
+        workingDirectory: terraform/nutanix/infra
+        script: terraform apply -auto-approve -replace='module.windows_workloads["build-2022"].nutanix_virtual_machine.vm[0]' -target='module.windows_workloads["build-2022"]' -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)"
+
 - stage: customize
   jobs:
   - template: ../templates/ansible-playbook.yml
@@ -21,7 +57,8 @@ stages:
       ansible_playbook: windows-image.yml
       vault_addr: $(vault_addr)
       vault_token: $(vault_token)
-      delivery: ${{ parameters.delivery }}
+      # The windows-image role compares this value in lowercase.
+      delivery: ${{ lower(parameters.delivery) }}
       platform: nutanix
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra

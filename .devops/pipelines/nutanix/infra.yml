@@ -153,3 +153,90 @@ stages:
       platform: nutanix
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: loadgen
+  displayName: LoadGen Bots
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: loadgen.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+# The Citrix and Horizon stages run unconditionally, like on VMware: when the
+# matching Terraform parameter is off, the inventory group is empty and the
+# playbook is a no-op.
+- stage: citrix_ddc
+  displayName: Citrix Delivery Controller
+  dependsOn: sql
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-delivery-controller.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: citrix_lic
+  displayName: Citrix License Server
+  dependsOn: citrix_ddc
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-license-server.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: citrix_sf
+  displayName: Citrix StoreFront
+  dependsOn: citrix_ddc
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: citrix-storefront.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: horizon
+  displayName: VMware Horizon Connection Server
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: horizon-connection-server.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+- stage: updates
+  displayName: Windows Updates
+  dependsOn: domain
+  jobs:
+  - template: ../templates/ansible-playbook.yml
+    parameters:
+      ansible_path: $(Build.Repository.LocalPath)/ansible
+      ansible_playbook: updates.yml
+      vault_addr: $(vault_addr)
+      vault_token: $(vault_token)
+      platform: nutanix
+      terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
+      terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra

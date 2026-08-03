@@ -57,3 +57,24 @@ module "windows_workloads" {
   network_dns          = each.key == "dc" ? [local.default_dns] : [cidrhost(local.network.cidr, var.network_list[0]), local.default_dns]
   local_admin_password = local.build.password
 }
+
+# LoadGen bots, cloned from the same server image as the workloads (the
+# VMware lab does the same). Offsets 16+ keep clear of the workloads map
+# above (0-8 and 15).
+module "bots" {
+  source = "./modules/nutanix.vm.windows"
+
+  vm_name      = "bot"
+  vm_count     = var.bot_count
+  vm_cpu       = 4
+  vm_memory    = 16384
+  cluster_uuid = local.cluster.uuid
+  subnet_uuid  = local.network.subnet_uuid
+  image_uuid   = data.nutanix_image.server_2022.id
+
+  network_addresses    = [for i in range(var.bot_count) : cidrhost(local.network.cidr, var.network_list[16 + i])]
+  network_prefix       = local.prefix
+  network_gateway      = local.gateway
+  network_dns          = [cidrhost(local.network.cidr, var.network_list[0]), local.default_dns]
+  local_admin_password = local.build.password
+}
