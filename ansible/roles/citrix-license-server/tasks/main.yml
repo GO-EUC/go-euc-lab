@@ -76,17 +76,16 @@
       set_fact:
         iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-    - name: Check for pending reboot
+    # stdout is the string "True"/"False"; comparing to boolean true skipped
+    # the reboot and let Windows reboot mid-install instead.
+    - name: Check for pending reboot before install
       win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot
+      register: pending_reboot_check
 
-    - name: Set fact for pending reboot
-      set_fact:
-        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
-
-    - name: Reboot to remove the pending reboot
+    - name: Reboot to clear pending reboot before install
       ansible.windows.win_reboot:
-      when: pending_reboot == true
+        reboot_timeout: 3600
+      when: (pending_reboot_check.stdout | trim | lower) == 'true'
 
     - name: Mount the Citrix installation ISO
       win_disk_image:
@@ -99,6 +98,17 @@
         path: "{{ disk_image_out.mount_paths[0] }}\\x64\\Licensing\\CTX_Licensing.msi"
         state: present
       register: lic_install
+      ignore_unreachable: true
+      vars:
+        ansible_winrm_operation_timeout_sec: 3600
+        ansible_winrm_read_timeout_sec: 3700
+
+    - name: Wait for WinRM after installer reboot
+      ansible.builtin.wait_for_connection:
+        timeout: 1800
+        sleep: 15
+        delay: 30
+      when: lic_install is unreachable
 
     - name: Install Citrix License PowerShell snap-ins
       win_package:
@@ -120,7 +130,10 @@
 
     - name: Reboot to complete installation
       ansible.windows.win_reboot:
-      when: lic_install.changed
+        reboot_timeout: 3600
+      when:
+        - lic_install is not unreachable
+        - lic_install.changed | default(false)
 
     - name: Verify Citrix License Server is present
       win_stat:

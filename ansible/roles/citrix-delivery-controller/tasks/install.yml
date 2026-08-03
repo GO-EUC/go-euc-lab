@@ -119,17 +119,17 @@
       set_fact:
         iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-    - name: Check for pending reboot
+    # stdout is the string "True"/"False"; comparing that to boolean true
+    # always skipped the reboot, so the installer started with a pending
+    # reboot and Windows rebooted mid-task (WinRM HTTP 400).
+    - name: Check for pending reboot before install
       win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot
+      register: pending_reboot_check
 
-    - name: Set fact for pending reboot
-      set_fact:
-        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
-
-    - name: Reboot to remove the pending reboot
+    - name: Reboot to clear pending reboot before install
       ansible.windows.win_reboot:
-      when: pending_reboot == true
+        reboot_timeout: 3600
+      when: (pending_reboot_check.stdout | trim | lower) == 'true'
 
     - name: Mount the Citrix installation ISO
       win_disk_image:
@@ -147,6 +147,18 @@
         state: present
         expected_return_code: [0, 3, 3010]
       register: citrix_installation
+      ignore_unreachable: true
+      vars:
+        ansible_winrm_operation_timeout_sec: 7200
+        ansible_winrm_read_timeout_sec: 7300
+
+    # The meta-installer can still reboot for prerequisites even with /noreboot.
+    - name: Wait for WinRM after installer reboot
+      ansible.builtin.wait_for_connection:
+        timeout: 1800
+        sleep: 15
+        delay: 30
+      when: citrix_installation is unreachable
 
     - name: Unmount the Citrix installation ISO
       win_disk_image:
@@ -156,19 +168,19 @@
 
     - name: Reboot to complete Citrix Delivery Controller installation
       ansible.windows.win_reboot:
-      when: citrix_installation.reboot_required == true
+        reboot_timeout: 3600
+      when:
+        - citrix_installation is not unreachable
+        - citrix_installation.reboot_required | default(false)
 
-    - name: Check for pending reboot
+    - name: Check for pending reboot after install
       win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot
+      register: pending_reboot_check
 
-    - name: Set fact for pending reboot
-      set_fact:
-        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
-
-    - name: Reboot to remove the pending reboot
+    - name: Reboot to clear pending reboot after install
       ansible.windows.win_reboot:
-      when: pending_reboot == true
+        reboot_timeout: 3600
+      when: (pending_reboot_check.stdout | trim | lower) == 'true'
 
     - name: Remove Citrix Delivery Controller RunOnce key from registry
       win_regedit:
@@ -177,35 +189,48 @@
         state: absent
       register: install_resume
 
-    - name: Mount the Citrix installation ISO
+    - name: Mount the Citrix installation ISO for resume
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
       register: disk_image_out
+      when: install_resume.changed
 
     - name: Resume the Citrix Delivery Controller installation
       win_package:
         path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
         state: present
         expected_return_code: [0, 3, 3010]
+      register: citrix_resume
+      ignore_unreachable: true
       when: install_resume.changed
+      vars:
+        ansible_winrm_operation_timeout_sec: 7200
+        ansible_winrm_read_timeout_sec: 7300
 
-    - name: Unmount the Citrix installation ISO
+    - name: Wait for WinRM after resume reboot
+      ansible.builtin.wait_for_connection:
+        timeout: 1800
+        sleep: 15
+        delay: 30
+      when:
+        - install_resume.changed
+        - citrix_resume is unreachable
+
+    - name: Unmount the Citrix installation ISO after resume
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: absent
+      when: install_resume.changed
 
-    - name: Check for pending reboot
+    - name: Check for pending reboot after resume
       win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot
+      register: pending_reboot_check
 
-    - name: Set fact for pending reboot
-      set_fact:
-        pending_reboot: "{{ pending_reboot.stdout | trim | lower}}"
-
-    - name: Reboot to remove the pending reboot
+    - name: Reboot to clear pending reboot after resume
       ansible.windows.win_reboot:
-      when: pending_reboot == true
+        reboot_timeout: 3600
+      when: (pending_reboot_check.stdout | trim | lower) == 'true'
 
     - name: Verify Citrix Delivery Controller binaries are present
       win_stat:
