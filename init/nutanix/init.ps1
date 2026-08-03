@@ -669,8 +669,17 @@ Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix secrets enable -ve
 #   go/postgress   - Terraform state backend connection info
 #   go/domain*     - lab domain name and service account passwords
 # ("postgress" spelling is the repository-wide convention.)
+# The optional timezone (a Windows timezone id, see
+# https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones)
+# rides along in go/domain; Ansible applies it to every Windows machine and
+# falls back to W. Europe Standard Time when absent. Quoted: the ids contain
+# spaces and the seed line is passed to the remote shell as-is.
+$domainSeed = "domain name=$($settings.domain_name)"
+if ($settings.timezone) {
+    $domainSeed += " timezone='$($settings.timezone)'"
+}
 $seed = @(
-    "domain name=$($settings.domain_name)",
+    $domainSeed,
     "nutanix/prism endpoint=$($settings.prism.endpoint) username=$($settings.prism.username) password=$([Net.NetworkCredential]::new('', $PrismPassword).Password) insecure=$(([string]$settings.prism.insecure).ToLower())",
     "nutanix/cluster uuid=$($settings.prism.cluster_uuid)",
     "nutanix/storage container_uuid=$($settings.prism.storage_container_uuid)",

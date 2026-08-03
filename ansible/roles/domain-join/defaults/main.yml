@@ -1,0 +1,6 @@
+---
+# Windows timezone id applied at join time. The lab-wide value comes from
+# the initializer's settings.json via Vault (go/domain, resolved by
+# vault.yml); this fallback covers playbooks that skip the vault include.
+# Full list: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones
+windows_timezone: "{{ hostvars['localhost']['windows_timezone'] | default('W. Europe Standard Time') }}"

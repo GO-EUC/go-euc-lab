@@ -10,9 +10,9 @@
   hosts: all
   tasks:
 
-    - name: Set timezone to 'W. Europe Standard Time' (GMT+01:00)
+    - name: "Set timezone to '{{ windows_timezone | default('W. Europe Standard Time') }}'"
       win_timezone:
-        timezone: W. Europe Standard Time
+        timezone: "{{ windows_timezone | default('W. Europe Standard Time') }}"
 
     - name: Force reboot before
       win_reboot:

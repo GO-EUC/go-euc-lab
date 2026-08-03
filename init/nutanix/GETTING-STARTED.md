@@ -176,6 +176,14 @@ Run **Nutanix CE - 2. Infra** (`.devops/pipelines/nutanix/infra.yml`). Parameter
 
 The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), deploys the monitoring stack, and runs the Ansible stages: domain, management, SQL, and RD Gateway.
 
+### Timezone
+
+Every Windows machine gets its timezone from the optional `timezone` key in `settings.json`, which the initializer seeds into Vault under `go/domain` (default when omitted: `W. Europe Standard Time`). The value must be a Windows timezone id; the full list is in Microsoft's [Default Time Zones](https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones) reference, or run `tzutil /l` on any Windows machine. To change it on an existing lab without re-running the initializer, update the secret directly:
+
+```bash
+vault kv put -mount=go domain name=go.euc timezone='GMT Standard Time'
+```
+
 ### Monitoring stack
 
 The `docker` stage runs the `ansible/monitoring.yml` playbook against the control-plane VM and deploys two containers next to the existing NGINX/Vault/Postgres set:

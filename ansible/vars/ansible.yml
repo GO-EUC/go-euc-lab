@@ -4,3 +4,9 @@ ansible_winrm_transport: ntlm
 ansible_winrm_server_cert_validation: ignore
 ansible_port: 5985
 ansible_winrm_read_timeout_sec: 300
+
+# Windows timezone id applied to every lab machine. Configured in the
+# initializer's settings.json ("timezone"), stored in Vault under go/domain,
+# and resolved by vault.yml; W. Europe Standard Time when unset.
+# Full list: https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-time-zones
+windows_timezone: "{{ hostvars['localhost']['windows_timezone'] | default('W. Europe Standard Time') }}"

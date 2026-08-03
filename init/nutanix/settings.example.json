@@ -1,6 +1,7 @@
 {
   "repo_root": "/path/to/GO-EUC-LAB",
   "domain_name": "go.euc",
+  "timezone": "W. Europe Standard Time",
   "ado_url": "https://dev.azure.com/orgname",
   "ado_agents": 5,
   "prism": {
