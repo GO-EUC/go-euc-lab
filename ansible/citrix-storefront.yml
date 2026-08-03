@@ -8,6 +8,16 @@
 
 - name: Domain join the Citrix Storefront
   hosts: citrix_sf
+  gather_facts: no
+  pre_tasks:
+    - name: Wait for WinRM to become ready
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+        sleep: 15
+      retries: 10
+      delay: 30
+    - name: Gathering Facts
+      ansible.builtin.setup:
   roles:
     - rdp
     - domain-join
@@ -19,6 +29,16 @@
 
 - name: Install and configure Citrix Storefront
   hosts: citrix_sf
+  gather_facts: no
+  pre_tasks:
+    - name: Wait for domain credentials to be accepted
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+        sleep: 15
+      retries: 10
+      delay: 30
+    - name: Gathering Facts
+      ansible.builtin.setup:
   roles:
     - citrix-storefront
   vars_files:

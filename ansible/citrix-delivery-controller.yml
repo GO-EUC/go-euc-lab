@@ -8,6 +8,18 @@
 
 - name: Domain join the Citrix Delivery Controller
   hosts: citrix_ddc
+  # WinRM can return HTTP 400 while the guest is still settling after a
+  # reboot or a failed installer pass; wait before the first module call.
+  gather_facts: no
+  pre_tasks:
+    - name: Wait for WinRM to become ready
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+        sleep: 15
+      retries: 10
+      delay: 30
+    - name: Gathering Facts
+      ansible.builtin.setup:
   roles:
     - rdp
     - domain-join
@@ -27,8 +39,8 @@
       ansible.builtin.wait_for_connection:
         timeout: 600
         sleep: 15
-      retries: 5
-      delay: 15
+      retries: 10
+      delay: 30
     - name: Gathering Facts
       ansible.builtin.setup:
   roles:
