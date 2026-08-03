@@ -28,7 +28,9 @@ locals {
       ctx-cc = { offset = 4, cpu = 4, memory = 4096, disk = 100 }
     } : {},
     var.citrix_vad ? {
-      ctx-ddc = { offset = 5, cpu = 4, memory = 4096, disk = 100 }
+      # Citrix recommends >= 5 GiB for the Delivery Controller; 4 GiB only
+      # passes with /ignore_hw_check_failure and is unstable under install.
+      ctx-ddc = { offset = 5, cpu = 4, memory = 8192, disk = 100 }
       ctx-sf  = { offset = 6, cpu = 4, memory = 4096, disk = 100 }
       ctx-lic = { offset = 7, cpu = 4, memory = 4096, disk = 100 }
     } : {},

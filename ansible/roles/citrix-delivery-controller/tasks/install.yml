@@ -24,24 +24,23 @@
         pending_reboot_check_name: Check for pending reboot before prerequisites
         pending_reboot_reboot_name: Reboot to clear pending reboot before prerequisites
 
-    # No NET-Framework-Core (.NET 3.5): its payload is in "Removed" state on
-    # current Server images, so installing it reaches out to Windows Update
-    # (error 0x8024402c when unreachable). Modern CVAD requires .NET 4.8,
-    # which the 45 features below cover; 3.5 was only needed by 7.x-era
-    # releases. Everything listed installs from the local component store.
-    - name: Install Citrix Delivery Controller prerequisites
+    # Match the IIS/WAS feature set XenDesktopServerSetup enables via DISM so
+    # the meta-installer does not run feature enablement (and reboot) itself.
+    # Omit NetFx3 / NET-Framework-Core: FoD payload is Removed on Server 2022.
+    - name: Install Citrix Delivery Controller Windows features
       win_feature:
         name:
           - NET-Framework-45-Core
           - NET-Framework-45-ASPNET
+          - NET-WCF-Services45
+          - NET-WCF-HTTP-Activation45
           - GPMC
           - RSAT-ADDS-Tools
-          - RDS-Licensing-UI
-          - WAS
-          - Telnet-Client
-          - GPMC
-          - Remote-Assistance
           - RSAT-AD-Tools
+          - RDS-Licensing-UI
+          - Remote-Assistance
+          - Telnet-Client
+          - WAS
           - Web-Server
           - Web-WebServer
           - Web-Common-Http
@@ -61,9 +60,11 @@
           - Web-Filtering
           - Web-Basic-Auth
           - Web-Windows-Auth
+          - Web-IP-Security
+          - Web-App-Dev
           - Web-Net-Ext45
           - Web-ASP
-          - Web-ASP-Net45
+          - Web-Asp-Net45
           - Web-CGI
           - Web-ISAPI-Ext
           - Web-ISAPI-Filter
@@ -82,7 +83,14 @@
 
     - name: Reboot machine for Windows Features
       ansible.windows.win_reboot:
+        reboot_timeout: 3600
       when: win_feature.reboot_required
+
+    - name: Clear pending reboot after Windows Features
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Windows Features
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Windows Features
 
     - name: Create Log Folder
       win_file:
@@ -114,13 +122,117 @@
       set_fact:
         iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-    - name: Clear pending reboot before Citrix install
+    - name: Mount the Citrix installation ISO
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    # Pre-install Support\* packages the meta-installer would otherwise install
+    # mid-run (VC++, URL Rewrite, ARR, SqlLocalDB). Nested msiexec under
+    # XenDesktopServerSetup is what fails with MSI 1719/1603 on SqlLocalDB
+    # (custom-action server dies) and then leaves a pending reboot / dead WinRM.
+    - name: Ensure Windows Installer service is running
+      win_service:
+        name: msiserver
+        state: started
+        start_mode: manual
+
+    - name: Pre-install Visual C++ x64 runtime from Citrix media
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\Support\\VcRedist\\vc_redist.x64.exe"
+        arguments: /quiet /norestart
+        state: present
+        expected_return_code: [0, 1638, 3010]
+
+    - name: Pre-install Visual C++ x86 runtime from Citrix media
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\Support\\VcRedist\\vc_redist.x86.exe"
+        arguments: /quiet /norestart
+        state: present
+        expected_return_code: [0, 1638, 3010]
+
+    - name: Pre-install IIS URL Rewrite from Citrix media
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\Support\\UrlRewrite\\rewrite_amd64_en-US.msi"
+        arguments: /qn REBOOT=ReallySuppress
+        state: present
+        expected_return_code: [0, 1638, 3010]
+
+    - name: Pre-install Application Request Routing from Citrix media
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\Support\\ApplicationRequestRouter\\requestRouter_amd64.msi"
+        arguments: /qn REBOOT=ReallySuppress
+        state: present
+        expected_return_code: [0, 1638, 3010]
+
+    - name: Check whether SQL LocalDB is already installed
+      win_stat:
+        path: C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe
+      register: sqllocaldb_bin
+
+    # Use msiexec directly (not nested under the meta-installer). A prior nested
+    # Citrix install can leave product {5148FDBB-...} half-registered after 1719
+    # rollback — uninstall that residue before installing cleanly.
+    - name: Pre-install SQL LocalDB from Citrix media
+      win_shell: |
+        $ErrorActionPreference = 'Stop'
+        $productCode = '{5148FDBB-2CFC-4953-B5E5-E44E361BAFD4}'
+        $bin = 'C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe'
+        $msi = '{{ disk_image_out.mount_paths[0] }}\Support\SQLLocalDB\SqlLocalDB.msi'
+        $log = 'C:\Logs\SqlLocalDB-preinstall.log'
+
+        if (Test-Path $bin) { exit 0 }
+
+        # Clear dirty product registration from a previous failed nested install.
+        $uninst = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
+        if (-not $uninst) {
+          $uninst = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
+        }
+        if ($uninst) {
+          Write-Host "Removing leftover SqlLocalDB product $productCode"
+          $x = Start-Process -FilePath msiexec.exe -ArgumentList @(
+            '/x', $productCode, '/qn', 'REBOOT=ReallySuppress'
+          ) -Wait -PassThru
+          Start-Sleep -Seconds 5
+        }
+
+        $p = Start-Process -FilePath msiexec.exe -ArgumentList @(
+          '/i', "`"$msi`"",
+          '/qn',
+          'IACCEPTSQLLOCALDBLICENSETERMS=YES',
+          'REBOOT=ReallySuppress',
+          '/L*v', "`"$log`""
+        ) -Wait -PassThru
+        # 0 = success, 1638 = already installed, 3010 = success reboot required
+        if ($p.ExitCode -in @(0, 1638, 3010)) { exit 0 }
+        Write-Error "SqlLocalDB msiexec failed with exit code $($p.ExitCode). See $log"
+        exit $p.ExitCode
+      args:
+        executable: powershell
+      register: sqllocaldb_install
+      retries: 3
+      delay: 45
+      until: sqllocaldb_install.rc == 0
+      when: not sqllocaldb_bin.stat.exists
+      vars:
+        ansible_winrm_operation_timeout_sec: 3600
+        ansible_winrm_read_timeout_sec: 3700
+
+    - name: Verify SQL LocalDB binaries are present
+      win_stat:
+        path: C:\Program Files\Microsoft SQL Server\160\Tools\Binn\SqlLocalDB.exe
+      register: sqllocaldb_installed
+      failed_when: not sqllocaldb_installed.stat.exists
+
+    - name: Clear pending reboot after media prerequisites
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
       vars:
-        pending_reboot_check_name: Check for pending reboot before Citrix install
-        pending_reboot_reboot_name: Reboot to clear pending reboot before Citrix install
+        pending_reboot_check_name: Check for pending reboot after media prerequisites
+        pending_reboot_reboot_name: Reboot to clear pending reboot after media prerequisites
 
-    - name: Mount the Citrix installation ISO
+    # ISO mount is lost across the prereq reboot above.
+    - name: Remount the Citrix installation ISO for meta-installer
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
