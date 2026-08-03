@@ -5,6 +5,13 @@
     name: lic_version
   register: citrix_version
 
+# Do not trust the registry marker alone: a failed or partial run can leave
+# lic_version set without CTX_Licensing.msi having been installed.
+- name: Check whether Citrix License Server is installed
+  win_stat:
+    path: C:\Program Files (x86)\Citrix\Licensing\LS\lmgrd.exe
+  register: citrix_licensing_bin
+
 - name: Block for Citrix installation
   block:
 
@@ -115,6 +122,12 @@
       ansible.windows.win_reboot:
       when: lic_install.changed
 
+    - name: Verify Citrix License Server is present
+      win_stat:
+        path: C:\Program Files (x86)\Citrix\Licensing\LS\lmgrd.exe
+      register: citrix_licensing_installed
+      failed_when: not citrix_licensing_installed.stat.exists
+
     - name: Add registry for future installation check
       win_regedit:
         path: HKLM:\Software\GO-EUC\Citrix
@@ -122,4 +135,7 @@
         data: "{{ citrix.version }}"
         type: string
 
-  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
+  when: >
+    (not citrix_licensing_bin.stat.exists)
+    or (citrix_version.exists == false)
+    or (citrix_version.value != citrix.version)

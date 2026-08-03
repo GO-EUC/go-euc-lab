@@ -5,6 +5,14 @@
     name: ddc_version
   register: citrix_version
 
+# Do not trust the registry marker alone: XenDesktopServerSetup is multi-pass
+# (reboot + RunOnce resume). A run can write ddc_version without BrokerService
+# ever landing on disk.
+- name: Check whether Citrix Delivery Controller is installed
+  win_stat:
+    path: C:\Program Files\Citrix\Broker\Service\BrokerService.exe
+  register: citrix_broker_bin
+
 - name: Block for Citrix installation
   block:
 
@@ -185,8 +193,7 @@
     - name: Unmount the Citrix installation ISO
       win_disk_image:
         image_path: "{{ iso_path }}"
-        state: present
-      register: disk_image_out
+        state: absent
 
     - name: Check for pending reboot
       win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
@@ -200,6 +207,12 @@
       ansible.windows.win_reboot:
       when: pending_reboot == true
 
+    - name: Verify Citrix Delivery Controller binaries are present
+      win_stat:
+        path: C:\Program Files\Citrix\Broker\Service\BrokerService.exe
+      register: citrix_broker_installed
+      failed_when: not citrix_broker_installed.stat.exists
+
     - name: Add registry for future installation check
       win_regedit:
         path: HKLM:\Software\GO-EUC\Citrix
@@ -207,4 +220,7 @@
         data: "{{ citrix.version }}"
         type: string
 
-  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
+  when: >
+    (not citrix_broker_bin.stat.exists)
+    or (citrix_version.exists == false)
+    or (citrix_version.value != citrix.version)

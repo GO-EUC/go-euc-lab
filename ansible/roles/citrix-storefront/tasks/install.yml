@@ -5,6 +5,11 @@
     name: sf_version
   register: citrix_version
 
+- name: Check whether Citrix StoreFront is installed
+  win_stat:
+    path: C:\Program Files\Citrix\Receiver StoreFront\Services
+  register: citrix_storefront_dir
+
 - name: Block for Citrix installation
   block:
 
@@ -141,6 +146,12 @@
       ansible.windows.win_reboot:
       when: citrix_installation.changed
 
+    - name: Verify Citrix StoreFront is present
+      win_stat:
+        path: C:\Program Files\Citrix\Receiver StoreFront\Services
+      register: citrix_storefront_installed
+      failed_when: not citrix_storefront_installed.stat.exists
+
     - name: Add registry for future installation check
       win_regedit:
         path: HKLM:\Software\GO-EUC\Citrix
@@ -148,4 +159,7 @@
         data: "{{ citrix.version }}"
         type: string
 
-  when: (citrix_version.exists == false) or (citrix_version.value != citrix.version)
+  when: >
+    (not citrix_storefront_dir.stat.exists)
+    or (citrix_version.exists == false)
+    or (citrix_version.value != citrix.version)
