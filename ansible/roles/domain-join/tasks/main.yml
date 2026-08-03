@@ -5,36 +5,13 @@
 # ("the specified credentials were rejected") while the local build account
 # still works.
 
-# Citrix/feature installs often leave a pending reboot. Continuing into DNS
-# while one is queued lets Windows reboot mid-task (empty "ntlm:" unreachable).
-# Registry checks avoid depending on the PendingReboot PowerShell module.
-- name: Check Component Based Servicing reboot pending
-  win_reg_stat:
-    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending
-  register: cbs_reboot
-  ignore_unreachable: true
-
-- name: Check Windows Update reboot pending
-  win_reg_stat:
-    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired
-  register: wu_reboot
-  ignore_unreachable: true
-  when: cbs_reboot is not unreachable
-
-- name: Wait for WinRM if a reboot-pending check lost the connection
-  ansible.builtin.wait_for_connection:
-    timeout: 1800
-    sleep: 15
-    delay: 30
-  when: cbs_reboot is unreachable or wu_reboot is unreachable
-
-- name: Reboot to clear pending reboot before domain configuration
-  ansible.windows.win_reboot:
-    reboot_timeout: 3600
-  when:
-    - cbs_reboot is not unreachable
-    - wu_reboot is not unreachable
-    - cbs_reboot.exists or wu_reboot.exists
+# Citrix/feature installs often leave a pending reboot. Continuing while one
+# is queued lets Windows reboot mid-task (empty "ntlm:" / WinRM HTTP 400).
+- name: Clear pending reboot before domain configuration
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+  vars:
+    pending_reboot_check_name: Check for pending reboot before domain configuration
+    pending_reboot_reboot_name: Reboot to clear pending reboot before domain configuration
 
 - name: "Set timezone to '{{ windows_timezone }}'"
   win_timezone:

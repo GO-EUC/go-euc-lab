@@ -1,0 +1,39 @@
+---
+# Clear a pending Windows reboot without the PendingReboot PowerShell module
+# (that module needs NuGet from the gallery, which is slow and flaky over WinRM).
+# Covers CBS, Windows Update, and PendingFileRenameOperations (common after MSI).
+
+- name: "{{ pending_reboot_check_name | default('Check for pending reboot') }}"
+  win_shell: |
+    $pending = $false
+    if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') {
+      $pending = $true
+    }
+    if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') {
+      $pending = $true
+    }
+    $pfro = (
+      Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' `
+        -Name PendingFileRenameOperations -ErrorAction SilentlyContinue
+    ).PendingFileRenameOperations
+    if ($null -ne $pfro) {
+      $pending = $true
+    }
+    Write-Output $pending.ToString().ToLower()
+  register: pending_reboot_check
+  ignore_unreachable: true
+  changed_when: false
+
+- name: Wait for WinRM if pending-reboot check lost the connection
+  ansible.builtin.wait_for_connection:
+    timeout: 1800
+    sleep: 15
+    delay: 30
+  when: pending_reboot_check is unreachable
+
+- name: "{{ pending_reboot_reboot_name | default('Reboot to clear pending reboot') }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 3600
+  when:
+    - pending_reboot_check is not unreachable
+    - (pending_reboot_check.stdout | default('') | trim | lower) == 'true'

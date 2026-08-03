@@ -16,18 +16,13 @@
 - name: Block for Citrix installation
   block:
 
-    - name: Install NuGet
-      win_shell: Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-
-    - name: Check for PendingReboot module
-      win_psmodule:
-        name: PendingReboot
-        state: present
-        accept_license: true
-      retries: 3
-      delay: 10
-      register: result
-      until: result is not failed
+    # Clear any reboot left by earlier feature/MSI work before touching WinRM
+    # for long-running tasks. Uses registry checks only - no NuGet/gallery.
+    - name: Clear pending reboot before prerequisites
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot before prerequisites
+        pending_reboot_reboot_name: Reboot to clear pending reboot before prerequisites
 
     # No NET-Framework-Core (.NET 3.5): its payload is in "Removed" state on
     # current Server images, so installing it reaches out to Windows Update
@@ -119,17 +114,11 @@
       set_fact:
         iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-    # stdout is the string "True"/"False"; comparing that to boolean true
-    # always skipped the reboot, so the installer started with a pending
-    # reboot and Windows rebooted mid-task (WinRM HTTP 400).
-    - name: Check for pending reboot before install
-      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot_check
-
-    - name: Reboot to clear pending reboot before install
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: (pending_reboot_check.stdout | trim | lower) == 'true'
+    - name: Clear pending reboot before Citrix install
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot before Citrix install
+        pending_reboot_reboot_name: Reboot to clear pending reboot before Citrix install
 
     - name: Mount the Citrix installation ISO
       win_disk_image:
@@ -173,14 +162,11 @@
         - citrix_installation is not unreachable
         - citrix_installation.reboot_required | default(false)
 
-    - name: Check for pending reboot after install
-      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot_check
-
-    - name: Reboot to clear pending reboot after install
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: (pending_reboot_check.stdout | trim | lower) == 'true'
+    - name: Clear pending reboot after Citrix install
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Citrix install
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Citrix install
 
     - name: Remove Citrix Delivery Controller RunOnce key from registry
       win_regedit:
@@ -223,14 +209,11 @@
         state: absent
       when: install_resume.changed
 
-    - name: Check for pending reboot after resume
-      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot_check
-
-    - name: Reboot to clear pending reboot after resume
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: (pending_reboot_check.stdout | trim | lower) == 'true'
+    - name: Clear pending reboot after Citrix resume
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Citrix resume
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Citrix resume
 
     - name: Verify Citrix Delivery Controller binaries are present
       win_stat:

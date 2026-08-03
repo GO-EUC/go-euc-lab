@@ -13,19 +13,14 @@
 - name: Block for Citrix installation
   block:
 
-    - name: Install NuGet
-      win_shell: Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    - name: Clear pending reboot before prerequisites
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot before prerequisites
+        pending_reboot_reboot_name: Reboot to clear pending reboot before prerequisites
 
-    - name: Check for PendingReboot module
-      win_psmodule:
-        name: PendingReboot
-        state: present
-        accept_license: true
-      retries: 3
-      delay: 10
-      register: result
-      until: result is not failed
-
+    # No NET-Framework-Features (.NET 3.5): payload is "Removed" on current
+    # Server images and forces a Windows Update download.
     - name: Install Citrix Storefront prerequisites
       win_feature:
         name:
@@ -65,7 +60,6 @@
           - Web-Lgcy-Scripting
           - Web-WMI
           - Web-Scripting-Tools
-          - NET-Framework-Features
           - NET-Framework-45-Features
           - NET-Framework-45-Core
           - NET-Framework-45-ASPNET
@@ -111,16 +105,11 @@
       set_fact:
         iso_path: "C:\\Download\\Citrix\\{{citrix.source}}"
 
-    # stdout is the string "True"/"False"; comparing to boolean true skipped
-    # the reboot and let Windows reboot mid-install instead.
-    - name: Check for pending reboot before install
-      win_shell: (Test-PendingReboot -SkipConfigurationManagerClientCheck).IsRebootPending
-      register: pending_reboot_check
-
-    - name: Reboot to clear pending reboot before install
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: (pending_reboot_check.stdout | trim | lower) == 'true'
+    - name: Clear pending reboot before Citrix install
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot before Citrix install
+        pending_reboot_reboot_name: Reboot to clear pending reboot before Citrix install
 
     - name: Mount the Citrix installation ISO
       win_disk_image:
