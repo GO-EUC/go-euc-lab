@@ -1,20 +1,29 @@
 ---
+# Timezone and DNS must run even when the machine is already a domain member:
+# the join itself is skipped on re-runs, but DNS can drift back to the
+# guest-customization defaults, and domain credentials then fail WinRM
+# ("the specified credentials were rejected") while the local build account
+# still works.
+
+- name: "Set timezone to '{{ windows_timezone }}'"
+  win_timezone:
+    timezone: "{{ windows_timezone }}"
+
+- name: Set fact for Domain Path
+  set_fact:
+    domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
+
+- name: Set DNS to primary domain controller
+  win_dns_client:
+    adapter_names: '*'
+    ipv4_addresses:
+      - "{{ hostvars[groups['dc'][0]].ansible_host }}"
+
+- name: Flush DNS cache after pointing at the domain controller
+  win_shell: Clear-DnsClientCache
+
 - name: Domain join machine
   block:
-
-  - name: "Set timezone to '{{ windows_timezone }}'"
-    win_timezone:
-      timezone: "{{ windows_timezone }}"
-
-  - name: Set fact for Domain Path
-    set_fact:
-      domain_path: "DC={{ dns_domain_name.split('.') | join(',DC=') }}"
-
-  - name: Set DNS to primary domain controller
-    win_dns_client:
-      adapter_names: '*'
-      ipv4_addresses:
-        - "{{ hostvars[groups['dc'][0]].ansible_host }}"
 
   - name: Domain join
     win_domain_membership:

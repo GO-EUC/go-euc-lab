@@ -19,6 +19,18 @@
 
 - name: Install and configure Citrix Delivery Controller
   hosts: citrix_ddc
+  # Domain credentials need the DC reachable over DNS; the join play above
+  # re-points DNS, then this wait absorbs any brief auth settle time.
+  gather_facts: no
+  pre_tasks:
+    - name: Wait for domain credentials to be accepted
+      ansible.builtin.wait_for_connection:
+        timeout: 600
+        sleep: 15
+      retries: 5
+      delay: 15
+    - name: Gathering Facts
+      ansible.builtin.setup:
   roles:
     - citrix-delivery-controller
   vars_files:
