@@ -31,8 +31,8 @@
   citrix_hosting_connection:
     name: Default
     type: vSphere
-    host_address: 10.2.0.5
-    host_username: administrator@vsphere.local
+    host_address: "{{ vmware.vsphere.host }}"
+    host_username: "{{ vmware.vsphere.username }}"
     host_password: "{{vsphere_password}}"
     host_datacenter: GO
     host_cluster: Infra

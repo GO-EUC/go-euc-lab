@@ -25,3 +25,6 @@
     - citrix.yml
     - ansible.yml
     - domain.yml
+    # vmware.yml supplies the vSphere endpoint for the hosting connection
+    # (the task only runs on the VMware platform).
+    - vmware.yml

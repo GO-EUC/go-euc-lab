@@ -1,8 +1,11 @@
 ---
 citrix:
-  version: '2407'
-  source: Citrix_Virtual_Apps_and_Desktops_7_2407.iso
-  path: "http://10.2.0.6:8080/Citrix/CVAD"
+  # Version and ISO name are discovered from the software store listing at
+  # run time (see vault.yml); the pinned values only apply when discovery is
+  # unavailable. The store address comes from the pipeline (software_store).
+  version: "{{ hostvars['localhost']['citrix_version_discovered'] | default('2407') }}"
+  source: "{{ hostvars['localhost']['citrix_source_discovered'] | default('Citrix_Virtual_Apps_and_Desktops_7_2407.iso') }}"
+  path: "{{ software_store | default('http://10.2.0.6:8080') }}/Citrix/CVAD"
   site: Default
   database_port: 1433
   database_site: CVAD_Site_DB
@@ -13,7 +16,7 @@ citrix:
   scope: All
   grooming: 365
   optimizer:
-    path: "http://10.2.0.6:8080/Citrix/Optimizer"
+    path: "{{ software_store | default('http://10.2.0.6:8080') }}/Citrix/Optimizer"
     version: 3103
   licensing:
     port: 27000

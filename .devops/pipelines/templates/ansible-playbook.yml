@@ -62,7 +62,10 @@ jobs:
         $env:build="${{ parameters.build }}"
         $env:platform="${{ parameters.platform }}"
 
-        $ansible_param = "-i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }}"
+        # software_store points at the NGINX container on the control-plane VM
+        # (the same host that runs Postgres); the playbooks use it to discover
+        # installer versions from the autoindex listings.
+        $ansible_param = "-i ${{ parameters.terraform_path }}/inventory -e vault_token=${{ parameters.vault_token }} -e vault_addr=${{ parameters.vault_addr }} -e software_store=http://$(postgress_address):8080"
         if ($env:build -ne "none") {
           Write-Output "Build select"
           [int]$build_id = $env:build -replace "[^0-9]" , ''

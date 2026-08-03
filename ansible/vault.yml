@@ -94,3 +94,90 @@
     influx_token: "{{ influx.data.data.token | default('') }}"
     influx_url: "{{ influx.data.data.url | default('https://influx.logitblog.com') }}"
     influx_org: "{{ influx.data.data.org | default('GO') }}"
+
+# ---------------------------------------------------------------------------
+# Software store discovery. The NGINX store serves autoindex listings, so the
+# newest Citrix CVAD version (Citrix/CVAD/<version>/<iso>) is resolved at run
+# time instead of hardcoding it in vars/citrix.yml. Best-effort: when the
+# store address is not passed in or the Citrix content is missing, the vars
+# file falls back to its pinned defaults.
+- name: Read the CVAD folder listing from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/CVAD/"
+    return_content: true
+  register: cvad_index
+  failed_when: false
+  when: software_store is defined
+
+- name: Collect the CVAD version folders
+  ansible.builtin.set_fact:
+    cvad_versions: "{{ cvad_index.content | default('') | regex_findall('href=\"([0-9]+)/\"') }}"
+  when:
+    - software_store is defined
+    - cvad_index.status | default(0) == 200
+
+- name: Set the discovered CVAD version
+  ansible.builtin.set_fact:
+    citrix_version_discovered: "{{ cvad_versions | map('int') | max | string }}"
+  when: cvad_versions | default([]) | length > 0
+
+- name: Read the latest CVAD version folder from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/CVAD/{{ citrix_version_discovered }}/"
+    return_content: true
+  register: cvad_folder
+  failed_when: false
+  when: citrix_version_discovered is defined
+
+- name: Set the discovered CVAD ISO name
+  ansible.builtin.set_fact:
+    citrix_source_discovered: "{{ cvad_folder.content | regex_findall('href=\"([^\"]+[.]iso)\"') | first }}"
+  when:
+    - citrix_version_discovered is defined
+    - cvad_folder.status | default(0) == 200
+    - cvad_folder.content | default('') | regex_findall('href=\"([^\"]+[.]iso)\"') | length > 0
+
+# Same discovery for VMware Horizon (VMware/Horizon/<version>/<installers>).
+- name: Read the Horizon folder listing from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/VMware/Horizon/"
+    return_content: true
+  register: horizon_index
+  failed_when: false
+  when: software_store is defined
+
+- name: Collect the Horizon version folders
+  ansible.builtin.set_fact:
+    horizon_versions: "{{ horizon_index.content | default('') | regex_findall('href=\"([0-9]+)/\"') }}"
+  when:
+    - software_store is defined
+    - horizon_index.status | default(0) == 200
+
+- name: Set the discovered Horizon version
+  ansible.builtin.set_fact:
+    horizon_version_discovered: "{{ horizon_versions | map('int') | max | string }}"
+  when: horizon_versions | default([]) | length > 0
+
+- name: Read the latest Horizon version folder from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/VMware/Horizon/{{ horizon_version_discovered }}/"
+    return_content: true
+  register: horizon_folder
+  failed_when: false
+  when: horizon_version_discovered is defined
+
+- name: Set the discovered Horizon Connection Server installer
+  ansible.builtin.set_fact:
+    horizon_server_discovered: "{{ horizon_folder.content | regex_findall('href=\"(VMware-Horizon-Connection-Server[^\"]+[.]exe)\"') | first }}"
+  when:
+    - horizon_version_discovered is defined
+    - horizon_folder.status | default(0) == 200
+    - horizon_folder.content | default('') | regex_findall('href=\"(VMware-Horizon-Connection-Server[^\"]+[.]exe)\"') | length > 0
+
+- name: Set the discovered Horizon Agent installer
+  ansible.builtin.set_fact:
+    horizon_agent_discovered: "{{ horizon_folder.content | regex_findall('href=\"(VMware-Horizon-Agent[^\"]+[.]exe)\"') | first }}"
+  when:
+    - horizon_version_discovered is defined
+    - horizon_folder.status | default(0) == 200
+    - horizon_folder.content | default('') | regex_findall('href=\"(VMware-Horizon-Agent[^\"]+[.]exe)\"') | length > 0
