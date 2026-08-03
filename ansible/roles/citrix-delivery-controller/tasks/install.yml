@@ -21,10 +21,14 @@
       register: result
       until: result is not failed
 
+    # No NET-Framework-Core (.NET 3.5): its payload is in "Removed" state on
+    # current Server images, so installing it reaches out to Windows Update
+    # (error 0x8024402c when unreachable). Modern CVAD requires .NET 4.8,
+    # which the 45 features below cover; 3.5 was only needed by 7.x-era
+    # releases. Everything listed installs from the local component store.
     - name: Install Citrix Delivery Controller prerequisites
       win_feature:
         name:
-          - NET-Framework-Core
           - NET-Framework-45-Core
           - NET-Framework-45-ASPNET
           - GPMC

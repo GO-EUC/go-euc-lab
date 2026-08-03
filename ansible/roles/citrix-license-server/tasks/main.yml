@@ -21,11 +21,14 @@
       register: result
       until: result is not failed
 
+    # No NET-Framework-Core/-Features (.NET 3.5): the payload is in "Removed"
+    # state on current Server images, so installing it reaches out to Windows
+    # Update (error 0x8024402c when unreachable). The license server needs
+    # .NET 4.x, covered by the 45 features, which install from the local
+    # component store.
     - name: Install Citrix License Server prerequisites
       win_feature:
         name:
-          - NET-Framework-Core
-          - NET-Framework-Features
           - NET-Framework-45-Features
           - NET-Framework-45-Core
           - NET-Framework-45-ASPNET
