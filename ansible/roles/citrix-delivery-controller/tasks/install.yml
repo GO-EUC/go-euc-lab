@@ -222,14 +222,153 @@
       register: sqllocaldb_installed
       failed_when: not sqllocaldb_installed.stat.exists
 
-    - name: Clear pending reboot after media prerequisites
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
-      vars:
-        pending_reboot_check_name: Check for pending reboot after media prerequisites
-        pending_reboot_reboot_name: Reboot to clear pending reboot after media prerequisites
+    # SqlLocalDB/VC++ often leave MSI in a dirty state without setting the
+    # usual pending-reboot registry keys. Always reboot so Web Studio's IIS
+    # custom actions do not hit Error 1719 (msiserver inaccessible).
+    - name: Reboot after media prerequisites to settle MSI state
+      ansible.windows.win_reboot:
+        reboot_timeout: 3600
 
     # ISO mount is lost across the prereq reboot above.
     - name: Remount the Citrix installation ISO for meta-installer
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    - name: Discover remaining Support packages on Citrix media
+      win_shell: |
+        $root = '{{ disk_image_out.mount_paths[0] }}'
+        $find = {
+          param($patterns)
+          foreach ($p in $patterns) {
+            $hit = Get-ChildItem -Path $root -Recurse -Filter $p -File -ErrorAction SilentlyContinue |
+              Select-Object -First 1 -ExpandProperty FullName
+            if ($hit) { return $hit }
+          }
+          return ''
+        }
+        [pscustomobject]@{
+          webview2 = & $find @('*WebView2*.exe', '*MicrosoftEdgeWebView2RuntimeInstaller*.exe')
+          desktop_runtime_x86 = & $find @('windowsdesktop-runtime*win-x86.exe', '*DesktopRuntime*x86*.exe')
+          desktop_runtime_x64 = & $find @('windowsdesktop-runtime*win-x64.exe', '*DesktopRuntime*x64*.exe')
+          webstudio = (Join-Path $root 'x64\DesktopStudio\WebStudio_x64.msi')
+        } | ConvertTo-Json -Compress
+      args:
+        executable: powershell
+      register: citrix_media_packages
+      changed_when: false
+
+    - name: Parse discovered Citrix media package paths
+      ansible.builtin.set_fact:
+        citrix_media_pkg: "{{ citrix_media_packages.stdout | from_json }}"
+
+    - name: Pre-install Edge WebView2 from Citrix media
+      win_package:
+        path: "{{ citrix_media_pkg.webview2 }}"
+        arguments: /silent /install
+        state: present
+        expected_return_code: [0, 1638, 3010]
+      when: citrix_media_pkg.webview2 | length > 0
+
+    - name: Pre-install .NET Desktop Runtime x86 from Citrix media
+      win_package:
+        path: "{{ citrix_media_pkg.desktop_runtime_x86 }}"
+        arguments: /install /quiet /norestart
+        state: present
+        expected_return_code: [0, 1638, 3010]
+      when: citrix_media_pkg.desktop_runtime_x86 | length > 0
+
+    - name: Pre-install .NET Desktop Runtime x64 from Citrix media
+      win_package:
+        path: "{{ citrix_media_pkg.desktop_runtime_x64 }}"
+        arguments: /install /quiet /norestart
+        state: present
+        expected_return_code: [0, 1638, 3010]
+      when: citrix_media_pkg.desktop_runtime_x64 | length > 0
+
+    # Web Studio's deferred StartIIS7ConfigTransaction CA dies with 1719 when
+    # nested under XenDesktopServerSetup while IIS/WAS are live. Install the
+    # MSI standalone with IIS stopped so the meta-installer can skip it.
+    - name: Stop IIS before standalone Web Studio install
+      win_service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - W3SVC
+        - WAS
+      failed_when: false
+
+    - name: Ensure Windows Installer service is running before Web Studio
+      win_service:
+        name: msiserver
+        state: started
+        start_mode: manual
+
+    - name: Pre-install Web Studio from Citrix media
+      win_shell: |
+        $ErrorActionPreference = 'Stop'
+        $msi = '{{ citrix_media_pkg.webstudio }}'
+        $log = 'C:\Logs\WebStudio-preinstall.log'
+        $productCode = '{CC2CF8E9-E9A4-445A-8D32-FA0537DDECE9}'
+        if (-not (Test-Path $msi)) {
+          Write-Error "Web Studio MSI not found at $msi"
+          exit 1
+        }
+        $marker = 'C:\Program Files\Citrix\Web Studio'
+        if (Test-Path $marker) { exit 0 }
+
+        # Clear dirty product registration left by a previous 1719 rollback.
+        $uninst = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
+        if (-not $uninst) {
+          $uninst = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
+        }
+        if ($uninst) {
+          Write-Host "Removing leftover Web Studio product $productCode"
+          Start-Process -FilePath msiexec.exe -ArgumentList @(
+            '/x', $productCode, '/qn', 'REBOOT=ReallySuppress'
+          ) -Wait -PassThru | Out-Null
+          Start-Sleep -Seconds 5
+        }
+
+        $p = Start-Process -FilePath msiexec.exe -ArgumentList @(
+          '/i', "`"$msi`"",
+          '/qn',
+          'REBOOT=ReallySuppress',
+          'INSTALLLOCATION=C:\Program Files\Citrix',
+          'ARPSYSTEMCOMPONENT=1',
+          '/L*v', "`"$log`""
+        ) -Wait -PassThru
+        if ($p.ExitCode -in @(0, 1638, 3010)) { exit 0 }
+        Write-Error "Web Studio msiexec failed with exit code $($p.ExitCode). See $log"
+        exit $p.ExitCode
+      args:
+        executable: powershell
+      register: webstudio_install
+      retries: 2
+      delay: 30
+      until: webstudio_install.rc == 0
+      when: citrix_media_pkg.webstudio | length > 0
+      vars:
+        ansible_winrm_operation_timeout_sec: 3600
+        ansible_winrm_read_timeout_sec: 3700
+
+    - name: Start IIS after standalone Web Studio install
+      win_service:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - WAS
+        - W3SVC
+      failed_when: false
+
+    - name: Clear pending reboot after Web Studio pre-install
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Web Studio pre-install
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Web Studio pre-install
+
+    - name: Remount the Citrix installation ISO after Web Studio pre-install
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
@@ -245,30 +384,39 @@
         state: present
         expected_return_code: [0, 3, 3010]
       register: citrix_installation
+      # WinRM HTTP 400 / credential rejection during MSI work is reported as
+      # failed, not unreachable — ignore both and recover below.
       ignore_unreachable: true
+      ignore_errors: true
       vars:
         ansible_winrm_operation_timeout_sec: 7200
         ansible_winrm_read_timeout_sec: 7300
 
-    # The meta-installer can still reboot for prerequisites even with /noreboot.
-    - name: Wait for WinRM after installer reboot
+    - name: Remember whether Citrix meta-installer needs recovery
+      ansible.builtin.set_fact:
+        citrix_install_needs_recovery: "{{ citrix_installation is failed or citrix_installation is unreachable }}"
+
+    # The meta-installer can still reboot / kill WinRM even with /noreboot.
+    - name: Wait for WinRM after installer disruption
       ansible.builtin.wait_for_connection:
         timeout: 1800
         sleep: 15
-        delay: 30
-      when: citrix_installation is unreachable
+        delay: 45
+      when: citrix_install_needs_recovery | bool
 
     - name: Unmount the Citrix installation ISO
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: absent
       register: disk_image_out
+      ignore_unreachable: true
+      ignore_errors: true
 
     - name: Reboot to complete Citrix Delivery Controller installation
       ansible.windows.win_reboot:
         reboot_timeout: 3600
       when:
-        - citrix_installation is not unreachable
+        - not (citrix_install_needs_recovery | bool)
         - citrix_installation.reboot_required | default(false)
 
     - name: Clear pending reboot after Citrix install
@@ -284,12 +432,17 @@
         state: absent
       register: install_resume
 
+    - name: Check for copied meta-installer resume binary
+      win_stat:
+        path: C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopServerSetup.exe
+      register: citrix_resume_bin
+
     - name: Mount the Citrix installation ISO for resume
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
       register: disk_image_out
-      when: install_resume.changed
+      when: install_resume.changed or citrix_resume_bin.stat.exists
 
     - name: Resume the Citrix Delivery Controller installation
       win_package:
@@ -298,25 +451,49 @@
         expected_return_code: [0, 3, 3010]
       register: citrix_resume
       ignore_unreachable: true
-      when: install_resume.changed
+      ignore_errors: true
+      when: install_resume.changed or (citrix_install_needs_recovery | bool and citrix_resume_bin.stat.exists)
       vars:
         ansible_winrm_operation_timeout_sec: 7200
         ansible_winrm_read_timeout_sec: 7300
 
-    - name: Wait for WinRM after resume reboot
+    - name: Wait for WinRM after resume disruption
       ansible.builtin.wait_for_connection:
         timeout: 1800
         sleep: 15
-        delay: 30
+        delay: 45
       when:
-        - install_resume.changed
-        - citrix_resume is unreachable
+        - citrix_resume is defined
+        - citrix_resume is failed or citrix_resume is unreachable
+
+    - name: Remount the Citrix installation ISO for meta-installer retry
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+      when:
+        - citrix_install_needs_recovery | bool
+        - not citrix_resume_bin.stat.exists
+
+    - name: Retry Citrix Delivery Controller role after recovery
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+        arguments: /components webstudio,controller,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        state: present
+        expected_return_code: [0, 3, 3010]
+      register: citrix_installation_retry
+      when:
+        - citrix_install_needs_recovery | bool
+        - not citrix_resume_bin.stat.exists
+      vars:
+        ansible_winrm_operation_timeout_sec: 7200
+        ansible_winrm_read_timeout_sec: 7300
 
     - name: Unmount the Citrix installation ISO after resume
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: absent
-      when: install_resume.changed
+      when: install_resume.changed or citrix_resume_bin.stat.exists or (citrix_install_needs_recovery | bool)
 
     - name: Clear pending reboot after Citrix resume
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
