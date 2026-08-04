@@ -25,4 +25,6 @@ terraform**/deploy.json
 /manifests/*.json
 
 #Settings JSON
-settings.json
+settings.json.local-run/
+ansible/citrix-delivery-controller-direct.yml
+.local-run/

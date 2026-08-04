@@ -73,4 +73,10 @@ jobs:
           $ansible_param += " -e build_id=$($build_id -1)"
         }
 
-        Start-Process ansible-playbook -ArgumentList "${{ parameters.ansible_path }}/${{ parameters.ansible_playbook }} $ansible_param"
+        # Invoke directly (not Start-Process) so ADO waits on ansible-playbook
+        # and propagates its exit code instead of orphaning the process.
+        $playbook = "${{ parameters.ansible_path }}/${{ parameters.ansible_playbook }}"
+        & ansible-playbook $playbook ($ansible_param -split '\s+')
+        if ($LASTEXITCODE -ne 0) {
+          exit $LASTEXITCODE
+        }

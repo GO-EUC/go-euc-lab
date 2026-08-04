@@ -1,0 +1,50 @@
+{
+  "repo_root": "\\Users\\leeej\\Source\\GO-EUC-LAB",
+  "domain_name": "go.euc",
+  "timezone": "GMT Standard Time",
+  "ado_url": "https://dev.azure.com/leeejeffries",
+  "ado_agents": 5,
+  "prism": {
+    "endpoint": "192.168.101.171",
+    "username": "admin",
+    "cluster_uuid": "00065383-758d-2d43-4e23-34800df4ec14",
+    "storage_container_uuid": "a347c3bc-228f-4b54-939a-c66b3094afd4",
+    "subnet_uuid": "2f5013b0-8ed0-4436-926e-d2860db7fa5d",
+    "insecure": true
+  },
+  "prism_central": {
+    "endpoint": "192.168.101.174",
+    "username": "admin",
+    "insecure": true
+  },
+  "network": {
+    "cidr": "192.168.102.0/24",
+    "gateway": 1,
+    "dns": 1,
+    "start": 10,
+    "end": 250
+  },
+  "docker": {
+    "name": "dckr-1",
+    "user": "gouser",
+    "ip": 6,
+    "static_ip": "192.168.102.5",
+    "image_source_uri": "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+  },
+  "build": {
+    "user": "gouser",
+    "ip": 20
+  },
+  "monitoring": {
+    "external": true,
+    "influx": {
+      "url": "https://influx.leeejeffries.com",
+      "org": "monitoring",
+      "token": "GjcyPiRF8ofGxToHzqxWGfWM8mVBvRBP6CP0foivmF-J44pZRfhXuHNr28SZQ1BebYDGg8HtzgporRtAo2k7Kw=="
+    },
+    "grafana": {
+      "url": "https://grafana.leeejeffries.com"
+    }
+  },
+  "software_store": "\\Users\\leeej\\Software"
+}

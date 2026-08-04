@@ -252,7 +252,6 @@
           webview2 = & $find @('*WebView2*.exe', '*MicrosoftEdgeWebView2RuntimeInstaller*.exe')
           desktop_runtime_x86 = & $find @('windowsdesktop-runtime*win-x86.exe', '*DesktopRuntime*x86*.exe')
           desktop_runtime_x64 = & $find @('windowsdesktop-runtime*win-x64.exe', '*DesktopRuntime*x64*.exe')
-          webstudio = (Join-Path $root 'x64\DesktopStudio\WebStudio_x64.msi')
         } | ConvertTo-Json -Compress
       args:
         executable: powershell
@@ -287,100 +286,27 @@
         expected_return_code: [0, 1638, 3010]
       when: citrix_media_pkg.desktop_runtime_x64 | length > 0
 
-    # Web Studio's deferred StartIIS7ConfigTransaction CA dies with 1719 when
-    # nested under XenDesktopServerSetup while IIS/WAS are live. Install the
-    # MSI standalone with IIS stopped so the meta-installer can skip it.
-    - name: Stop IIS before standalone Web Studio install
-      win_service:
-        name: "{{ item }}"
-        state: stopped
-      loop:
-        - W3SVC
-        - WAS
-      failed_when: false
-
-    - name: Ensure Windows Installer service is running before Web Studio
-      win_service:
-        name: msiserver
-        state: started
-        start_mode: manual
-
-    - name: Pre-install Web Studio from Citrix media
-      win_shell: |
-        $ErrorActionPreference = 'Stop'
-        $msi = '{{ citrix_media_pkg.webstudio }}'
-        $log = 'C:\Logs\WebStudio-preinstall.log'
-        $productCode = '{CC2CF8E9-E9A4-445A-8D32-FA0537DDECE9}'
-        if (-not (Test-Path $msi)) {
-          Write-Error "Web Studio MSI not found at $msi"
-          exit 1
-        }
-        $marker = 'C:\Program Files\Citrix\Web Studio'
-        if (Test-Path $marker) { exit 0 }
-
-        # Clear dirty product registration left by a previous 1719 rollback.
-        $uninst = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
-        if (-not $uninst) {
-          $uninst = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\$productCode" -ErrorAction SilentlyContinue
-        }
-        if ($uninst) {
-          Write-Host "Removing leftover Web Studio product $productCode"
-          Start-Process -FilePath msiexec.exe -ArgumentList @(
-            '/x', $productCode, '/qn', 'REBOOT=ReallySuppress'
-          ) -Wait -PassThru | Out-Null
-          Start-Sleep -Seconds 5
-        }
-
-        $p = Start-Process -FilePath msiexec.exe -ArgumentList @(
-          '/i', "`"$msi`"",
-          '/qn',
-          'REBOOT=ReallySuppress',
-          'INSTALLLOCATION=C:\Program Files\Citrix',
-          'ARPSYSTEMCOMPONENT=1',
-          '/L*v', "`"$log`""
-        ) -Wait -PassThru
-        if ($p.ExitCode -in @(0, 1638, 3010)) { exit 0 }
-        Write-Error "Web Studio msiexec failed with exit code $($p.ExitCode). See $log"
-        exit $p.ExitCode
-      args:
-        executable: powershell
-      register: webstudio_install
-      retries: 2
-      delay: 30
-      until: webstudio_install.rc == 0
-      when: citrix_media_pkg.webstudio | length > 0
-      vars:
-        ansible_winrm_operation_timeout_sec: 3600
-        ansible_winrm_read_timeout_sec: 3700
-
-    - name: Start IIS after standalone Web Studio install
-      win_service:
-        name: "{{ item }}"
-        state: started
-      loop:
-        - WAS
-        - W3SVC
-      failed_when: false
-
-    - name: Clear pending reboot after Web Studio pre-install
+    - name: Clear pending reboot after Edge/Desktop Runtime
       ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
       vars:
-        pending_reboot_check_name: Check for pending reboot after Web Studio pre-install
-        pending_reboot_reboot_name: Reboot to clear pending reboot after Web Studio pre-install
+        pending_reboot_check_name: Check for pending reboot after Edge/Desktop Runtime
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Edge/Desktop Runtime
 
-    - name: Remount the Citrix installation ISO after Web Studio pre-install
+    - name: Remount the Citrix installation ISO for controller install
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
       register: disk_image_out
 
+    # Two-pass install: Web Studio's IIS custom actions (Error 1719) and
+    # nested msiexec under the meta-installer hang/kill WinRM. Land the
+    # Delivery Controller first, then install Web Studio separately.
     - name: Install Citrix Delivery Controller role
       win_package:
         path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
-        # desktopstudio was removed from XenDesktopServerSetup in CVAD 2507+:
-        # Web Studio (webstudio) is the supported management console now.
+        # Pass 1: controller + Director only. Web Studio is installed after.
         # Valid components: controller, webstudio, desktopdirector, licenseserver.
-        arguments: /components webstudio,controller,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        arguments: /components controller,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
         state: present
         expected_return_code: [0, 3, 3010]
       register: citrix_installation
@@ -478,7 +404,7 @@
     - name: Retry Citrix Delivery Controller role after recovery
       win_package:
         path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
-        arguments: /components webstudio,controller,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        arguments: /components controller,desktopdirector /configure_firewall /nosql /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
         state: present
         expected_return_code: [0, 3, 3010]
       register: citrix_installation_retry
@@ -506,6 +432,70 @@
         path: C:\Program Files\Citrix\Broker\Service\BrokerService.exe
       register: citrix_broker_installed
       failed_when: not citrix_broker_installed.stat.exists
+
+    # Pass 2: Web Studio after the controller is on disk. Isolates the IIS MSI
+    # custom actions that previously hung WinRM / failed with Error 1719.
+    - name: Remount the Citrix installation ISO for Web Studio
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+
+    - name: Install Citrix Web Studio
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+        arguments: /components webstudio /configure_firewall /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        state: present
+        expected_return_code: [0, 3, 3010]
+      register: citrix_webstudio
+      ignore_unreachable: true
+      ignore_errors: true
+      vars:
+        ansible_winrm_operation_timeout_sec: 3600
+        ansible_winrm_read_timeout_sec: 3700
+
+    - name: Wait for WinRM after Web Studio disruption
+      ansible.builtin.wait_for_connection:
+        timeout: 1800
+        sleep: 15
+        delay: 45
+      when: citrix_webstudio is failed or citrix_webstudio is unreachable
+
+    - name: Clear pending reboot after Web Studio
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Web Studio
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Web Studio
+
+    - name: Remount the Citrix installation ISO for Web Studio retry
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: present
+      register: disk_image_out
+      when: citrix_webstudio is failed or citrix_webstudio is unreachable
+
+    - name: Retry Citrix Web Studio install
+      win_package:
+        path: "{{ disk_image_out.mount_paths[0] }}\\x64\\XenDesktop Setup\\XenDesktopServerSetup.exe"
+        arguments: /components webstudio /configure_firewall /noreboot /quiet /ignore_hw_check_failure /logpath C:\Logs
+        state: present
+        expected_return_code: [0, 3, 3010]
+      register: citrix_webstudio_retry
+      when: citrix_webstudio is failed or citrix_webstudio is unreachable
+      vars:
+        ansible_winrm_operation_timeout_sec: 3600
+        ansible_winrm_read_timeout_sec: 3700
+
+    - name: Unmount the Citrix installation ISO after Web Studio
+      win_disk_image:
+        image_path: "{{ iso_path }}"
+        state: absent
+
+    - name: Clear pending reboot after Web Studio retry
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+      vars:
+        pending_reboot_check_name: Check for pending reboot after Web Studio retry
+        pending_reboot_reboot_name: Reboot to clear pending reboot after Web Studio retry
 
     - name: Add registry for future installation check
       win_regedit:
