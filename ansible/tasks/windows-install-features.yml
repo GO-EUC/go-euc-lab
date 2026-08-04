@@ -1,0 +1,66 @@
+---
+# Install Windows features with recovery for mid-install WinRM drops.
+# WAS/IIS enablement often restarts HTTP.sys / WinRM and surfaces as
+# InvalidCredentialsError (failed, not unreachable) or a full reboot.
+#
+# Vars:
+#   windows_feature_names: list of feature names (required)
+#   windows_feature_task_name: task label (optional)
+
+- name: "{{ windows_feature_task_name | default('Install Windows features') }}"
+  ansible.windows.win_feature:
+    name: "{{ windows_feature_names }}"
+    state: present
+  register: win_feature
+  ignore_unreachable: true
+  ignore_errors: true
+  vars:
+    ansible_winrm_operation_timeout_sec: 3600
+    ansible_winrm_read_timeout_sec: 3700
+
+- name: Remember whether Windows feature install needs recovery
+  ansible.builtin.set_fact:
+    win_feature_needs_recovery: "{{ win_feature is failed or win_feature is unreachable }}"
+
+- name: Wait for WinRM after Windows features disruption
+  ansible.builtin.wait_for_connection:
+    timeout: 1800
+    sleep: 15
+    delay: 45
+  when: win_feature_needs_recovery | bool
+
+- name: Clear pending reboot after Windows features disruption
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+  vars:
+    pending_reboot_check_name: >-
+      Check for pending reboot after {{ windows_feature_task_name | default('Windows features') }} disruption
+    pending_reboot_reboot_name: >-
+      Reboot to clear pending reboot after {{ windows_feature_task_name | default('Windows features') }} disruption
+  when: win_feature_needs_recovery | bool
+
+- name: "{{ (windows_feature_task_name | default('Install Windows features')) + ' (retry)' }}"
+  ansible.windows.win_feature:
+    name: "{{ windows_feature_names }}"
+    state: present
+  register: win_feature
+  when: win_feature_needs_recovery | bool
+  until: win_feature is succeeded
+  retries: 12
+  delay: 60
+  ignore_unreachable: true
+  vars:
+    ansible_winrm_operation_timeout_sec: 3600
+    ansible_winrm_read_timeout_sec: 3700
+
+- name: Reboot after Windows features
+  ansible.windows.win_reboot:
+    reboot_timeout: 3600
+  when: win_feature.reboot_required | default(false)
+
+- name: Clear pending reboot after Windows features
+  ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
+  vars:
+    pending_reboot_check_name: >-
+      Check for pending reboot after {{ windows_feature_task_name | default('Windows features') }}
+    pending_reboot_reboot_name: >-
+      Reboot to clear pending reboot after {{ windows_feature_task_name | default('Windows features') }}

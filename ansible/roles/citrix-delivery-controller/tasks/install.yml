@@ -27,9 +27,13 @@
     # Match the IIS/WAS feature set XenDesktopServerSetup enables via DISM so
     # the meta-installer does not run feature enablement (and reboot) itself.
     # Omit NetFx3 / NET-Framework-Core: FoD payload is Removed on Server 2022.
-    - name: Install Citrix Delivery Controller Windows features
-      win_feature:
-        name:
+    # Split tools vs WAS/IIS: enabling WAS/IIS often restarts WinRM and shows up
+    # as InvalidCredentialsError mid-task; the helper waits/retries through that.
+    - name: Install Citrix Delivery Controller Windows features (tools)
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-install-features.yml"
+      vars:
+        windows_feature_task_name: Install Citrix Delivery Controller Windows features (tools)
+        windows_feature_names:
           - NET-Framework-45-Core
           - NET-Framework-45-ASPNET
           - NET-WCF-Services45
@@ -40,6 +44,12 @@
           - RDS-Licensing-UI
           - Remote-Assistance
           - Telnet-Client
+
+    - name: Install Citrix Delivery Controller Windows features (IIS)
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-install-features.yml"
+      vars:
+        windows_feature_task_name: Install Citrix Delivery Controller Windows features (IIS)
+        windows_feature_names:
           - WAS
           - Web-Server
           - Web-WebServer
@@ -78,19 +88,6 @@
           - Web-Lgcy-Scripting
           - Web-WMI
           - Web-Scripting-Tools
-        state: present
-      register: win_feature
-
-    - name: Reboot machine for Windows Features
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: win_feature.reboot_required
-
-    - name: Clear pending reboot after Windows Features
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/windows-clear-pending-reboot.yml"
-      vars:
-        pending_reboot_check_name: Check for pending reboot after Windows Features
-        pending_reboot_reboot_name: Reboot to clear pending reboot after Windows Features
 
     - name: Create Log Folder
       win_file:
