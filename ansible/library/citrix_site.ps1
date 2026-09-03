@@ -283,17 +283,33 @@ if ($state -eq "absent") {
                 $joined = $true
             }
 
-            # If the server is not joined, it will join based on the exsisting controller form the database
+            # If the server is not joined, it will join based on the existing
+            # controller from the database. Incomplete prior runs can leave the
+            # site databases present with no controller rows; recreate the site
+            # in that case instead of calling Add-XDController with an empty address.
             if ($joined -eq $false) {
-                if ($machines.ItemArray.Count -eq 1) {
-                    $controller = $machines.MachineName
+                $controller = $null
+                if ($null -ne $machines -and $machines.ItemArray.Count -ge 1) {
+                    $controller = [string]$machines.MachineName
+                    if ([string]::IsNullOrWhiteSpace($controller) -and $machines.ItemArray.Count -ge 1) {
+                        $controller = [string]$machines.ItemArray[0]
+                    }
                 }
 
-                try {
-                    Add-XDController -SiteControllerAddress $controller  | Out-Null
-                    $result.changed = $true
-                } catch {
-                    Fail-Json $result "An error occurred trying to join using controller $controller. Error: $($_)"
+                if ([string]::IsNullOrWhiteSpace($controller)) {
+                    try {
+                        New-XDSite -DatabaseServer $databaseServer -LoggingDatabaseName $databaseNameLogging -MonitorDatabaseName $databaseNameMonitoring -SiteDatabaseName $databaseNameSite -SiteName $siteName -AdminAddress $env:ComputerName -ErrorAction Stop | Out-Null
+                        $result.changed = $true
+                    } catch {
+                        Fail-Json $result "Site databases exist but contain no controller; recreating the site failed. Error: $($_)"
+                    }
+                } else {
+                    try {
+                        Add-XDController -SiteControllerAddress $controller | Out-Null
+                        $result.changed = $true
+                    } catch {
+                        Fail-Json $result "An error occurred trying to join using controller $controller. Error: $($_)"
+                    }
                 }
             }
         }
