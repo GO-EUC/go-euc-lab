@@ -79,6 +79,9 @@ source "nutanix" "windows-server" {
   }
 
   // Removable Media Settings
+  // Label is used by windows-init.cmd when AHV does not assign the Packer
+  // CD-ROM a drive letter (common with the OS ISO + VirtIO ISO already attached).
+  cd_label = "PACKER"
   cd_files = [
     "${path.cwd}/packer/nutanix/scripts/${var.vm_guest_os_family}/"
   ]
@@ -100,6 +103,8 @@ source "nutanix" "windows-server" {
       network_gateway      = cidrhost(var.network_cidr, var.network_gateway)
       network_dns          = cidrhost(var.network_cidr, var.network_dns)
     })
+    "windows-init.ps1" = file("${path.cwd}/packer/nutanix/scripts/windows/windows-init.ps1")
+    "windows-init.cmd" = file("${path.cwd}/packer/nutanix/scripts/windows/windows-init.cmd")
   }
 
   // Boot and Provisioning Settings

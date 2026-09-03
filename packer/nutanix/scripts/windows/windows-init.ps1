@@ -9,6 +9,7 @@
 #>
 
 $ErrorActionPreference = "Stop"
+Start-Transcript -Path "$env:SystemRoot\Temp\windows-init.log" -Force | Out-Null
 
 # Set the network profile to Private. WinRM refuses to configure on Public
 # networks and its firewall rule is scoped to the local subnet. At first logon
@@ -90,3 +91,5 @@ try {
 } catch {
     Write-Output "Failed to restart service"
 }
+
+Stop-Transcript | Out-Null
