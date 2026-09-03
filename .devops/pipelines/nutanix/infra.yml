@@ -77,8 +77,8 @@ stages:
       inputs:
         script: |
           pip3 install hvac
-          ansible-galaxy collection install community.docker
-          ansible-galaxy collection install community.hashi_vault
+          chmod +x .devops/pipelines/scripts/install-galaxy-collections.sh
+          .devops/pipelines/scripts/install-galaxy-collections.sh community.docker community.hashi_vault
     - task: PowerShell@2
       displayName: Deploy InfluxDB and Grafana
       inputs:

@@ -34,7 +34,8 @@ stages:
       displayName: Setup required packages
       inputs:
         script: |
-          ansible-galaxy collection install community.docker
+          chmod +x .devops/pipelines/scripts/install-galaxy-collections.sh
+          .devops/pipelines/scripts/install-galaxy-collections.sh community.docker
 
     - task: PowerShell@2
       displayName: ${{ parameters.display_name }}
