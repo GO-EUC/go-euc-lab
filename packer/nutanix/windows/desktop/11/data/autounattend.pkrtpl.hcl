@@ -152,19 +152,6 @@
                <Description>Prevent automatic BitLocker device encryption</Description>
                <Path>reg add HKLM\SYSTEM\CurrentControlSet\Control\BitLocker /v PreventDeviceEncryption /t REG_DWORD /d 1 /f</Path>
             </RunSynchronousCommand>
-            <!-- Enable WinRM here so Packer can connect before first logon.
-                 FirstLogonCommands used to hunt for windows-init.ps1 with
-                 Get-PSDrive, which misses AHV CD-ROMs that have no letter. -->
-            <RunSynchronousCommand wcm:action="add">
-               <Order>10</Order>
-               <Description>Enable WinRM for Packer</Description>
-               <Path>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Enable-PSRemoting -SkipNetworkProfileCheck -Force; Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value $true; Set-Item WSMan:\localhost\Service\Auth\Basic -Value $true; Set-Item WSMan:\localhost\Client\Auth\Basic -Value $true; Set-Service winrm -StartupType Automatic; Restart-Service winrm; netsh advfirewall firewall add rule name=PackerWinRM dir=in action=allow protocol=TCP localport=5985"</Path>
-            </RunSynchronousCommand>
-            <RunSynchronousCommand wcm:action="add">
-               <Order>11</Order>
-               <Description>Run windows-init.cmd from the Packer CD if it has a drive letter</Description>
-               <Path>cmd.exe /c "for %i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %i:\windows-init.cmd %i:\windows-init.cmd"</Path>
-            </RunSynchronousCommand>
          </RunSynchronous>
       </component>
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
@@ -248,10 +235,16 @@
                <Description>Disable BitLocker device encryption</Description>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
-               <!-- cmd.exe drive-letter search: Get-PSDrive misses AHV CD-ROMs
-                    that have no letter until Explorer opens them. -->
-               <CommandLine>cmd.exe /c "if exist %SystemRoot%\Temp\windows-init.ps1 (powershell.exe -NoProfile -ExecutionPolicy Bypass -File %SystemRoot%\Temp\windows-init.ps1) else (for %i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %i:\windows-init.cmd %i:\windows-init.cmd)"</CommandLine>
+               <!-- Inline WinRM so Packer can connect even if the Packer CD has
+                    no drive letter. Do not do this in specialize: Enable-PSRemoting
+                    and network-profile changes there abort Windows Setup. -->
+               <CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Enable-PSRemoting -SkipNetworkProfileCheck -Force; Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value 1; Set-Item WSMan:\localhost\Service\Auth\Basic -Value 1; Set-Item WSMan:\localhost\Client\Auth\Basic -Value 1; Set-Service winrm -StartupType Automatic; Restart-Service winrm; netsh advfirewall firewall add rule name=PackerWinRM dir=in action=allow protocol=TCP localport=5985"</CommandLine>
                <Order>4</Order>
+               <Description>Enable WinRM for Packer</Description>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
+               <CommandLine>cmd.exe /c "if exist %SystemRoot%\Temp\windows-init.ps1 (powershell.exe -NoProfile -ExecutionPolicy Bypass -File %SystemRoot%\Temp\windows-init.ps1) else (for %i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %i:\windows-init.cmd %i:\windows-init.cmd)"</CommandLine>
+               <Order>5</Order>
                <Description>Initial Configuration</Description>
             </SynchronousCommand>
          </FirstLogonCommands>
