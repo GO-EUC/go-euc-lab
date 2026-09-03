@@ -152,6 +152,14 @@
                <Description>Prevent automatic BitLocker device encryption</Description>
                <Path>reg add HKLM\SYSTEM\CurrentControlSet\Control\BitLocker /v PreventDeviceEncryption /t REG_DWORD /d 1 /f</Path>
             </RunSynchronousCommand>
+            <!-- Copy only: do not enable WinRM or change the network profile
+                 here, that aborts Windows Setup. Volume GUID paths work when
+                 the Packer CD has no drive letter. -->
+            <RunSynchronousCommand wcm:action="add">
+               <Order>10</Order>
+               <Description>Copy windows-init.ps1 from the Packer CD to disk</Description>
+               <Path>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Volume | ForEach-Object { $c = Join-Path $_.Path 'windows-init.ps1'; if (Test-Path -LiteralPath $c) { Copy-Item -LiteralPath $c C:\Windows\Temp\windows-init.ps1 -Force } }"</Path>
+            </RunSynchronousCommand>
          </RunSynchronous>
       </component>
       <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
@@ -243,8 +251,18 @@
                <Description>Enable WinRM for Packer</Description>
             </SynchronousCommand>
             <SynchronousCommand wcm:action="add">
-               <CommandLine>cmd.exe /c "if exist %SystemRoot%\Temp\windows-init.ps1 (powershell.exe -NoProfile -ExecutionPolicy Bypass -File %SystemRoot%\Temp\windows-init.ps1) else (for %i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %i:\windows-init.cmd %i:\windows-init.cmd)"</CommandLine>
+               <CommandLine>cmd.exe /c "echo firstlogon %DATE% %TIME%&gt; C:\Windows\Temp\firstlogon-init.log"</CommandLine>
                <Order>5</Order>
+               <Description>Record that FirstLogonCommands ran</Description>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
+               <CommandLine>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Volume | ForEach-Object { $c = Join-Path $_.Path 'windows-init.ps1'; if (Test-Path -LiteralPath $c) { Copy-Item -LiteralPath $c C:\Windows\Temp\windows-init.ps1 -Force; Add-Content C:\Windows\Temp\firstlogon-init.log $c } }"</CommandLine>
+               <Order>6</Order>
+               <Description>Copy windows-init.ps1 from any volume</Description>
+            </SynchronousCommand>
+            <SynchronousCommand wcm:action="add">
+               <CommandLine>cmd.exe /c "if exist C:\Windows\Temp\windows-init.ps1 (powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Windows\Temp\windows-init.ps1) else (echo windows-init.ps1 missing&gt;&gt; C:\Windows\Temp\firstlogon-init.log)"</CommandLine>
+               <Order>7</Order>
                <Description>Initial Configuration</Description>
             </SynchronousCommand>
          </FirstLogonCommands>
