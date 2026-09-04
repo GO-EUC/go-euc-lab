@@ -20,7 +20,7 @@
 
 - name: Install Citrix VDA
   win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDAWorkstationSetup_{{citrix.version}}.exe"
+    path: "{{ citrix.vda_workstation_url }}"
     arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]

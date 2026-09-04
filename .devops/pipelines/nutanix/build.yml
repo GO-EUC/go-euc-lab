@@ -52,6 +52,34 @@ stages:
 - stage: customize
   dependsOn: redeploy
   jobs:
+  # The template stage powers the build VM off. Bring it back before WinRM.
+  - job: poweron
+    displayName: Power on build VM
+    steps:
+    - task: PowerShell@2
+      displayName: Power on build-2022-1
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_FORMAT = "json"
+          $env:VAULT_ADDR = "$(vault_addr)"
+          $env:VAULT_TOKEN = "$(vault_token)"
+
+          $pe = vault kv get -format json -mount=go nutanix/prism | ConvertFrom-Json
+          $password = ConvertTo-SecureString $pe.data.password -AsPlainText -Force
+          $skipTls = ($pe.data.insecure -eq $true) -or ("$($pe.data.insecure)" -eq "true")
+
+          $helper = Join-Path "$(Build.Repository.LocalPath)" "scripts/nutanix/Invoke-PrismElement.ps1"
+          & $helper `
+            -Endpoint $pe.data.endpoint `
+            -Username $pe.data.username `
+            -Password $password `
+            -Action PowerOnVm `
+            -Name "build-2022-1" `
+            -SkipCertificateCheck:$skipTls
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # WinRM is not up the instant AHV reports ON.
+          Start-Sleep -Seconds 90
   - template: ../templates/ansible-playbook.yml
     parameters:
       ansible_path: $(Build.Repository.LocalPath)/ansible
@@ -63,6 +91,7 @@ stages:
       platform: nutanix
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+      dependsOn: poweron
 
 # Citrix 2603 MCS on Nutanix AHV Prism Central picks a VM template version
 # when creating or updating a machine catalog. Power off the customized

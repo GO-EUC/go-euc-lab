@@ -6,7 +6,7 @@
 
 - name: Download Citrix Optimizer
   win_get_url:
-    url: "{{citrix.optimizer.path}}/{{citrix.optimizer.version}}/CitrixOptimizerTool.zip"
+    url: "{{ citrix.optimizer.url }}"
     dest: C:\Temp\CitrixOptimizerTool.zip
 
 - name: Extract zip file
@@ -14,8 +14,20 @@
     src: C:\Temp\CitrixOptimizerTool.zip
     dest: C:\Temp\
 
+- name: Find the Citrix Optimizer engine
+  ansible.windows.win_find:
+    paths: C:\Temp
+    patterns: CtxOptimizerEngine.ps1
+    recurse: true
+  register: optimizer_engine
+
+- name: Fail when the Citrix Optimizer engine is missing
+  fail:
+    msg: "CtxOptimizerEngine.ps1 was not found after extracting {{ citrix.optimizer.url }}"
+  when: optimizer_engine.matched | default(0) == 0
+
 - name: Apply optimizations
-  win_shell: C:\Temp\CtxOptimizerEngine.ps1 -Template AutoSelect -Mode Execute
+  win_shell: "& '{{ optimizer_engine.files[0].path }}' -Template AutoSelect -Mode Execute"
 
 - name: Remove Temp directory structure
   win_file:

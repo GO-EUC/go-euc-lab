@@ -10,7 +10,7 @@ param(
     [securestring]$Password,
 
     [Parameter(Mandatory = $true, ParameterSetName = "Vm")]
-    [ValidateSet("CreateVm", "DeleteVm", "GetVm", "RestartVm")]
+    [ValidateSet("CreateVm", "DeleteVm", "GetVm", "RestartVm", "PowerOnVm")]
     [string]$Action,
 
     [Parameter(Mandatory = $true, ParameterSetName = "Image")]
@@ -144,6 +144,37 @@ if ($Action -eq "DeleteVm") {
         $Uuid = $existingVm.uuid
     }
     $response = Invoke-PrismRequest -Path "/PrismGateway/services/rest/v2.0/vms/$Uuid" -Method Delete
+    Wait-PrismTask -TaskUuid (Get-TaskUuid $response) | ConvertTo-Json -Depth 20
+    exit 0
+}
+
+if ($Action -eq "PowerOnVm") {
+    if ([string]::IsNullOrWhiteSpace($Uuid) -and [string]::IsNullOrWhiteSpace($Name)) {
+        throw "PowerOnVm requires -Uuid or -Name."
+    }
+    if ([string]::IsNullOrWhiteSpace($Uuid)) {
+        $existingVm = (Invoke-PrismRequest -Path "/PrismGateway/services/rest/v2.0/vms/").entities |
+            Where-Object { $_.name -eq $Name } | Select-Object -First 1
+        if (!$existingVm) {
+            throw "PowerOnVm could not find VM '$Name'."
+        }
+        $Uuid = $existingVm.uuid
+        $powerState = "$($existingVm.power_state)".ToUpperInvariant()
+    } else {
+        $existingVm = Invoke-PrismRequest -Path "/PrismGateway/services/rest/v2.0/vms/$Uuid"
+        $powerState = "$($existingVm.power_state)".ToUpperInvariant()
+        if ([string]::IsNullOrWhiteSpace($Name)) {
+            $Name = $existingVm.name
+        }
+    }
+    if ($powerState -eq "ON") {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] VM '$Name' ($Uuid) is already powered on."
+        $existingVm | ConvertTo-Json -Depth 20
+        exit 0
+    }
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Powering on VM '$Name' ($Uuid)."
+    $response = Invoke-PrismRequest -Path "/PrismGateway/services/rest/v2.0/vms/$Uuid/set_power_state" `
+        -Method Post -Body @{ transition = "ON" }
     Wait-PrismTask -TaskUuid (Get-TaskUuid $response) | ConvertTo-Json -Depth 20
     exit 0
 }

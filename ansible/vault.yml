@@ -205,6 +205,159 @@
     - cvad_versions | default([]) | length == 0
     - cvad_isos | default([]) | length > 0
 
+# VDA standalone setups may sit next to the ISO, in Citrix/CVAD/, or in a
+# VDA/ subfolder. Prefer a filename that contains the discovered version.
+- name: Collect VDA installers from the CVAD version folder
+  ansible.builtin.set_fact:
+    cvad_vda_server_files: "{{ cvad_folder.content | default('') | regex_findall('href=\"([^\"]*VDAServerSetup[^\"]*[.]exe)\"') }}"
+    cvad_vda_workstation_files: "{{ cvad_folder.content | default('') | regex_findall('href=\"([^\"]*VDAWorkstationSetup[^\"]*[.]exe)\"') }}"
+    cvad_vda_subfolders: "{{ cvad_folder.content | default('') | regex_findall('href=\"((?![.]{2}/)[^\"]*[Vv][Dd][Aa][^\"]*)/\"') }}"
+  when: cvad_folder.status | default(0) == 200
+
+- name: Read a VDA subfolder from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/CVAD/{{ citrix_version_discovered }}/{{ cvad_vda_subfolders | first }}/"
+    return_content: true
+  register: cvad_vda_folder
+  failed_when: false
+  when:
+    - citrix_version_discovered is defined
+    - cvad_vda_subfolders | default([]) | length > 0
+    - (cvad_vda_server_files | default([]) | length == 0) or (cvad_vda_workstation_files | default([]) | length == 0)
+
+- name: Merge VDA installers from the VDA subfolder
+  ansible.builtin.set_fact:
+    cvad_vda_server_files: "{{ (cvad_vda_server_files | default([])) + (cvad_vda_folder.content | default('') | regex_findall('href=\"([^\"]*VDAServerSetup[^\"]*[.]exe)\"') | map('regex_replace', '^', (cvad_vda_subfolders | first) ~ '/') | list) }}"
+    cvad_vda_workstation_files: "{{ (cvad_vda_workstation_files | default([])) + (cvad_vda_folder.content | default('') | regex_findall('href=\"([^\"]*VDAWorkstationSetup[^\"]*[.]exe)\"') | map('regex_replace', '^', (cvad_vda_subfolders | first) ~ '/') | list) }}"
+  when: cvad_vda_folder.status | default(0) == 200
+
+- name: Collect VDA installers from a flat CVAD folder
+  ansible.builtin.set_fact:
+    cvad_vda_server_files: "{{ (cvad_vda_server_files | default([])) + (cvad_index.content | default('') | regex_findall('href=\"([^\"]*VDAServerSetup[^\"]*[.]exe)\"')) }}"
+    cvad_vda_workstation_files: "{{ (cvad_vda_workstation_files | default([])) + (cvad_index.content | default('') | regex_findall('href=\"([^\"]*VDAWorkstationSetup[^\"]*[.]exe)\"')) }}"
+  when: cvad_index.status | default(0) == 200
+
+- name: Choose the VDA server installer file
+  ansible.builtin.set_fact:
+    citrix_vda_server_file: "{{ (cvad_vda_server_files | select('search', citrix_version_discovered | default('')) | list | first) | default(cvad_vda_server_files | first, true) }}"
+  when: cvad_vda_server_files | default([]) | length > 0
+
+- name: Choose the VDA workstation installer file
+  ansible.builtin.set_fact:
+    citrix_vda_workstation_file: "{{ (cvad_vda_workstation_files | select('search', citrix_version_discovered | default('')) | list | first) | default(cvad_vda_workstation_files | first, true) }}"
+  when: cvad_vda_workstation_files | default([]) | length > 0
+
+- name: Set the VDA server installer URL
+  ansible.builtin.set_fact:
+    citrix_vda_server_url: "{{ software_store }}/Citrix/CVAD/{{ citrix_version_discovered }}/{{ citrix_vda_server_file }}"
+  when:
+    - citrix_vda_server_file is defined
+    - citrix_version_discovered is defined
+    - citrix_vda_server_file is search('/') or (cvad_folder.content | default('') | regex_search('href=\"' ~ citrix_vda_server_file ~ '\"'))
+
+- name: Set the VDA server installer URL from the CVAD root
+  ansible.builtin.set_fact:
+    citrix_vda_server_url: "{{ software_store }}/Citrix/CVAD/{{ citrix_vda_server_file }}"
+  when:
+    - citrix_vda_server_file is defined
+    - citrix_vda_server_url is not defined
+
+- name: Set the VDA workstation installer URL
+  ansible.builtin.set_fact:
+    citrix_vda_workstation_url: "{{ software_store }}/Citrix/CVAD/{{ citrix_version_discovered }}/{{ citrix_vda_workstation_file }}"
+  when:
+    - citrix_vda_workstation_file is defined
+    - citrix_version_discovered is defined
+    - citrix_vda_workstation_file is search('/') or (cvad_folder.content | default('') | regex_search('href=\"' ~ citrix_vda_workstation_file ~ '\"'))
+
+- name: Set the VDA workstation installer URL from the CVAD root
+  ansible.builtin.set_fact:
+    citrix_vda_workstation_url: "{{ software_store }}/Citrix/CVAD/{{ citrix_vda_workstation_file }}"
+  when:
+    - citrix_vda_workstation_file is defined
+    - citrix_vda_workstation_url is not defined
+
+- name: Read the Citrix Optimizer folder listing from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/Optimizer/"
+    return_content: true
+  register: optimizer_index
+  failed_when: false
+  when: software_store is defined
+
+- name: Collect Optimizer version folders and zip files
+  ansible.builtin.set_fact:
+    optimizer_versions: "{{ optimizer_index.content | default('') | regex_findall('href=\"([0-9]+)/\"') }}"
+    optimizer_zips: "{{ optimizer_index.content | default('') | regex_findall('href=\"([^\"]+[Oo]ptimizer[^\"]*[.]zip)\"') }}"
+  when:
+    - software_store is defined
+    - optimizer_index.status | default(0) == 200
+
+- name: Set the discovered Optimizer version
+  ansible.builtin.set_fact:
+    citrix_optimizer_version_discovered: "{{ optimizer_versions | map('int') | max | string }}"
+  when: optimizer_versions | default([]) | length > 0
+
+- name: Read the latest Optimizer version folder from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/Optimizer/{{ citrix_optimizer_version_discovered }}/"
+    return_content: true
+  register: optimizer_folder
+  failed_when: false
+  when: citrix_optimizer_version_discovered is defined
+
+- name: Set the discovered Optimizer zip from a version folder
+  ansible.builtin.set_fact:
+    citrix_optimizer_url: "{{ software_store }}/Citrix/Optimizer/{{ citrix_optimizer_version_discovered }}/{{ (optimizer_folder.content | regex_findall('href=\"([^\"]+[.]zip)\"') | first) }}"
+  when:
+    - citrix_optimizer_version_discovered is defined
+    - optimizer_folder.status | default(0) == 200
+    - optimizer_folder.content | default('') | regex_findall('href=\"([^\"]+[.]zip)\"') | length > 0
+
+- name: Set the discovered Optimizer zip from a flat store layout
+  ansible.builtin.set_fact:
+    citrix_optimizer_url: "{{ software_store }}/Citrix/Optimizer/{{ optimizer_zips | sort | last }}"
+  when:
+    - citrix_optimizer_url is not defined
+    - optimizer_zips | default([]) | length > 0
+
+# This lab currently keeps the Optimizer zip next to the CVAD ISO rather
+# than under Citrix/Optimizer/. Accept that layout (and a zip in Citrix/).
+- name: Set the discovered Optimizer zip from the CVAD folder
+  ansible.builtin.set_fact:
+    citrix_optimizer_url: "{{ software_store }}/Citrix/CVAD/{{ (cvad_index.content | default('') | regex_findall('href=\"([^\"]+[Oo]ptimizer[^\"]*[.]zip)\"') | first) }}"
+  when:
+    - citrix_optimizer_url is not defined
+    - cvad_index.status | default(0) == 200
+    - cvad_index.content | default('') | regex_findall('href=\"([^\"]+[Oo]ptimizer[^\"]*[.]zip)\"') | length > 0
+
+- name: Read the Citrix folder listing from the software store
+  ansible.builtin.uri:
+    url: "{{ software_store }}/Citrix/"
+    return_content: true
+  register: citrix_index
+  failed_when: false
+  when:
+    - software_store is defined
+    - citrix_optimizer_url is not defined
+
+- name: Set the discovered Optimizer zip from the Citrix folder
+  ansible.builtin.set_fact:
+    citrix_optimizer_url: "{{ software_store }}/Citrix/{{ (citrix_index.content | default('') | regex_findall('href=\"([^\"]+[Oo]ptimizer[^\"]*[.]zip)\"') | first) }}"
+  when:
+    - citrix_optimizer_url is not defined
+    - citrix_index.status | default(0) == 200
+    - citrix_index.content | default('') | regex_findall('href=\"([^\"]+[Oo]ptimizer[^\"]*[.]zip)\"') | length > 0
+
+- name: Report discovered Citrix delivery media
+  ansible.builtin.debug:
+    msg: >-
+      CVAD {{ citrix_version_discovered | default('unknown') }}
+      VDA server={{ citrix_vda_server_url | default('missing') }}
+      VDA workstation={{ citrix_vda_workstation_url | default('missing') }}
+      Optimizer={{ citrix_optimizer_url | default('missing') }}
+  when: software_store is defined
+
 # Same discovery for VMware Horizon (VMware/Horizon/<version>/<installers>).
 - name: Read the Horizon folder listing from the software store
   ansible.builtin.uri:

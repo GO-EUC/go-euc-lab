@@ -9,6 +9,24 @@
     citrix_type: Server
   when: ansible_facts.os_installation_type == 'Server'
 
+- name: Create Temp folder
+  win_file:
+    path: C:\Temp
+    state: directory
+
+- name: Report the Citrix VDA installer URL
+  debug:
+    msg: "{{ (citrix_type == 'Workstation') | ternary(citrix.vda_workstation_url, citrix.vda_server_url) }}"
+
+- name: Download Citrix {{ citrix_type }} VDA
+  win_get_url:
+    url: "{{ (citrix_type == 'Workstation') | ternary(citrix.vda_workstation_url, citrix.vda_server_url) }}"
+    dest: C:\Temp\VDASetup.exe
+    timeout: 3600
+  vars:
+    ansible_winrm_read_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 3600
+
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
@@ -26,10 +44,13 @@
 
 - name: Install Citrix {{citrix_type}} VDA
   win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+    path: C:\Temp\VDASetup.exe
     arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]
+  vars:
+    ansible_winrm_read_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 3600
   register: install
 
 - name: Reboot VDA during install
@@ -38,10 +59,13 @@
 
 - name: Second install Citrix {{citrix_type}} VDA
   win_package:
-    path: "{{citrix.path}}/{{citrix.version}}/VDA{{citrix_type}}Setup_{{citrix.version}}.exe"
+    path: C:\Temp\VDASetup.exe
     arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     state: present
     expected_return_code: [0, 3, 3010]
+  vars:
+    ansible_winrm_read_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 3600
   register: install
   when: install.rc == 3
 

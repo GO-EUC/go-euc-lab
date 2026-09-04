@@ -30,9 +30,15 @@ parameters:
   type: string
   default: 'vmware'
 
+- name: dependsOn
+  type: string
+  default: ''
+
 jobs:
 - job: ansible
   displayName: Ansible deployment
+  ${{ if ne(parameters.dependsOn, '') }}:
+    dependsOn: ${{ parameters.dependsOn }}
 
   steps:
   - task: CmdLine@2

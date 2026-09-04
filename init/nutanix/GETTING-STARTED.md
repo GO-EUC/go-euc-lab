@@ -57,7 +57,8 @@ Create a local folder with the installation media. It is uploaded to the control
 ├── Nutanix
 │   └── Nutanix-VirtIO-1.2.3.iso
 ├── Citrix
-│   └── ... (only when deploying Citrix roles)
+│   ├── CVAD/                    # version folders or flat: ISO, VDA*Setup_*.exe, Optimizer zip
+│   └── Optimizer/<version>/     # optional; CitrixOptimizerTool.zip also accepted in CVAD/
 ```
 
 - ISO file names must contain the OS marker the pipeline searches for: `windows_11`, `windows_server_2019`, `windows_server_2022`, `windows_server_2025`.
