@@ -1,17 +1,14 @@
 ---
 citrix:
-  # Version and ISO name are discovered from the software store listing at
-  # run time (see vault.yml); the pinned values only apply when discovery is
-  # unavailable. The store address comes from the pipeline (software_store).
-  version: "{{ hostvars['localhost']['citrix_version_discovered'] | default('2407') }}"
-  source: "{{ hostvars['localhost']['citrix_source_discovered'] | default('Citrix_Virtual_Apps_and_Desktops_7_2407.iso') }}"
-  path: "{{ software_store | default('http://10.2.0.6:8080') }}/Citrix/CVAD"
-  # Full download URL for the ISO, layout-aware (versioned or flat store).
-  iso_url: "{{ hostvars['localhost']['citrix_iso_url'] | default((software_store | default('http://10.2.0.6:8080')) ~ '/Citrix/CVAD/2407/Citrix_Virtual_Apps_and_Desktops_7_2407.iso') }}"
-  # Standalone VDA setups discovered from the same CVAD folder (or a VDA/
-  # subfolder / flat Citrix/CVAD/ layout). Pinned names are the fallback.
-  vda_server_url: "{{ hostvars['localhost']['citrix_vda_server_url'] | default((software_store | default('http://10.2.0.6:8080')) ~ '/Citrix/CVAD/VDAServerSetup_' ~ (hostvars['localhost']['citrix_version_discovered'] | default('2407')) ~ '.exe') }}"
-  vda_workstation_url: "{{ hostvars['localhost']['citrix_vda_workstation_url'] | default((software_store | default('http://10.2.0.6:8080')) ~ '/Citrix/CVAD/VDAWorkstationSetup_' ~ (hostvars['localhost']['citrix_version_discovered'] | default('2407')) ~ '.exe') }}"
+  # Version, file names, and download URLs are discovered from the software
+  # store listing at run time (see vault.yml). The store address is the
+  # software_store extra-var (or go/docker in Vault), never a pinned host.
+  version: "{{ hostvars['localhost']['citrix_version_discovered'] }}"
+  source: "{{ hostvars['localhost']['citrix_source_discovered'] }}"
+  path: "{{ software_store }}/Citrix/CVAD"
+  iso_url: "{{ hostvars['localhost']['citrix_iso_url'] }}"
+  vda_server_url: "{{ hostvars['localhost']['citrix_vda_server_url'] }}"
+  vda_workstation_url: "{{ hostvars['localhost']['citrix_vda_workstation_url'] }}"
   site: Default
   database_port: 1433
   database_site: CVAD_Site_DB
@@ -22,9 +19,9 @@ citrix:
   scope: All
   grooming: 365
   optimizer:
-    path: "{{ software_store | default('http://10.2.0.6:8080') }}/Citrix/Optimizer"
-    version: "{{ hostvars['localhost']['citrix_optimizer_version_discovered'] | default('3103') }}"
-    url: "{{ hostvars['localhost']['citrix_optimizer_url'] | default((software_store | default('http://10.2.0.6:8080')) ~ '/Citrix/CVAD/CitrixOptimizerTool.zip') }}"
+    path: "{{ software_store }}/Citrix/Optimizer"
+    version: "{{ hostvars['localhost']['citrix_optimizer_version_discovered'] | default('') }}"
+    url: "{{ hostvars['localhost']['citrix_optimizer_url'] }}"
   licensing:
     port: 27000
     model: Concurrent

@@ -1,5 +1,5 @@
 ---
 nvidia:
-  path: "{{ software_store | default('http://10.2.0.6:8080') }}/NVIDIA/GRID"
+  path: "{{ software_store }}/NVIDIA/GRID"
   version: 528.24
   license: license.tok

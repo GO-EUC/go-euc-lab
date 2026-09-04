@@ -150,12 +150,28 @@
   when: go_euc_platform == 'nutanix'
 
 # ---------------------------------------------------------------------------
-# Software store discovery. The NGINX store serves autoindex listings, so the
-# newest Citrix CVAD version is resolved at run time instead of hardcoding it
-# in vars/citrix.yml. Two layouts are supported: version folders
-# (Citrix/CVAD/<version>/<iso>) and a flat folder with the version in the ISO
-# filename. Best-effort: when the store address is not passed in or the
-# Citrix content is missing, the vars file falls back to its pinned defaults.
+# Software store discovery. The NGINX store serves autoindex listings, so
+# ISO / VDA / Optimizer URLs are resolved at run time. Two layouts are
+# supported: version folders (Citrix/CVAD/<version>/<iso>) and a flat folder
+# with the version in the filename. The store address comes from the
+# software_store extra-var, or from the control-plane IP in go/docker.
+- name: Read docker info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/docker
+    token: "{{ vault_token }}"
+  register: docker
+  failed_when: false
+
+- name: Set the software store URL from the control-plane address
+  ansible.builtin.set_fact:
+    software_store: "http://{{ docker.data.data.ip }}:8080"
+  when:
+    - software_store is not defined
+    - docker.data is defined
+    - docker.data.data is defined
+    - docker.data.data.ip is defined
+
 - name: Read the CVAD folder listing from the software store
   ansible.builtin.uri:
     url: "{{ software_store }}/Citrix/CVAD/"
