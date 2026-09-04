@@ -42,33 +42,121 @@
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
 
-- name: Install Citrix {{citrix_type}} VDA
-  win_package:
-    path: C:\Temp\VDASetup.exe
-    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
-    state: present
-    expected_return_code: [0, 3, 3010]
+# win_package waits for VDASetup.exe to exit. After RDS is enabled the
+# meta-installer writes ExitCode 3 and RunOnce, then the wrapper stays
+# alive so Ansible never reboots. Poll Citrix MetaInstall instead.
+- name: Read Citrix VDA meta-install exit code
+  win_reg_stat:
+    path: HKLM:\SOFTWARE\Citrix\MetaInstall
+    name: ExitCode
+  register: vda_meta_exit
+
+- name: Stop leftover VDA setup processes
+  win_shell: |
+    Get-Process -Name VDASetup, XenDesktopVdaSetup, XenDesktopRemotePCSetup, XenDesktopSingleSessionCoreSetup -ErrorAction SilentlyContinue |
+      Stop-Process -Force
+  failed_when: false
+
+- name: Set VDA setup arguments
+  set_fact:
+    vda_setup_args: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
+    vda_needs_second_pass: "{{ vda_meta_exit.exists | default(false) and (vda_meta_exit.value | string) in ['3', '3010'] }}"
+
+- name: Install Citrix {{ citrix_type }} VDA
+  win_shell: |
+    $setup = "C:\Temp\VDASetup.exe"
+    $args = "{{ vda_setup_args }}"
+    $deadline = (Get-Date).AddMinutes(40)
+    $proc = Start-Process -FilePath $setup -ArgumentList $args -PassThru
+    do {
+      Start-Sleep -Seconds 20
+      $exit = $null
+      try {
+        $exit = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Citrix\MetaInstall" -ErrorAction Stop).ExitCode
+      } catch { }
+      if ($null -ne $exit -and $exit -in 0, 3, 3010) {
+        Get-Process -Name VDASetup, XenDesktopVdaSetup, XenDesktopRemotePCSetup, XenDesktopSingleSessionCoreSetup -ErrorAction SilentlyContinue |
+          Stop-Process -Force
+        exit [int]$exit
+      }
+      if ($proc.HasExited -and $proc.ExitCode -in 0, 3, 3010) {
+        exit [int]$proc.ExitCode
+      }
+    } while ((Get-Date) -lt $deadline)
+    Get-Process -Name VDASetup, XenDesktopVdaSetup -ErrorAction SilentlyContinue | Stop-Process -Force
+    throw "VDA setup did not record MetaInstall ExitCode 0/3/3010 within 40 minutes"
+  register: install
+  failed_when: install.rc not in [0, 3, 3010]
+  when: not (vda_needs_second_pass | bool)
   vars:
     ansible_winrm_operation_timeout_sec: 7200
     ansible_winrm_read_timeout_sec: 7300
-  register: install
+
+- name: Remember that a VDA reboot pass is required
+  set_fact:
+    vda_needs_second_pass: true
+  when:
+    - not (vda_needs_second_pass | bool)
+    - install.rc | default(0) in [3, 3010]
+
+- name: Remove Citrix VDA RunOnce resume key
+  win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+    name: "!XenDesktopSetup"
+    state: absent
+  when: vda_needs_second_pass | bool
 
 - name: Reboot VDA during install
   win_reboot:
-  when: install.rc == 3
+    reboot_timeout: 3600
+  when: vda_needs_second_pass | bool
 
-- name: Second install Citrix {{citrix_type}} VDA
-  win_package:
-    path: C:\Temp\VDASetup.exe
-    arguments: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
-    state: present
-    expected_return_code: [0, 3, 3010]
+- name: Wait for WinRM after VDA reboot
+  wait_for_connection:
+    timeout: 1800
+    sleep: 15
+    delay: 30
+  when: vda_needs_second_pass | bool
+
+- name: Second install Citrix {{ citrix_type }} VDA
+  win_shell: |
+    $setup = "C:\Temp\VDASetup.exe"
+    $resume = "C:\ProgramData\Citrix\XenDesktopSetup\XenDesktopVdaSetup.exe"
+    if (Test-Path $resume) { $setup = $resume }
+    $args = "{{ vda_setup_args }}"
+    $deadline = (Get-Date).AddMinutes(40)
+    $proc = Start-Process -FilePath $setup -ArgumentList $args -PassThru
+    do {
+      Start-Sleep -Seconds 20
+      $exit = $null
+      try {
+        $exit = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Citrix\MetaInstall" -ErrorAction Stop).ExitCode
+      } catch { }
+      # Pass 2 overwrites ExitCode; treat a new 0 as success. A leftover 3
+      # from pass 1 is ignored until the process exits or ExitCode changes
+      # after this process started.
+      if ($null -ne $exit -and $exit -eq 0) {
+        Get-Process -Name VDASetup, XenDesktopVdaSetup, XenDesktopRemotePCSetup, XenDesktopSingleSessionCoreSetup -ErrorAction SilentlyContinue |
+          Stop-Process -Force
+        exit 0
+      }
+      if ($proc.HasExited -and $proc.ExitCode -in 0, 3, 3010) {
+        exit [int]$proc.ExitCode
+      }
+      if ($null -ne $exit -and $exit -in 3, 3010 -and $proc.HasExited) {
+        exit [int]$exit
+      }
+    } while ((Get-Date) -lt $deadline)
+    Get-Process -Name VDASetup, XenDesktopVdaSetup -ErrorAction SilentlyContinue | Stop-Process -Force
+    throw "VDA resume did not finish within 40 minutes"
+  register: install
+  failed_when: install.rc not in [0, 3, 3010]
+  when: vda_needs_second_pass | bool
   vars:
     ansible_winrm_operation_timeout_sec: 7200
     ansible_winrm_read_timeout_sec: 7300
-  register: install
-  when: install.rc == 3
 
 - name: Reboot after VDA
   win_reboot:
-  when: install.reboot_required
+    reboot_timeout: 3600
+  when: install.rc | default(0) in [3, 3010] or install.reboot_required | default(false)
