@@ -183,7 +183,11 @@ stages:
   dependsOn:
   - domain
   - sql
-  condition: succeeded('domain')
+  condition: |
+    or(
+      succeeded('domain'),
+      eq(dependencies.domain.result, 'Skipped')
+    )
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:
@@ -214,7 +218,11 @@ stages:
   dependsOn:
   - domain
   - citrix_ddc
-  condition: succeeded('domain')
+  condition: |
+    or(
+      succeeded('domain'),
+      eq(dependencies.domain.result, 'Skipped')
+    )
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:

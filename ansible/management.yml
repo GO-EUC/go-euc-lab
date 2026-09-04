@@ -27,7 +27,7 @@
     - domain.yml
     - accounts.yml
   vars:
-    telegraf_monitor_vsphere: true
+    telegraf_monitor_vsphere: "{{ go_euc_platform | default('vmware') == 'vmware' }}"
     sql_admin: "GO\\sql_svc"
     sql_password: "{{ hostvars['localhost']['sql_svc'] }}"
     sql_server: "{{ groups['sql'][0] }}"

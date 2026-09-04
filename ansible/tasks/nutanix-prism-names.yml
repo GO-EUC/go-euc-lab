@@ -1,0 +1,81 @@
+---
+# Resolve the display names Citrix Studio needs for an AHV hosting unit.
+# Vault stores UUIDs (cluster, storage container, subnet); XDHyp matches names.
+- name: Read Nutanix cluster UUID from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/cluster
+    token: "{{ vault_token }}"
+  register: nutanix_cluster_secret
+
+- name: Read Nutanix storage UUID from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/storage
+    token: "{{ vault_token }}"
+  register: nutanix_storage_secret
+
+- name: Query Prism Element clusters
+  ansible.builtin.uri:
+    url: "https://{{ nutanix_host }}:9440/PrismGateway/services/rest/v2.0/clusters/"
+    user: "{{ nutanix_username }}"
+    password: "{{ nutanix_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: pe_clusters
+
+- name: Query Prism Element storage containers
+  ansible.builtin.uri:
+    url: "https://{{ nutanix_host }}:9440/PrismGateway/services/rest/v2.0/storage_containers/"
+    user: "{{ nutanix_username }}"
+    password: "{{ nutanix_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: pe_storage
+
+- name: Query Prism Element networks
+  ansible.builtin.uri:
+    url: "https://{{ nutanix_host }}:9440/PrismGateway/services/rest/v2.0/networks/"
+    user: "{{ nutanix_username }}"
+    password: "{{ nutanix_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  register: pe_networks
+
+- name: Initialize Nutanix hosting names
+  ansible.builtin.set_fact:
+    nutanix_cluster_name: "{{ nutanix_cluster_secret.data.data.name | default('') }}"
+    nutanix_storage_name: "{{ nutanix_storage_secret.data.data.name | default('') }}"
+    nutanix_network_name: "{{ network.data.data.name | default('') }}"
+
+- name: Match the cluster name
+  ansible.builtin.set_fact:
+    nutanix_cluster_name: "{{ item.name }}"
+  loop: "{{ pe_clusters.json.entities | default([]) }}"
+  when:
+    - nutanix_cluster_name | length == 0
+    - (item.uuid | default('')) == nutanix_cluster_secret.data.data.uuid
+
+- name: Match the storage container name
+  ansible.builtin.set_fact:
+    nutanix_storage_name: "{{ item.name }}"
+  loop: "{{ pe_storage.json.entities | default([]) }}"
+  when:
+    - nutanix_storage_name | length == 0
+    - (item.storage_container_uuid | default('')) == nutanix_storage_secret.data.data.container_uuid or (item.uuid | default('')) == nutanix_storage_secret.data.data.container_uuid or (item.id | default('')) == nutanix_storage_secret.data.data.container_uuid
+
+- name: Match the network name
+  ansible.builtin.set_fact:
+    nutanix_network_name: "{{ item.name }}"
+  loop: "{{ pe_networks.json.entities | default([]) }}"
+  when:
+    - nutanix_network_name | length == 0
+    - (item.uuid | default('')) == network.data.data.subnet_uuid
+
+- name: Fail when Prism did not resolve hosting names
+  ansible.builtin.fail:
+    msg: >-
+      Could not resolve Nutanix hosting names from Prism Element
+      ({{ nutanix_host }}). cluster='{{ nutanix_cluster_name }}'
+      storage='{{ nutanix_storage_name }}' network='{{ nutanix_network_name }}'.
+  when: nutanix_cluster_name | length == 0 or nutanix_storage_name | length == 0 or nutanix_network_name | length == 0

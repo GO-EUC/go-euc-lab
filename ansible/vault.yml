@@ -86,17 +86,21 @@
     loadgen_bot: "{{ accounts.data.data.loadgen_bot }}"
     sql_agt: "{{ accounts.data.data.sql_agt }}"
     sql_svc: "{{ accounts.data.data.sql_svc }}"
-    vsphere_username: "{{ vcsa.data.data.user | default('') }}"
-    vsphere_password: "{{ vcsa.data.data.password | default('') }}"
-    vsphere_host: "{{ vcsa.data.data.name | default('') }}"
-    nutanix_username: "{{ prism.data.data.username | default('') }}"
-    nutanix_password: "{{ prism.data.data.password | default('') }}"
-    nutanix_host: "{{ prism.data.data.endpoint | default('') }}"
+    vsphere_username: "{{ (vcsa.data.data.user if (vcsa.data is defined and vcsa.data.data is defined) else '') | default('') }}"
+    vsphere_password: "{{ (vcsa.data.data.password if (vcsa.data is defined and vcsa.data.data is defined) else '') | default('') }}"
+    vsphere_host: "{{ (vcsa.data.data.name if (vcsa.data is defined and vcsa.data.data is defined) else '') | default('') }}"
+    nutanix_username: "{{ (prism.data.data.username if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
+    nutanix_password: "{{ (prism.data.data.password if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
+    nutanix_host: "{{ (prism.data.data.endpoint if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
     # The URL and org fall back to the hosted GO-EUC instance for labs whose
     # go/influx secret predates the in-lab monitoring stack (token only).
     influx_token: "{{ influx.data.data.token | default('') }}"
     influx_url: "{{ influx.data.data.url | default('https://influx.logitblog.com') }}"
     influx_org: "{{ influx.data.data.org | default('GO') }}"
+
+- name: Resolve Nutanix cluster, storage, and network names
+  ansible.builtin.include_tasks: tasks/nutanix-prism-names.yml
+  when: go_euc_platform == 'nutanix'
 
 # ---------------------------------------------------------------------------
 # Software store discovery. The NGINX store serves autoindex listings, so the

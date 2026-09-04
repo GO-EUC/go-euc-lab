@@ -49,6 +49,7 @@
     - citrix.yml
     - ansible.yml
     - domain.yml
-    # vmware.yml supplies the vSphere endpoint for the hosting connection
-    # (the task only runs on the VMware platform).
+    - accounts.yml
+    # vSphere host/user live here; the hosting task only uses them on VMware.
+    # Nutanix cluster/storage/network names come from vault.yml via accounts.yml.
     - vmware.yml
