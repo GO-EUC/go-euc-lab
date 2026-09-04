@@ -22,10 +22,10 @@
   win_get_url:
     url: "{{ (citrix_type == 'Workstation') | ternary(citrix.vda_workstation_url, citrix.vda_server_url) }}"
     dest: C:\Temp\VDASetup.exe
-    timeout: 3600
+    timeout: 7200
   vars:
-    ansible_winrm_read_timeout_sec: 3600
-    ansible_winrm_operation_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 7200
+    ansible_winrm_read_timeout_sec: 7300
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X86"
   win_package:
@@ -49,8 +49,8 @@
     state: present
     expected_return_code: [0, 3, 3010]
   vars:
-    ansible_winrm_read_timeout_sec: 3600
-    ansible_winrm_operation_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 7200
+    ansible_winrm_read_timeout_sec: 7300
   register: install
 
 - name: Reboot VDA during install
@@ -64,8 +64,8 @@
     state: present
     expected_return_code: [0, 3, 3010]
   vars:
-    ansible_winrm_read_timeout_sec: 3600
-    ansible_winrm_operation_timeout_sec: 3600
+    ansible_winrm_operation_timeout_sec: 7200
+    ansible_winrm_read_timeout_sec: 7300
   register: install
   when: install.rc == 3
 
