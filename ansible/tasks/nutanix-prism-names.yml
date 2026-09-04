@@ -1,20 +1,8 @@
 ---
-# Resolve the display names Citrix Studio needs for an AHV hosting unit.
-# Vault stores UUIDs (cluster, storage container, subnet); XDHyp matches names.
-- name: Read Nutanix cluster UUID from vault
-  community.hashi_vault.vault_read:
-    url: "{{ vault_addr }}"
-    path: go/nutanix/cluster
-    token: "{{ vault_token }}"
-  register: nutanix_cluster_secret
-
-- name: Read Nutanix storage UUID from vault
-  community.hashi_vault.vault_read:
-    url: "{{ vault_addr }}"
-    path: go/nutanix/storage
-    token: "{{ vault_token }}"
-  register: nutanix_storage_secret
-
+# Fill hosting names that Vault does not yet have. Citrix XDHyp matches
+# cluster, storage container, and VLAN by name. Init seeds those names when
+# it can; this path covers labs whose go/nutanix/* secrets still have UUIDs
+# only. Resolved names are written back so later plays do not call Prism.
 - name: Query Prism Element clusters
   ansible.builtin.uri:
     url: "https://{{ nutanix_host }}:9440/PrismGateway/services/rest/v2.0/clusters/"
@@ -23,6 +11,7 @@
     force_basic_auth: true
     validate_certs: false
   register: pe_clusters
+  when: nutanix_cluster_name | length == 0
 
 - name: Query Prism Element storage containers
   ansible.builtin.uri:
@@ -32,6 +21,7 @@
     force_basic_auth: true
     validate_certs: false
   register: pe_storage
+  when: nutanix_storage_name | length == 0
 
 - name: Query Prism Element networks
   ansible.builtin.uri:
@@ -41,41 +31,64 @@
     force_basic_auth: true
     validate_certs: false
   register: pe_networks
-
-- name: Initialize Nutanix hosting names
-  ansible.builtin.set_fact:
-    nutanix_cluster_name: "{{ nutanix_cluster_secret.data.data.name | default('') }}"
-    nutanix_storage_name: "{{ nutanix_storage_secret.data.data.name | default('') }}"
-    nutanix_network_name: "{{ network.data.data.name | default('') }}"
+  when: nutanix_network_name | length == 0
 
 - name: Match the cluster name
   ansible.builtin.set_fact:
     nutanix_cluster_name: "{{ item.name }}"
-  loop: "{{ pe_clusters.json.entities | default([]) }}"
+  loop: "{{ (pe_clusters.json | default({})).entities | default([]) }}"
   when:
     - nutanix_cluster_name | length == 0
-    - (item.uuid | default('')) == nutanix_cluster_secret.data.data.uuid
+    - (item.uuid | default('')) == nutanix_cluster.data.data.uuid
 
 - name: Match the storage container name
   ansible.builtin.set_fact:
     nutanix_storage_name: "{{ item.name }}"
-  loop: "{{ pe_storage.json.entities | default([]) }}"
+  loop: "{{ (pe_storage.json | default({})).entities | default([]) }}"
   when:
     - nutanix_storage_name | length == 0
-    - (item.storage_container_uuid | default('')) == nutanix_storage_secret.data.data.container_uuid or (item.uuid | default('')) == nutanix_storage_secret.data.data.container_uuid or (item.id | default('')) == nutanix_storage_secret.data.data.container_uuid
+    - (item.storage_container_uuid | default('')) == nutanix_storage.data.data.container_uuid or (item.uuid | default('')) == nutanix_storage.data.data.container_uuid or (item.id | default('')) == nutanix_storage.data.data.container_uuid
 
 - name: Match the network name
   ansible.builtin.set_fact:
     nutanix_network_name: "{{ item.name }}"
-  loop: "{{ pe_networks.json.entities | default([]) }}"
+  loop: "{{ (pe_networks.json | default({})).entities | default([]) }}"
   when:
     - nutanix_network_name | length == 0
     - (item.uuid | default('')) == network.data.data.subnet_uuid
 
-- name: Fail when Prism did not resolve hosting names
+- name: Fail when hosting names are still missing
   ansible.builtin.fail:
     msg: >-
-      Could not resolve Nutanix hosting names from Prism Element
-      ({{ nutanix_host }}). cluster='{{ nutanix_cluster_name }}'
-      storage='{{ nutanix_storage_name }}' network='{{ nutanix_network_name }}'.
+      Vault is missing Nutanix hosting names and Prism Element
+      ({{ nutanix_host }}) did not resolve them.
+      cluster='{{ nutanix_cluster_name }}'
+      storage='{{ nutanix_storage_name }}'
+      network='{{ nutanix_network_name }}'.
+      Set name on go/nutanix/cluster, go/nutanix/storage, and go/nutanix/network.
   when: nutanix_cluster_name | length == 0 or nutanix_storage_name | length == 0 or nutanix_network_name | length == 0
+
+# KV v1 write replaces the secret; merge so uuid and other keys stay.
+- name: Persist the cluster name in vault
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/cluster
+    token: "{{ vault_token }}"
+    data: "{{ nutanix_cluster.data.data | combine({'name': nutanix_cluster_name}) }}"
+  when: nutanix_cluster.data.data.name | default('') != nutanix_cluster_name
+
+- name: Persist the storage container name in vault
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/storage
+    token: "{{ vault_token }}"
+    data: "{{ nutanix_storage.data.data | combine({'name': nutanix_storage_name}) }}"
+  when: nutanix_storage.data.data.name | default('') != nutanix_storage_name
+
+- name: Persist the network name in vault
+  community.hashi_vault.vault_write:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/network
+    token: "{{ vault_token }}"
+    data: "{{ network.data.data | combine({'name': nutanix_network_name}) }}"
+  when: network.data.data.name | default('') != nutanix_network_name

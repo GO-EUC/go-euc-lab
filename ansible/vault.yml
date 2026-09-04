@@ -9,7 +9,7 @@
 
 - name: Set platform defaults
   ansible.builtin.set_fact:
-    go_euc_platform: "{{ lookup('env', 'platform') | default('vmware', true) }}"
+    go_euc_platform: "{{ go_euc_platform | default(lookup('env', 'platform') | default('vmware', true), true) }}"
 
 - name: Read build credentials from vault
   community.hashi_vault.vault_read:
@@ -55,6 +55,22 @@
   register: prism
   when: go_euc_platform == 'nutanix'
 
+- name: Read Nutanix cluster info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/cluster
+    token : '{{ vault_token }}'
+  register: nutanix_cluster
+  when: go_euc_platform == 'nutanix'
+
+- name: Read Nutanix storage info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/storage
+    token : '{{ vault_token }}'
+  register: nutanix_storage
+  when: go_euc_platform == 'nutanix'
+
 # The influx secret only feeds the optional telegraf monitoring role and is
 # not present until the monitoring stack has been deployed (the docker stage
 # of the infra pipeline), so a missing secret must not fail the playbook.
@@ -92,14 +108,34 @@
     nutanix_username: "{{ (prism.data.data.username if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
     nutanix_password: "{{ (prism.data.data.password if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
     nutanix_host: "{{ (prism.data.data.endpoint if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
+    nutanix_cluster_name: ""
+    nutanix_storage_name: ""
+    nutanix_network_name: ""
     # The URL and org fall back to the hosted GO-EUC instance for labs whose
     # go/influx secret predates the in-lab monitoring stack (token only).
     influx_token: "{{ influx.data.data.token | default('') }}"
     influx_url: "{{ influx.data.data.url | default('https://influx.logitblog.com') }}"
     influx_org: "{{ influx.data.data.org | default('GO') }}"
 
-- name: Resolve Nutanix cluster, storage, and network names
+# Citrix hosting uses display names. Read them from Vault first (init seeds
+# name on cluster/storage/network; some labs also store aliases on prism).
+# Query Prism only when a name is still missing, then write it back.
+- name: Set Nutanix hosting names from vault
+  ansible.builtin.set_fact:
+    nutanix_cluster_name: "{{ nutanix_cluster.data.data.name | default(nutanix_cluster.data.data.cluster_name | default(prism.data.data.cluster_name | default(''), true), true) }}"
+    nutanix_storage_name: "{{ nutanix_storage.data.data.name | default(nutanix_storage.data.data.container_name | default(nutanix_storage.data.data.storage_name | default(prism.data.data.storage_container_name | default(''), true), true), true) }}"
+    nutanix_network_name: "{{ network.data.data.name | default(network.data.data.network_name | default(network.data.data.subnet_name | default(prism.data.data.subnet_name | default(''), true), true), true) }}"
+  when: go_euc_platform == 'nutanix'
+
+- name: Resolve missing Nutanix hosting names from Prism
   ansible.builtin.include_tasks: tasks/nutanix-prism-names.yml
+  when:
+    - go_euc_platform == 'nutanix'
+    - nutanix_cluster_name | length == 0 or nutanix_storage_name | length == 0 or nutanix_network_name | length == 0
+
+- name: Report Nutanix hosting names
+  ansible.builtin.debug:
+    msg: "Citrix hosting names cluster={{ nutanix_cluster_name }} storage={{ nutanix_storage_name }} network={{ nutanix_network_name }}"
   when: go_euc_platform == 'nutanix'
 
 # ---------------------------------------------------------------------------

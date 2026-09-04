@@ -136,6 +136,30 @@ function Get-CidrHost {
     ([Net.IPAddress]::new($result)).IPAddressToString
 }
 
+# Optional settings.json property: missing or blank returns $null.
+function Get-SettingsProperty {
+    param($Object, [string]$Name)
+
+    if ($null -eq $Object) { return $null }
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) { return $null }
+    $value = [string]$property.Value
+    if ([string]::IsNullOrWhiteSpace($value)) { return $null }
+    return $value
+}
+
+# vault kv put field. Always quoted so names with spaces survive the SSH wrap.
+function Format-VaultField {
+    param(
+        [Parameter(Mandatory = $true)][string]$Name,
+        [string]$Value
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) { return $null }
+    $escaped = $Value.Replace("'", "'\''")
+    return "$Name='$escaped'"
+}
+
 # ---------------------------------------------------------------------------
 # Repository root and prerequisites
 # ---------------------------------------------------------------------------
@@ -663,7 +687,8 @@ Write-Stage "Creating Vault KV store and seeding Nutanix configuration."
 Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix secrets enable -version=1 -path=go kv" | Out-Null
 
 # Seed secrets consumed by Terraform, Packer, and Ansible:
-#   go/nutanix/*   - Prism connection and cluster/network/storage UUIDs
+#   go/nutanix/*   - Prism connection plus cluster/network/storage UUIDs
+#                    and the display names Citrix Studio uses for hosting
 #   go/docker      - control-plane VM credentials and address
 #   go/build       - build VM credentials
 #   go/postgress   - Terraform state backend connection info
@@ -674,16 +699,60 @@ Invoke-SSHCommand -SSHSession $session -Command "$vaultPrefix secrets enable -ve
 # rides along in go/domain; Ansible applies it to every Windows machine and
 # falls back to W. Europe Standard Time when absent. Quoted: the ids contain
 # spaces and the seed line is passed to the remote shell as-is.
+#
+# Citrix XDHyp matches cluster, storage container, and VLAN by name, not
+# UUID. Prefer optional settings.json names; otherwise use the Prism probe
+# that already ran in stage 1 (matched to the configured UUIDs).
+$clusterName = Get-SettingsProperty $settings.prism 'cluster_name'
+if (-not $clusterName -and $capabilities.cluster -and $capabilities.cluster.name) {
+    if ([string]$capabilities.cluster.uuid -eq $settings.prism.cluster_uuid) {
+        $clusterName = [string]$capabilities.cluster.name
+    }
+}
+$storageName = Get-SettingsProperty $settings.prism 'storage_container_name'
+if (-not $storageName) {
+    $storageMatch = @($capabilities.storage_containers) |
+        Where-Object { [string]$_.uuid -eq $settings.prism.storage_container_uuid } |
+        Select-Object -First 1
+    if ($storageMatch -and $storageMatch.name) {
+        $storageName = [string]$storageMatch.name
+    }
+}
+$networkName = Get-SettingsProperty $settings.network 'name'
+if (-not $networkName) {
+    $networkName = Get-SettingsProperty $settings.prism 'subnet_name'
+}
+if (-not $networkName) {
+    $networkMatch = @($capabilities.networks) |
+        Where-Object { [string]$_.uuid -eq $settings.prism.subnet_uuid } |
+        Select-Object -First 1
+    if ($networkMatch -and $networkMatch.name) {
+        $networkName = [string]$networkMatch.name
+    }
+}
+if ($clusterName -or $storageName -or $networkName) {
+    Write-Stage "Seeding Citrix hosting names into Vault from settings or Prism."
+}
+
 $domainSeed = "domain name=$($settings.domain_name)"
 if ($settings.timezone) {
     $domainSeed += " timezone='$($settings.timezone)'"
 }
+$clusterSeed = "nutanix/cluster uuid=$($settings.prism.cluster_uuid)"
+$clusterNameField = Format-VaultField -Name name -Value $clusterName
+if ($clusterNameField) { $clusterSeed += " $clusterNameField" }
+$storageSeed = "nutanix/storage container_uuid=$($settings.prism.storage_container_uuid)"
+$storageNameField = Format-VaultField -Name name -Value $storageName
+if ($storageNameField) { $storageSeed += " $storageNameField" }
+$networkSeed = "nutanix/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns) start=$($settings.network.start) end=$($settings.network.end) subnet_uuid=$($settings.prism.subnet_uuid)"
+$networkNameField = Format-VaultField -Name name -Value $networkName
+if ($networkNameField) { $networkSeed += " $networkNameField" }
 $seed = @(
     $domainSeed,
     "nutanix/prism endpoint=$($settings.prism.endpoint) username=$($settings.prism.username) password=$([Net.NetworkCredential]::new('', $PrismPassword).Password) insecure=$(([string]$settings.prism.insecure).ToLower())",
-    "nutanix/cluster uuid=$($settings.prism.cluster_uuid)",
-    "nutanix/storage container_uuid=$($settings.prism.storage_container_uuid)",
-    "nutanix/network cidr=$($settings.network.cidr) gateway=$($settings.network.gateway) dns=$($settings.network.dns) start=$($settings.network.start) end=$($settings.network.end) subnet_uuid=$($settings.prism.subnet_uuid)",
+    $clusterSeed,
+    $storageSeed,
+    $networkSeed,
     "docker name=$($settings.docker.name) user=$($settings.docker.user) password=$dockerPlaintextPassword ip=$dockerIp",
     "build user=$($settings.build.user) ip=$($settings.build.ip) password=$buildPassword",
     "postgress user=tf password=$postgresPassword ip=$dockerIp database=state ssl=disable",

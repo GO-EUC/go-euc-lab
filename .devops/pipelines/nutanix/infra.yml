@@ -183,11 +183,9 @@ stages:
   dependsOn:
   - domain
   - sql
-  condition: |
-    or(
-      succeeded('domain'),
-      eq(dependencies.domain.result, 'Skipped')
-    )
+  # Run unless domain failed or the pipeline was canceled. Skipped domain
+  # (retry after a green domain stage) must still start DDC.
+  condition: not(or(canceled(), failed('domain')))
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:
@@ -218,11 +216,7 @@ stages:
   dependsOn:
   - domain
   - citrix_ddc
-  condition: |
-    or(
-      succeeded('domain'),
-      eq(dependencies.domain.result, 'Skipped')
-    )
+  condition: not(or(canceled(), failed('domain')))
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:
@@ -264,14 +258,14 @@ stages:
   # and still need patching. Canceled dependencies keep this stage from running.
   condition: |
     and(
-      in(dependencies.management.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.sql.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.rdgateway.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.loadgen.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.citrix_ddc.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.citrix_lic.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.citrix_sf.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'),
-      in(dependencies.horizon.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped')
+      in(dependencies.management.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.sql.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.rdgateway.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.loadgen.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.citrix_ddc.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.citrix_lic.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.citrix_sf.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', ''),
+      in(dependencies.horizon.result, 'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped', '')
     )
   jobs:
   - template: ../templates/ansible-playbook.yml

@@ -10,6 +10,9 @@
     "cluster_uuid": "cluster-uuid",
     "storage_container_uuid": "storage-container-uuid",
     "subnet_uuid": "subnet-uuid",
+    "cluster_name": "CE-Cluster",
+    "storage_container_name": "Default",
+    "subnet_name": "vlan.0",
     "insecure": true
   },
   "prism_central": {
@@ -22,7 +25,8 @@
     "gateway": 1,
     "dns": 1,
     "start": 10,
-    "end": 200
+    "end": 200,
+    "name": "vlan.0"
   },
   "docker": {
     "name": "dckr-1",

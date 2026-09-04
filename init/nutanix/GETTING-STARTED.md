@@ -110,6 +110,9 @@ Copy-Item init/nutanix/settings.example.json init/nutanix/settings.json
 | prism.cluster_uuid | string | Cluster UUID from the probe. |
 | prism.storage_container_uuid | string | Storage container UUID from the probe. |
 | prism.subnet_uuid | string | Subnet UUID from the probe. |
+| prism.cluster_name | string | Optional. Display name Citrix uses for the cluster. Init fills this from Prism when omitted. |
+| prism.storage_container_name | string | Optional. Display name of the storage container. |
+| prism.subnet_name | string | Optional. Display name of the VLAN / subnet (or set `network.name`). |
 | prism.insecure | bool | Skip TLS validation (true for the default self-signed certificate). |
 | prism_central.endpoint | string | Prism Central IP or FQDN. |
 | prism_central.username | string | Prism Central local user (usually `admin`). |
@@ -118,6 +121,7 @@ Copy-Item init/nutanix/settings.example.json init/nutanix/settings.json
 | network.gateway | int | Gateway offset in the CIDR (1 = 10.0.0.1). |
 | network.dns | int | Upstream DNS offset in the CIDR. |
 | network.start / network.end | int | Workload address range used by the pipelines. |
+| network.name | string | Optional. VLAN display name; same purpose as `prism.subnet_name`. |
 | docker.name | string | Control-plane VM name (e.g. `dckr-1`). |
 | docker.user | string | Control-plane admin user. |
 | docker.ip | int | Reserved offset for the control plane (kept for lab-wide conventions). |

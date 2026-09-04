@@ -74,11 +74,11 @@ The probe is read-only. It records the cluster, storage container, subnet, image
 
 The initializer imports an Ubuntu cloud image, creates the control-plane VM, then configures PostgreSQL, Vault, NGINX, and Azure DevOps agents through the same Docker-based control-plane convention used by the VMware path. It writes the following Vault paths:
 
-- `go/nutanix/prism`
+- `go/nutanix/prism` (endpoint, username, password, insecure)
 - `go/nutanix/prism_central`
-- `go/nutanix/cluster`
-- `go/nutanix/network`
-- `go/nutanix/storage`
+- `go/nutanix/cluster` (`uuid` plus `name` for the Citrix hosting connection)
+- `go/nutanix/network` (CIDR offsets, `subnet_uuid`, plus `name` for the VLAN)
+- `go/nutanix/storage` (`container_uuid` plus `name` for the container)
 - shared `go/domain`, `go/docker`, `go/build`, `go/postgress`, and `go/domain/accounts`
 - `go/influx` and `go/grafana`, only when `monitoring.external` is enabled (otherwise the infra pipeline's monitoring playbook seeds them)
 
