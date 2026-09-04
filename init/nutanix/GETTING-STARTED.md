@@ -173,8 +173,9 @@ Run **Nutanix CE - 2. Infra** (`.devops/pipelines/nutanix/infra.yml`). Parameter
 | citrix_cloud | Adds the Citrix Cloud Connector VM. |
 | citrix_vad | Adds the Citrix DDC, StoreFront, and license VMs. |
 | vmware_horizon | Adds the Horizon connection server VM. |
+| loadgen_bots | Adds two LoadGen bot VMs and the bot Ansible stage (off by default). |
 
-The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), deploys the monitoring stack, and runs the Ansible stages: domain, management, SQL, and RD Gateway.
+The pipeline unseals Vault, provisions the workload VMs through the official `nutanix` Terraform provider against Prism Central (resolving the golden image by name from the image library), deploys the monitoring stack, and runs the Ansible stages: domain, management, SQL, RD Gateway, optional LoadGen bots, Citrix/Horizon when selected, then Windows Updates.
 
 ### Timezone
 

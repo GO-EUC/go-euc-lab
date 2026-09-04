@@ -7,7 +7,9 @@
     include_tasks: vault.yml
 
 - name: Install Windows Updates and set timezone
-  hosts: all
+  # build-2022 is a delivery clone source and is never domain-joined here;
+  # domain credentials would be rejected (NTLM) if it stayed in `all`.
+  hosts: all:!build
   tasks:
 
     - name: "Set timezone to '{{ windows_timezone | default('W. Europe Standard Time') }}'"
