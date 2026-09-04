@@ -3,16 +3,19 @@
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X64"
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x64.exe
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 - name: Install Microsoft .NET Framework 4.8 - Offline installer
   win_package:
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 - name: Reboot to complete Windows Feature installation
   win_reboot:

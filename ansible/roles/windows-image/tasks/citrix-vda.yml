@@ -31,16 +31,19 @@
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x86.exe
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 - name: Install Microsoft Visual C++ Redistributable Latest - X64"
   win_package:
     path: https://aka.ms/vs/17/release/vc_redist.x64.exe
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 - name: Install Microsoft .NET Framework 4.8 - Offline installer
   win_package:
     path: https://go.microsoft.com/fwlink/?linkid=2088631
     arguments: /q /norestart
+    expected_return_code: [0, 1638, 3010]
 
 # win_package waits for VDASetup.exe to exit. After RDS is enabled the
 # meta-installer writes ExitCode 3 and RunOnce, then the wrapper stays
