@@ -50,6 +50,7 @@ stages:
         script: terraform apply -auto-approve -replace='module.windows_workloads["build-2022"].nutanix_virtual_machine.vm[0]' -target='module.windows_workloads["build-2022"]' -var="vault_address=$(vault_addr)" -var="vault_token=$(vault_token)"
 
 - stage: customize
+  dependsOn: redeploy
   jobs:
   - template: ../templates/ansible-playbook.yml
     parameters:
@@ -62,3 +63,48 @@ stages:
       platform: nutanix
       terraform_backend: conn_str=postgres://$(postgress_user):$(postgress_password)@$(postgress_address)/state?sslmode=$(postgress_ssl)
       terraform_path: $(Build.Repository.LocalPath)/terraform/nutanix/infra
+
+# Citrix 2603 MCS on Nutanix AHV Prism Central picks a VM template version
+# when creating or updating a machine catalog. Power off the customized
+# build VM and publish it under a stable name so later Delivery runs add
+# a new version instead of a second template.
+- stage: template
+  displayName: Publish Nutanix template
+  dependsOn: customize
+  jobs:
+  - job: publish
+    displayName: Convert build VM to template
+    steps:
+    - task: PowerShell@2
+      displayName: Publish Prism Central VM template
+      inputs:
+        targetType: inline
+        script: |
+          $env:VAULT_FORMAT = "json"
+          $env:VAULT_ADDR = "$(vault_addr)"
+          $env:VAULT_TOKEN = "$(vault_token)"
+
+          $pc = vault kv get -format json -mount=go nutanix/prism_central | ConvertFrom-Json
+          $pe = vault kv get -format json -mount=go nutanix/prism | ConvertFrom-Json
+
+          $pcPassword = ConvertTo-SecureString $pc.data.password -AsPlainText -Force
+          $pePassword = ConvertTo-SecureString $pe.data.password -AsPlainText -Force
+          $skipTls = ($pc.data.insecure -eq $true) -or ("$($pc.data.insecure)" -eq "true")
+
+          $templateName = "go-euc-${{ lower(parameters.delivery) }}-2022"
+          $versionName = "$(Build.BuildNumber)"
+          $description = "GO-EUC ${{ parameters.delivery }} master from build-2022-1 (build $(Build.BuildId))"
+
+          $publish = Join-Path "$(Build.Repository.LocalPath)" "scripts/nutanix/Publish-VmTemplate.ps1"
+          & $publish `
+            -PrismCentralEndpoint $pc.data.endpoint `
+            -Username $pc.data.username `
+            -Password $pcPassword `
+            -PrismElementEndpoint $pe.data.endpoint `
+            -PrismElementPassword $pePassword `
+            -VmName "build-2022-1" `
+            -TemplateName $templateName `
+            -VersionName $versionName `
+            -VersionDescription $description `
+            -SkipCertificateCheck:$skipTls
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

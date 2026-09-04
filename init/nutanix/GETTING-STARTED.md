@@ -204,6 +204,8 @@ Already running your own Influx/Grafana? Set `monitoring.external` to `true` in 
 
 Run **Nutanix CE - 3. Delivery** (`.devops/pipelines/nutanix/build.yml`) with the `delivery` parameter (`Citrix`, `VMware`, or `RDSH`) to run the Windows image customization playbook against the build VM.
 
+After customization the pipeline powers off `build-2022-1` and publishes it as a Prism Central VM template named `go-euc-<delivery>-2022` (for Citrix, `go-euc-citrix-2022`). Citrix 2603 MCS selects that template — and a new version on each later Delivery run — when you create or update the machine catalog. The build VM is left in place so `redeploy` can replace it from the golden image.
+
 ## Troubleshooting
 
 - **Initializer cannot SSH to the control plane** — the VM boots on DHCP and switches to the static address late in first boot; the script waits for Prism to report the static IP, reboots the VM, and retries. If it times out, open the VM console in Prism and check `/var/log/cloud-init-output.log`. Rerun with `-RecreateControlPlaneVm` after fixing settings.
