@@ -51,5 +51,5 @@
     - domain.yml
     - accounts.yml
     # vSphere host/user live here; the hosting task only uses them on VMware.
-    # Nutanix cluster/storage/network names come from vault.yml via accounts.yml.
+    # Nutanix AHV Prism Central credentials come from vault.yml via accounts.yml.
     - vmware.yml

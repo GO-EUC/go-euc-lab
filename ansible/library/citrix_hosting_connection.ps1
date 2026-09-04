@@ -53,12 +53,47 @@ Function Get-AvailableHypPlugins {
         $plugins = Get-HypHypervisorPlugin -ErrorAction SilentlyContinue
         if ($plugins) {
             return ($plugins | ForEach-Object {
-                if ($_.PluginId) { "$($_.Name) ($($_.PluginId))" } else { $_.Name }
+                $label = $_.Name
+                if (-not $label) { $label = $_.DisplayName }
+                if (-not $label) { $label = $_.PluginId }
+                if (-not $label) { $label = $_.Id }
+                if ($_.PluginId -and $label -ne $_.PluginId) { "$label ($($_.PluginId))" } else { $label }
             }) -join ", "
         }
     } catch {
     }
     return "none listed"
+}
+
+Function Get-DefaultZoneUid {
+    try {
+        $zone = Get-BrokerZone -ErrorAction Stop | Select-Object -First 1
+        if ($zone -and $zone.Uid) { return $zone.Uid }
+    } catch {
+    }
+    try {
+        Add-PSSnapin -Name "Citrix.Configuration.Admin.V2" -ErrorAction SilentlyContinue
+        $zone = Get-ConfigZone -ErrorAction Stop | Select-Object -First 1
+        if ($zone -and $zone.Uid) { return $zone.Uid }
+    } catch {
+    }
+    return $null
+}
+
+# CVAD 2603 Nutanix AHV Prism Central connection address is the PC IP.
+# Thumbprint is read from the Prism HTTPS endpoint (9440 when no port is given).
+Function Get-NutanixPcAddress {
+    param([Parameter(Mandatory = $true)][string]$HostAddress)
+
+    $trimmed = $HostAddress.Trim()
+    $withoutScheme = $trimmed -replace '^https?://', ''
+    $withoutPath = $withoutScheme -replace '/.*$', ''
+    $ipOrHost = $withoutPath -replace ':\d+$', ''
+    $thumbUrl = if ($withoutPath -match ':\d+$') { "https://$withoutPath" } else { "https://${ipOrHost}:9440" }
+    return @{
+        hypervisor = $ipOrHost
+        thumbprint_url = $thumbUrl
+    }
 }
 
 $params = Parse-Args $args -supports_check_mode $false
@@ -72,8 +107,8 @@ $hostSSL = Get-AnsibleParam $params "host_ssl" -type "bool" -default $true
 $hostDatacenter = Get-AnsibleParam $params "host_datacenter" -type "str" -FailIfEmpty $false
 $hostCompute = Get-AnsibleParam $params "host_compute" -type "str" -FailIfEmpty $false
 $hostCluster = Get-AnsibleParam $params "host_cluster" -type "str" -FailIfEmpty $false
-$hostNetwork = Get-AnsibleParam $params "host_network" -type "str" -FailIfEmpty $true
-$hostStorage = Get-AnsibleParam $params "host_storage" -type "str" -FailIfEmpty $true
+$hostNetwork = Get-AnsibleParam $params "host_network" -type "str" -FailIfEmpty $false
+$hostStorage = Get-AnsibleParam $params "host_storage" -type "str" -FailIfEmpty $false
 $state = Get-AnsibleParam $params "state" -type "str" -Default "present" -ValidateSet "present", "absent"
 
 $result = @{
@@ -118,13 +153,13 @@ if ($state -eq "absent") {
         $hType = "VCenter"
         $hAddress = "https://$($HostAddress)/sdk"
     } elseif ($typeNorm -eq "nutanix") {
+        # Citrix Virtual Apps and Desktops 2603: Nutanix AHV Prism Central.
+        # https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/install-configure/connections/connection-nutanix.html
         $hType = "Custom"
-        $pluginId = "AcropolisFactory"
-        if ($HostAddress -match '^https?://') {
-            $hAddress = $HostAddress
-        } else {
-            $hAddress = "https://$($HostAddress):9440"
-        }
+        $pluginId = "AcropolisHypervisorPCFactory"
+        $pcAddress = Get-NutanixPcAddress -HostAddress $HostAddress
+        $hAddress = $pcAddress.hypervisor
+        $thumbprintUrl = $pcAddress.thumbprint_url
     } elseif ($typeNorm -eq "xenserver") {
         $hType = "XenServer"
         $hAddress = "https://$($HostAddress)"
@@ -133,6 +168,12 @@ if ($state -eq "absent") {
     $tumbprint = $null
     if ($hostSSL -eq $false) {
         $hAddress = $hAddress.Replace("https://","http://")
+    } elseif ($typeNorm -eq "nutanix") {
+        try {
+            $tumbprint = Get-SSLThumbprint -URL $thumbprintUrl
+        } catch {
+            Fail-Json $result "Failed reading the TLS thumbprint from $thumbprintUrl. Error: $($_)"
+        }
     } elseif ($hAddress -like "https://*") {
         try {
             $tumbprint = Get-SSLThumbprint -URL $hAddress
@@ -144,12 +185,29 @@ if ($state -eq "absent") {
     $cConn = Get-ChildItem -Path XDHyp:\Connections | Where-Object {$_.HypervisorConnectionName -eq $name}
     if (!$cConn) {
         try {
-            if ($pluginId) {
-                try {
-                    $hConn = New-Item -Path XDHyp:\Connections -Name $name -HypervisorAddress $hAddress -SSLThumbprint $tumbprint -UserName $HostUserName -Password $HostPassword -ConnectionType $hType -PluginId $pluginId -Persist
-                } catch {
-                    $hConn = New-Item -Path XDHyp:\Connections -Name $name -HypervisorAddress $hAddress -SSLThumbprint $tumbprint -UserName $HostUserName -Password $HostPassword -ConnectionType $hType -HypervisorPluginId $pluginId -Persist
+            if ($typeNorm -eq "nutanix") {
+                $connectionPath = "XDHyp:\Connections\$name"
+                $securePass = ConvertTo-SecureString -String $hostPassword -AsPlainText -Force
+                $newItem = @{
+                    Path               = @($connectionPath)
+                    ConnectionType     = $hType
+                    HypervisorAddress  = @($hAddress)
+                    Persist            = $true
+                    PluginId           = $pluginId
+                    Scope              = @()
+                    SecurePassword     = $securePass
+                    UserName           = $hostUsername
                 }
+                if ($tumbprint) {
+                    $newItem.SSLThumbprint = @($tumbprint)
+                }
+                $zoneUid = Get-DefaultZoneUid
+                if ($zoneUid) {
+                    $newItem.ZoneUid = $zoneUid
+                }
+                $hConn = New-Item @newItem
+            } elseif ($pluginId) {
+                $hConn = New-Item -Path XDHyp:\Connections -Name $name -HypervisorAddress $hAddress -SSLThumbprint $tumbprint -UserName $HostUserName -Password $HostPassword -ConnectionType $hType -PluginId $pluginId -Persist
             } else {
                 $hConn = New-Item -Path XDHyp:\Connections -Name $name -HypervisorAddress $hAddress -SSLThumbprint $tumbprint -UserName $HostUserName -Password $HostPassword -ConnectionType $hType -Persist
             }
@@ -161,24 +219,20 @@ if ($state -eq "absent") {
     }
 
     if ($typeNorm -eq "nutanix") {
-        $connectionRoot = "XDHyp:\Connections\$name"
-        $children = @(Get-ChildItem -Path $connectionRoot -ErrorAction SilentlyContinue)
-        $clusterItem = $children | Where-Object {
-            $_.Name -eq $hostCluster -or
-            $_.Name -like "$hostCluster.*" -or
-            $_.PSChildName -eq $hostCluster
-        } | Select-Object -First 1
-        if (-not $clusterItem -and $children.Count -eq 1) {
-            $clusterItem = $children[0]
+        # 2603: cluster and network are chosen when the machine catalog is
+        # created. The hosting unit is only a named container under the PC connection.
+        $connectionPath = "XDHyp:\Connections\$name"
+        $hostUnitName = "$name Resource"
+        $cInf = Get-ChildItem XDHyp:\HostingUnits | Where-Object {$_.HostingUnitName -eq $hostUnitName}
+        if (!$cInf) {
+            try {
+                New-Item -Path @("XDHyp:\HostingUnits\$hostUnitName") -RootPath $connectionPath -HypervisorConnectionName $name -CustomProperties "" -NetworkPath @() -StoragePath @()
+                $result.changed = $true
+            } catch {
+                Fail-Json $result "Failed creating the Nutanix hosting unit '$hostUnitName'. Error: $($_)"
+            }
         }
-        if (-not $clusterItem) {
-            $available = ($children | ForEach-Object { $_.Name }) -join ", "
-            Fail-Json $result "Nutanix cluster '$hostCluster' not found under $connectionRoot. Available: $available"
-        }
-        $hRootPath = $clusterItem.FullPath
-        if (-not $hRootPath) {
-            $hRootPath = "$connectionRoot\$($clusterItem.Name)"
-        }
+        Exit-Json $result
     } elseif ($hostCluster) {
         $hostSpecificSuffix = "$hostDatacenter.datacenter\$hostCluster.cluster"
         $hRootPath = "XDHyp:\Connections\$($name)\$($hostSpecificSuffix)"
@@ -189,6 +243,10 @@ if ($state -eq "absent") {
         $hRootPath = "XDHyp:\Connections\$($name)\"
     } else {
         $hRootPath = "XDHyp:\Connections\$($name)"
+    }
+
+    if (-not $hostStorage -or -not $hostNetwork) {
+        Fail-Json $result "host_storage and host_network are required for $type hosting units."
     }
 
     $storage = Get-ChildItem -Path $hRootPath | Where-Object {$_.Name -eq $hostStorage -or $_.Name -like "$hostStorage.*"}

@@ -46,16 +46,20 @@
     ansible_become_user: "{{ ansible_user }}"
     ansible_become_password: "{{ ansible_password }}"
 
-- name: Set Nutanix AHV hypervisor connection
+- name: Require Prism Central credentials for the hosting connection
+  ansible.builtin.fail:
+    msg: go/nutanix/prism_central must contain endpoint, username, and password.
+  when:
+    - go_euc_platform | default('vmware') == 'nutanix'
+    - nutanix_pc_host | length == 0 or nutanix_pc_username | length == 0 or nutanix_pc_password | length == 0
+
+- name: Set Nutanix AHV Prism Central hypervisor connection
   citrix_hosting_connection:
     name: Default
     type: Nutanix
-    host_address: "{{ nutanix_host }}"
-    host_username: "{{ nutanix_username }}"
-    host_password: "{{ nutanix_password }}"
-    host_cluster: "{{ nutanix_cluster_name }}"
-    host_storage: "{{ nutanix_storage_name }}"
-    host_network: "{{ nutanix_network_name }}"
+    host_address: "{{ nutanix_pc_host }}"
+    host_username: "{{ nutanix_pc_username }}"
+    host_password: "{{ nutanix_pc_password }}"
     state: present
   when: go_euc_platform | default('vmware') == 'nutanix'
   vars:

@@ -55,6 +55,14 @@
   register: prism
   when: go_euc_platform == 'nutanix'
 
+- name: Read Nutanix Prism Central info from vault
+  community.hashi_vault.vault_read:
+    url: "{{ vault_addr }}"
+    path: go/nutanix/prism_central
+    token : '{{ vault_token }}'
+  register: prism_central
+  when: go_euc_platform == 'nutanix'
+
 - name: Read Nutanix cluster info from vault
   community.hashi_vault.vault_read:
     url: "{{ vault_addr }}"
@@ -108,6 +116,9 @@
     nutanix_username: "{{ (prism.data.data.username if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
     nutanix_password: "{{ (prism.data.data.password if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
     nutanix_host: "{{ (prism.data.data.endpoint if (prism.data is defined and prism.data.data is defined) else '') | default('') }}"
+    nutanix_pc_username: "{{ (prism_central.data.data.username if (prism_central.data is defined and prism_central.data.data is defined) else '') | default('') }}"
+    nutanix_pc_password: "{{ (prism_central.data.data.password if (prism_central.data is defined and prism_central.data.data is defined) else '') | default('') }}"
+    nutanix_pc_host: "{{ (prism_central.data.data.endpoint if (prism_central.data is defined and prism_central.data.data is defined) else '') | default('') }}"
     nutanix_cluster_name: ""
     nutanix_storage_name: ""
     nutanix_network_name: ""
