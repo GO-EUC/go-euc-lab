@@ -64,6 +64,7 @@
   set_fact:
     vda_setup_args: /components VDA /disableexperiencemetrics /enable_hdx_ports /enable_hdx_udp_ports /enable_real_time_transport /masterimage /noreboot /quiet
     vda_needs_second_pass: "{{ vda_meta_exit.exists | default(false) and (vda_meta_exit.value | string) in ['3', '3010'] }}"
+    vda_already_complete: "{{ vda_meta_exit.exists | default(false) and (vda_meta_exit.value | string) == '0' }}"
 
 - name: Install Citrix {{ citrix_type }} VDA
   win_shell: |
@@ -90,7 +91,9 @@
     throw "VDA setup did not record MetaInstall ExitCode 0/3/3010 within 40 minutes"
   register: install
   failed_when: install.rc not in [0, 3, 3010]
-  when: not (vda_needs_second_pass | bool)
+  when:
+    - not (vda_needs_second_pass | bool)
+    - not (vda_already_complete | bool)
   vars:
     ansible_winrm_operation_timeout_sec: 7200
     ansible_winrm_read_timeout_sec: 7300

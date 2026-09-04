@@ -28,12 +28,20 @@
     path: C:\ODTSetup\setup.exe
     arguments: /configure C:\ODTSetup\GO-EUC.xml
 
+# Click-to-Run M365 lives under root\Office16, not the MSI Office16 folder.
+- name: Find OSPP.VBS
+  ansible.windows.win_find:
+    paths:
+      - C:\Program Files\Microsoft Office
+      - C:\Program Files (x86)\Microsoft Office
+    patterns: OSPP.VBS
+    recurse: true
+  register: ospp
+
 # Details from Pieter Wigleven here - https://twitter.com/PieterWigleven/status/1280554361739833345
 - name: Install 10 day testing license from Pieter Wigleven
-  win_package:
-    chdir: C:\Program Files\Microsoft Office\Office16
-    path: C:\Windows\system32\cscript.exe
-    arguments: OSPP.VBS /inpkey:DRNV7-VGMM2-B3G9T-4BF84-VMFTK
+  win_command: cscript.exe //nologo "{{ ospp.files[0].path }}" /inpkey:DRNV7-VGMM2-B3G9T-4BF84-VMFTK
+  when: ospp.matched | default(0) > 0
 
 - name: M365 - Disable Activation UI
   win_regedit:
